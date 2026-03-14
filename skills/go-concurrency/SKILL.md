@@ -1,6 +1,7 @@
 ---
 name: go-concurrency
-description: Go concurrency patterns including goroutine lifecycle management, channel usage, mutex handling, and sync primitives. Use when writing concurrent Go code, spawning goroutines, working with channels, or documenting thread-safety guarantees. Based on Google and Uber Go Style Guides.
+description: Go concurrency patterns including goroutine lifecycle management, channel usage, mutex handling, and sync primitives. Use when writing concurrent Go code, spawning goroutines, working with channels, or documenting thread-safety guarantees.
+sources: [Google Style Guide, Uber Style Guide]
 ---
 
 # Go Concurrency
@@ -74,8 +75,6 @@ Every goroutine must have a predictable stop mechanism:
 - A way to signal that it should stop
 - Code must be able to block and wait for the goroutine to finish
 
-> **Source**: Uber Go Style Guide
-
 ```go
 // Bad: No way to stop or wait for this goroutine
 go func() {
@@ -144,8 +143,6 @@ go func() {
 goroutine, expose an object that manages the goroutine's lifetime with a method
 (`Close`, `Stop`, `Shutdown`) to stop and wait for it.
 
-> **Source**: Uber Go Style Guide
-
 ```go
 // Bad: Spawns uncontrollable background goroutine
 func init() {
@@ -188,8 +185,6 @@ goroutine leaks in packages that spawn goroutines.
 
 The zero-value of `sync.Mutex` and `sync.RWMutex` is valid, so you almost never
 need a pointer to a mutex.
-
-> **Source**: Uber Go Style Guide
 
 ```go
 // Bad: Unnecessary pointer
@@ -322,8 +317,6 @@ be subject to scrutiny. Consider:
 - What prevents the channel from filling up under load?
 - What happens when writers block?
 
-> **Source**: Uber Go Style Guide
-
 ```go
 // Bad: Arbitrary buffer size
 c := make(chan int, 64) // "Ought to be enough for anybody!"
@@ -351,8 +344,6 @@ Use [go.uber.org/atomic](https://pkg.go.dev/go.uber.org/atomic) for type-safe
 atomic operations. The standard `sync/atomic` package operates on raw types
 (`int32`, `int64`, etc.), making it easy to forget to use atomic operations
 consistently.
-
-> **Source**: Uber Go Style Guide
 
 ```go
 // Bad: Easy to forget atomic operation
@@ -409,6 +400,12 @@ operations are not. Document concurrency when:
 
 ---
 
+## Context Usage
+
+> Read [references/CONTEXT.md](references/CONTEXT.md) when passing context.Context through function chains, deciding where to store context, or deriving contexts with cancellation.
+
+---
+
 ## Buffer Pooling with Channels
 
 Use a buffered channel as a free list to reuse allocated buffers. This "leaky
@@ -416,6 +413,8 @@ buffer" pattern uses `select` with `default` for non-blocking operations.
 
 See [references/BUFFER-POOLING.md](references/BUFFER-POOLING.md) for the full
 pattern with examples and production alternatives using `sync.Pool`.
+
+> Read [references/BUFFER-POOLING.md](references/BUFFER-POOLING.md) when implementing a worker pool with reusable buffers.
 
 ---
 
@@ -432,6 +431,8 @@ when implementing request/response multiplexing with channels.
 Split independent computations across CPU cores using goroutines and a
 completion channel. See [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md)
 when parallelizing CPU-bound computations across cores.
+
+> Read [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md) when implementing request-response multiplexing or CPU-bound parallel computation.
 
 ---
 

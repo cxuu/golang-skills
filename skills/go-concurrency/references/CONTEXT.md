@@ -1,14 +1,10 @@
----
-name: go-context
-description: Go context.Context usage patterns including parameter placement, avoiding struct embedding, and proper propagation. Use when working with context.Context in Go code for cancellation, deadlines, and request-scoped values.
-sources: [Go Wiki CodeReviewComments]
----
-
 # Go Context Usage
 
 `context.Context` carries security credentials, tracing information, deadlines,
 and cancellation signals across API and process boundaries. Go programs pass
 contexts explicitly along the entire function call chain.
+
+> Based on [Go Wiki CodeReviewComments - Contexts](https://github.com/golang/wiki/blob/master/CodeReviewComments.md#contexts).
 
 ---
 

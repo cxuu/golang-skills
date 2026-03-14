@@ -1,156 +1,82 @@
 ---
 name: go-data-structures
 description: Go data structures including allocation with new vs make, arrays, slices, maps, printing with fmt, and constants with iota. Use when working with Go's built-in data structures, memory allocation, or formatted output.
+sources: [Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 
 # Go Data Structures
-
-> **Source**: Effective Go
-
-This skill covers Go's built-in data structures and allocation primitives.
 
 ---
 
 ## Allocation: new vs make
 
-Go has two allocation primitives: `new` and `make`. They do different things.
+- `new(T)` returns `*T`, zeroed. Useful when the zero value is ready to use
+  (e.g., `bytes.Buffer`, `sync.Mutex`).
+- `make(T, args)` creates slices, maps, and channels only. Returns an
+  initialized (not zeroed) value of type `T` (not `*T`).
 
-### new
-
-`new(T)` allocates zeroed storage for a new item of type `T` and returns `*T`:
-
-```go
-p := new(SyncedBuffer)  // type *SyncedBuffer, zeroed
-var v SyncedBuffer      // type  SyncedBuffer, zeroed
-```
-
-**Zero-value design**: Design data structures so the zero value is useful without
-further initialization. Examples: `bytes.Buffer`, `sync.Mutex`.
-
-```go
-type SyncedBuffer struct {
-    lock    sync.Mutex
-    buffer  bytes.Buffer
-}
-// Ready to use immediately upon allocation
-```
-
-### make
-
-`make(T, args)` creates slices, maps, and channels only. It returns an
-**initialized** (not zeroed) value of type `T` (not `*T`):
-
-```go
-make([]int, 10, 100)  // slice: length 10, capacity 100
-make(map[string]int)  // map: ready to use
-make(chan int)        // channel: ready to use
-```
-
-### The Difference
-
-```go
-var p *[]int = new([]int)       // *p == nil; rarely useful
-var v  []int = make([]int, 100) // v is a usable slice of 100 ints
-
-// Idiomatic:
-v := make([]int, 100)
-```
-
-**Rule**: `make` applies only to maps, slices, and channels and does not return
-a pointer.
+Design data structures so the zero value is useful without further
+initialization.
 
 ---
 
 ## Composite Literals
 
-Create and initialize structs, arrays, slices, and maps in one expression:
+Create and initialize structs, arrays, slices, and maps in one expression.
+Always use **field names** for types defined outside the current package:
 
 ```go
-// Struct with positional fields
-f := File{fd, name, nil, 0}
-
-// Struct with named fields (order doesn't matter, missing = zero)
+// Good: named fields — order-independent, resilient to struct changes
 f := &File{fd: fd, name: name}
 
-// Zero value
-f := &File{}  // equivalent to new(File)
-
-// Arrays, slices, maps
-a := [...]string{Enone: "no error", Eio: "Eio", Einval: "invalid"}
-s := []string{Enone: "no error", Eio: "Eio", Einval: "invalid"}
-m := map[int]string{Enone: "no error", Eio: "Eio", Einval: "invalid"}
+// Bad: positional fields for external types — fragile
+r := csv.Reader{',', '#', 4, false, false, false, false}
 ```
 
-**Note**: It's safe to return the address of a local variable in Go—the storage
-survives after the function returns.
-
----
-
-## Arrays
-
-Arrays are values in Go (unlike C):
-
-- Assigning one array to another copies all elements
-- Passing an array to a function passes a copy, not a pointer
-- The size is part of the type: `[10]int` and `[20]int` are distinct
+Closing braces must match indentation of the opening line:
 
 ```go
-func Sum(a *[3]float64) (sum float64) {
-    for _, v := range *a {
-        sum += v
-    }
-    return
+// Good: cuddled braces
+good := []*Type{{
+    Field: "value",
+}, {
+    Field: "value",
+}}
+
+// Good: non-cuddled
+good := []*Type{
+    {Field: "multi"},
+    {Field: "line"},
 }
 
-array := [...]float64{7.0, 8.5, 9.1}
-x := Sum(&array)  // Pass pointer for efficiency
+// Bad: closing brace on same line as value
+bad := []*Type{
+    {Key: "multi"},
+    {Key: "line"}}
 ```
 
-**Recommendation**: Use slices instead of arrays in most cases.
+It's safe to return the address of a local variable — the storage survives
+after the function returns.
 
 ---
 
 ## Slices
 
-Slices wrap arrays to provide a flexible, powerful interface to sequences.
-
-### Slice Basics
-
-Slices hold references to an underlying array. Assigning one slice to another
-makes both refer to the same array:
-
-```go
-func (f *File) Read(buf []byte) (n int, err error)
-
-// Read into first 32 bytes of larger buffer
-n, err := f.Read(buf[0:32])
-```
-
-### Length and Capacity
-
-- `len(s)`: current length
-- `cap(s)`: maximum length (from start of slice to end of underlying array)
-
 ### The append Function
 
-```go
-func append(slice []T, elements ...T) []T
-```
-
-**Always assign the result**—the underlying array may change:
+**Always assign the result** — the underlying array may change:
 
 ```go
 x := []int{1, 2, 3}
 x = append(x, 4, 5, 6)
 
 // Append a slice to a slice
-y := []int{4, 5, 6}
 x = append(x, y...)  // Note the ...
 ```
 
 ### Two-Dimensional Slices
 
-**Method 1**: Independent inner slices (can grow/shrink independently):
+**Independent inner slices** (can grow/shrink independently):
 
 ```go
 picture := make([][]uint8, YSize)
@@ -159,7 +85,7 @@ for i := range picture {
 }
 ```
 
-**Method 2**: Single allocation (more efficient for fixed sizes):
+**Single allocation** (more efficient for fixed sizes):
 
 ```go
 picture := make([][]uint8, YSize)
@@ -169,92 +95,38 @@ for i := range picture {
 }
 ```
 
-For detailed slice internals, see [references/SLICES.md](references/SLICES.md).
+> Read [references/SLICES.md](references/SLICES.md) when debugging unexpected slice behavior, sharing slices across goroutines, or working with slice headers.
 
 ### Declaring Empty Slices
 
-> **Normative**: This is required per Go Wiki CodeReviewComments.
-
-When declaring an empty slice, prefer:
+Prefer nil slices over empty literals:
 
 ```go
+// Good: nil slice
 var t []string
-```
 
-over:
-
-```go
+// Avoid: non-nil but zero-length
 t := []string{}
 ```
 
-The former declares a **nil slice**, while the latter is **non-nil but zero-length**.
-They are functionally equivalent—their `len` and `cap` are both zero—but the nil
-slice is the preferred style.
+Both have `len` and `cap` of zero, but the nil slice is the preferred style.
 
-**Exception for JSON encoding:** A nil slice encodes to `null`, while an empty
-slice `[]string{}` encodes to `[]`. Use non-nil when you need a JSON array:
+**Exception for JSON**: A nil slice encodes to `null`, while `[]string{}`
+encodes to `[]`. Use non-nil when you need a JSON array.
 
-```go
-// nil slice → JSON null
-var tags []string
-json.Marshal(tags)  // "null"
-
-// empty slice → JSON array
-tags := []string{}
-json.Marshal(tags)  // "[]"
-```
-
-**Interface design:** When designing interfaces, avoid making a distinction
-between a nil slice and a non-nil zero-length slice, as this can lead to subtle
-programming errors.
+When designing interfaces, avoid distinguishing between nil and non-nil
+zero-length slices.
 
 ---
 
 ## Maps
 
-Maps associate keys with values. Keys must support equality (`==`).
-
-### Creating and Using Maps
-
-```go
-var timeZone = map[string]int{
-    "UTC":  0*60*60,
-    "EST": -5*60*60,
-    "CST": -6*60*60,
-}
-
-offset := timeZone["EST"]  // -18000
-```
-
-### Testing for Presence
-
-An absent key returns the zero value. Use the "comma ok" idiom to distinguish:
-
-```go
-seconds, ok := timeZone[tz]
-if !ok {
-    log.Println("unknown time zone:", tz)
-}
-
-// Or combined:
-if seconds, ok := timeZone[tz]; ok {
-    return seconds
-}
-```
-
-### Deleting Entries
-
-```go
-delete(timeZone, "PDT")  // Safe even if key doesn't exist
-```
-
 ### Implementing a Set
 
-Use `map[T]bool`:
+Use `map[T]bool` — idiomatic and reads naturally:
 
 ```go
 attended := map[string]bool{"Ann": true, "Joe": true}
-
 if attended[person] {  // false if not in map
     fmt.Println(person, "was at the meeting")
 }
@@ -262,94 +134,36 @@ if attended[person] {  // false if not in map
 
 ---
 
-## Printing
-
-The `fmt` package provides rich formatted printing.
-
-### Basic Functions
-
-| Function | Output |
-|----------|--------|
-| `Printf` | Formatted to stdout |
-| `Sprintf` | Returns formatted string |
-| `Fprintf` | Formatted to io.Writer |
-| `Print/Println` | Default format |
-
-```go
-fmt.Printf("Hello %d\n", 23)
-fmt.Println("Hello", 23)
-s := fmt.Sprintf("Hello %d", 23)
-```
-
-### The %v Format
-
-`%v` prints any value with a reasonable default:
-
-```go
-fmt.Printf("%v\n", timeZone)
-// map[CST:-21600 EST:-18000 MST:-25200 PST:-28800 UTC:0]
-```
-
-For structs:
-- `%v`: values only
-- `%+v`: with field names
-- `%#v`: full Go syntax
-
-```go
-type T struct {
-    a int
-    b float64
-    c string
-}
-t := &T{7, -2.35, "abc\tdef"}
-
-fmt.Printf("%v\n", t)   // &{7 -2.35 abc   def}
-fmt.Printf("%+v\n", t)  // &{a:7 b:-2.35 c:abc     def}
-fmt.Printf("%#v\n", t)  // &main.T{a:7, b:-2.35, c:"abc\tdef"}
-```
-
-### Other Useful Formats
-
-| Format | Purpose |
-|--------|---------|
-| `%T` | Type of value |
-| `%q` | Quoted string |
-| `%x` | Hex (strings, bytes, ints) |
-
-### The Stringer Interface
-
-Define `String() string` to control default formatting:
-
-```go
-func (t *T) String() string {
-    return fmt.Sprintf("%d/%g/%q", t.a, t.b, t.c)
-}
-```
-
-**Warning**: Don't call `Sprintf` with `%s` on the receiver—infinite recursion:
-
-```go
-// Bad: infinite recursion
-func (m MyString) String() string {
-    return fmt.Sprintf("MyString=%s", m)
-}
-
-// Good: convert to basic type
-func (m MyString) String() string {
-    return fmt.Sprintf("MyString=%s", string(m))
-}
-```
-
----
-
 ## Constants and iota
 
-Constants are created at compile time and can only be numbers, characters,
-strings, or booleans.
+`iota` creates enumerated constants. Start enums at one so the zero value
+represents an invalid/unset state:
 
-### iota Enumerator
+```go
+type Operation int
 
-`iota` creates enumerated constants:
+const (
+    Add Operation = iota + 1
+    Subtract
+    Multiply
+)
+// Add=1, Subtract=2, Multiply=3
+```
+
+There are cases where the zero value makes sense as a default — use zero when
+the default behavior is desirable:
+
+```go
+type LogOutput int
+
+const (
+    LogToStdout LogOutput = iota  // zero value = default
+    LogToFile
+    LogToRemote
+)
+```
+
+Advanced `iota` patterns (e.g., bit-shifting for `ByteSize`):
 
 ```go
 type ByteSize float64
@@ -360,66 +174,26 @@ const (
     MB
     GB
     TB
-    PB
-    EB
 )
-```
-
-Combine with `String()` for automatic formatting:
-
-```go
-func (b ByteSize) String() string {
-    switch {
-    case b >= EB:
-        return fmt.Sprintf("%.2fEB", b/EB)
-    case b >= PB:
-        return fmt.Sprintf("%.2fPB", b/PB)
-    // ... etc
-    }
-    return fmt.Sprintf("%.2fB", b)
-}
 ```
 
 ---
 
 ## Copying
 
-> **Advisory**: This is a best practice recommendation from Go Wiki CodeReviewComments.
-
-To avoid unexpected aliasing, be careful when copying a struct from another
-package. For example, `bytes.Buffer` contains a `[]byte` slice. If you copy a
-`Buffer`, the slice in the copy may alias the array in the original, causing
-subsequent method calls to have surprising effects.
-
-```go
-// Dangerous: copying a bytes.Buffer
-var buf1 bytes.Buffer
-buf1.WriteString("hello")
-
-buf2 := buf1  // buf2's internal slice may alias buf1's array!
-buf2.WriteString(" world")  // May affect buf1 unexpectedly
-```
+Be careful when copying a struct from another package. If the type has methods
+on its pointer type (`*T`), copying the value can cause aliasing bugs.
 
 **General rule:** Do not copy a value of type `T` if its methods are associated
-with the pointer type `*T`.
-
-This applies to many types in the standard library and third-party packages:
-- `bytes.Buffer`
-- `sync.Mutex`, `sync.WaitGroup`, `sync.Cond`
-- Types containing the above
+with the pointer type `*T`. This applies to `bytes.Buffer`, `sync.Mutex`,
+`sync.WaitGroup`, and types containing them.
 
 ```go
 // Bad: copying a mutex
 var mu sync.Mutex
-mu2 := mu  // Copying a mutex is almost always a bug
+mu2 := mu  // almost always a bug
 
-// Good: use pointers or embed carefully
-type SafeCounter struct {
-    mu    sync.Mutex
-    count int
-}
-
-// Pass by pointer, not by value
+// Good: pass by pointer
 func increment(sc *SafeCounter) {
     sc.mu.Lock()
     sc.count++
@@ -435,14 +209,11 @@ func increment(sc *SafeCounter) {
 |-------|-----------|
 | `new(T)` | Returns `*T`, zeroed |
 | `make(T)` | Slices, maps, channels only; returns `T`, initialized |
-| Arrays | Values, not references; size is part of type |
-| Slices | Reference underlying array; use `append` |
-| Maps | Key must support `==`; use comma-ok for presence |
+| Composite literals | Use field names for external types; match brace indentation |
+| Slices | Always assign `append` result; `nil` slice preferred over `[]T{}` |
+| Sets | `map[T]bool` is idiomatic |
 | Copying | Don't copy `T` if methods are on `*T`; beware aliasing |
-| `%v` | Default format for any value |
-| `%+v` | Struct with field names |
-| `%#v` | Full Go syntax |
-| `iota` | Enumerated constants |
+| `iota` enums | Start at one unless zero value is a meaningful default |
 
 ## See Also
 

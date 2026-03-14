@@ -1,11 +1,10 @@
 ---
 name: go-documentation
 description: Guidelines for Go documentation including doc comments, package docs, godoc formatting, runnable examples, and signal boosting. Use when writing or reviewing documentation for Go packages, types, functions, or methods.
+sources: [Google Style Guide]
 ---
 
 # Go Documentation
-
-This skill covers documentation conventions from Google's Go Style Guide.
 
 ---
 

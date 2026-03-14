@@ -1,19 +1,16 @@
 ---
 name: go-declarations
 description: Go variable, constant, and type declaration patterns including initialization, scope reduction, literal formatting, and modern idioms. Use when declaring variables, initializing structs or maps, or choosing between var and :=.
+sources: [Google Style Guide, Uber Style Guide]
 ---
 
 # Go Declarations and Initialization
-
-> **Sources**: Uber Go Style Guide, Google Go Style Guide
 
 ---
 
 ## Group Similar Declarations
 
 Group related `var`, `const`, and `type` declarations in parenthesized blocks.
-
-> **Source**: Uber Go Style Guide
 
 **Bad:**
 
@@ -90,8 +87,6 @@ func (c *client) request() {
 
 ## Top-level Variable Declarations
 
-> **Source**: Uber Go Style Guide
-
 At the top level, use `var`. Do not specify the type unless it differs from the
 expression's type:
 
@@ -127,7 +122,9 @@ var _e error = F()
 
 ## Local Variable Declarations
 
-> **Source**: Uber Go Style Guide
+> **Default**: Use `:=` for local variables. Use `var` only for: zero-value
+> initialization where the zero value matters, or when the type isn't clear from
+> the right-hand side.
 
 Use `:=` when explicitly assigning a value:
 
@@ -167,8 +164,6 @@ func f(list []int) {
 ---
 
 ## Reduce Scope of Variables
-
-> **Source**: Uber Go Style Guide
 
 Move declarations as close to usage as possible. Use if-init to limit scope:
 
@@ -222,8 +217,6 @@ func Bar() {
 ---
 
 ## Initializing Structs
-
-> **Source**: Uber Go Style Guide
 
 ### Always Use Field Names
 
@@ -293,17 +286,14 @@ sptr := &T{Name: "bar"}
 
 ## Composite Literal Formatting
 
-> **Source**: Google Go Style Guide (Normative)
-
 Use field names for external package types. Match closing brace indentation with
 the opening line. Omit repeated type names in slice/map literals (`gofmt -s`).
-See `references/INITIALIZATION.md` for the full formatting rules with examples.
+
+> Read [references/INITIALIZATION.md](references/INITIALIZATION.md) when working with complex struct initialization, factory patterns, or builder patterns.
 
 ---
 
 ## Initializing Maps
-
-> **Source**: Uber Go Style Guide
 
 Use `make()` for empty maps that will be populated programmatically—it visually
 distinguishes initialization from a nil declaration and allows size hints:
@@ -346,8 +336,6 @@ populated later (with a size hint if known).
 
 ## Use Raw String Literals
 
-> **Source**: Uber Go Style Guide
-
 Use backtick strings to avoid hand-escaped characters:
 
 ```go
@@ -365,8 +353,6 @@ ideal for regex patterns, SQL, JSON, and multi-line text.
 
 ## Use `any` Instead of `interface{}`
 
-> **Source**: Google Go Style Guide (Normative)
-
 Go 1.18 introduced `any` as an alias for `interface{}`. Prefer `any` in new
 code:
 
@@ -381,8 +367,6 @@ func process(v any) {}
 ---
 
 ## Avoid Using Built-In Names
-
-> **Source**: Uber Go Style Guide
 
 Never use Go's [predeclared identifiers](https://go.dev/ref/spec#Predeclared_identifiers)
 as variable, function, or type names. Shadowing built-ins creates subtle bugs

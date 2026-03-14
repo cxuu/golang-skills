@@ -1,13 +1,10 @@
 ---
 name: go-naming
 description: Go naming conventions for packages, functions, methods, variables, constants, and receivers from Google and Uber style guides. Use when naming any identifier in Go code—choosing names for types, functions, methods, variables, constants, or packages—to ensure clarity, consistency, and idiomatic style.
+sources: [Google Style Guide, Uber Style Guide]
 ---
 
 # Go Naming Conventions
-
-> **Normative**: Core naming rules (MixedCaps, no underscores) are required per
-> Google's canonical Go style guide. Advisory guidance provides best practices
-> for clarity and maintainability.
 
 ## Core Principle
 
@@ -247,7 +244,7 @@ pendingOrders := filterPending(orders)    // larger scope
 const _defaultPort = 8080
 ```
 
-**For detailed guidance**: See [references/VARIABLES.md](references/VARIABLES.md)
+> Read [references/VARIABLES.md](references/VARIABLES.md) when naming local variables in functions over 15 lines.
 
 ---
 
@@ -271,13 +268,11 @@ package db
 func Load() error              // db.Load()
 ```
 
-**For detailed guidance**: See [references/REPETITION.md](references/REPETITION.md)
+> Read [references/REPETITION.md](references/REPETITION.md) when a package name and its exported symbols feel redundant.
 
 ---
 
 ## Avoid Built-In Names
-
-> **Source**: Uber Go Style Guide
 
 Never shadow Go's predeclared identifiers (`error`, `string`, `len`, `cap`,
 `append`, `copy`, `new`, `make`, etc.) as variable, parameter, or type names.

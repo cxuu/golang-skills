@@ -1,10 +1,6 @@
----
-name: go-functional-options
-description: The functional options pattern for Go constructors and public APIs. Use when designing APIs with optional configuration, especially with 3+ parameters.
-sources: [Uber Style Guide]
----
-
 # Functional Options Pattern
+
+> **Source**: Uber Go Style Guide
 
 Functional options is a pattern where you declare an opaque `Option` type that records information in an internal struct. The constructor accepts a variadic number of these options and applies them to configure the result.
 
@@ -36,6 +32,8 @@ type Option interface {
 The unexported `apply` method ensures only options from this package can be used.
 
 ## Complete Implementation
+
+> **Source**: Uber Go Style Guide
 
 ```go
 package db
@@ -99,6 +97,8 @@ func Open(addr string, opts ...Option) (*Connection, error) {
 
 ## Usage Examples
 
+> **Source**: Uber Go Style Guide
+
 ### Without Functional Options (Bad)
 
 ```go
@@ -136,6 +136,8 @@ db.Open(
 **Prefer Config Struct when**: Fewer than 3 options, options rarely change, all options usually specified together, or internal APIs only.
 
 ## Why Not Closures?
+
+> **Source**: Uber Go Style Guide
 
 An alternative implementation uses closures:
 

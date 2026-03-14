@@ -1,11 +1,10 @@
 ---
 name: go-performance
 description: Go performance patterns including efficient string handling, type conversions, and container capacity hints. Use when optimizing Go code or writing performance-critical sections.
+sources: [Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments]
 ---
 
 # Go Performance Patterns
-
-> **Source**: Uber Go Style Guide
 
 Performance-specific guidelines apply only to the **hot path**. Don't prematurely optimize—focus these patterns where they matter most.
 
@@ -14,8 +13,6 @@ Performance-specific guidelines apply only to the **hot path**. Don't prematurel
 ## Prefer strconv over fmt
 
 When converting primitives to/from strings, `strconv` is faster than `fmt`.
-
-> **Source**: Uber Go Style Guide
 
 **Bad:**
 
@@ -45,8 +42,6 @@ for i := 0; i < b.N; i++ {
 ## Avoid Repeated String-to-Byte Conversions
 
 Do not create byte slices from a fixed string repeatedly. Instead, perform the conversion once and capture the result.
-
-> **Source**: Uber Go Style Guide
 
 **Bad:**
 
@@ -79,8 +74,6 @@ The good version is **~7x faster** because it avoids allocating a new byte slice
 ## Prefer Specifying Container Capacity
 
 Specify container capacity where possible to allocate memory up front. This minimizes subsequent allocations from copying and resizing as elements are added.
-
-> **Source**: Uber Go Style Guide
 
 ### Map Capacity Hints
 
@@ -161,8 +154,6 @@ The good version is **~12x faster** due to zero reallocations during append.
 
 ## Pass Values
 
-> **Source**: Go Wiki CodeReviewComments (Advisory)
-
 Don't pass pointers as function arguments just to save a few bytes. If a function refers to its argument `x` only as `*x` throughout, then the argument shouldn't be a pointer.
 
 **Common instances where values should be passed directly:**
@@ -193,8 +184,6 @@ func process(s string) {
 ---
 
 ## String Concatenation
-
-> **Source**: Google Go Style Guide (best-practices)
 
 Choose the right string building strategy based on complexity:
 

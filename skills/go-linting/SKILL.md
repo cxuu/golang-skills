@@ -1,11 +1,10 @@
 ---
 name: go-linting
 description: Recommended Go linters and golangci-lint configuration. Use when setting up linting for a Go project or configuring CI/CD.
+sources: [Uber Style Guide]
 ---
 
 # Go Linting
-
-> **Source**: Uber Go Style Guide
 
 ## Core Principle
 
@@ -15,9 +14,16 @@ Consistent linting helps catch common issues and establishes a high bar for code
 
 ---
 
-## Minimum Recommended Linters
+## Setup Procedure
 
-> **Source**: Uber Go Style Guide
+1. Create `.golangci.yml` using the configuration below
+2. Run `golangci-lint run ./...`
+3. If errors appear, fix them category by category (formatting first, then vet, then style)
+4. Re-run until clean
+
+---
+
+## Minimum Recommended Linters
 
 These linters catch the most common issues while maintaining a high quality bar:
 
@@ -34,8 +40,6 @@ These linters catch the most common issues while maintaining a high quality bar:
 ---
 
 ## Lint Runner: golangci-lint
-
-> **Source**: Uber Go Style Guide
 
 Use [golangci-lint](https://github.com/golangci/golangci-lint) as your lint runner:
 

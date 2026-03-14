@@ -1,41 +1,20 @@
 ---
 name: go-defensive
 description: Defensive programming patterns in Go including interface verification, slice/map copying at boundaries, time handling, avoiding globals, and defer for cleanup. Use when writing robust, production-quality Go code.
+sources: [Effective Go, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 
 # Go Defensive Programming Patterns
 
 ## Verify Interface Compliance
 
-> **Source**: Uber Go Style Guide
+Use compile-time checks to verify interface implementation. See **go-interfaces**: Interface Satisfaction Checks for the full pattern and guidance on when to use it.
 
-Verify interface compliance at compile time using zero-value assertions.
-
-**Bad**
 ```go
-type Handler struct{}
-
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  // ...
-}
-```
-
-**Good**
-```go
-type Handler struct{}
-
 var _ http.Handler = (*Handler)(nil)
-
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  // ...
-}
 ```
-
-Use `nil` for pointer types, slices, maps; empty struct `{}` for value receivers.
 
 ## Copy Slices and Maps at Boundaries
-
-> **Source**: Uber Go Style Guide
 
 Slices and maps contain pointers. Copy at API boundaries to prevent unintended modifications.
 
@@ -81,8 +60,6 @@ func (s *Stats) Snapshot() map[string]int {
 ```
 
 ## Defer to Clean Up
-
-> **Source**: Uber Go Style Guide, Effective Go
 
 Use `defer` to clean up resources (files, locks). Avoids missed cleanup on multiple returns.
 
@@ -176,8 +153,6 @@ func a() {
 
 ## Start Enums at One
 
-> **Source**: Uber Go Style Guide
-
 Start enums at non-zero to distinguish uninitialized from valid values.
 
 **Bad**
@@ -201,8 +176,6 @@ const (
 **Exception**: When zero is the sensible default (e.g., `LogToStdout = iota`).
 
 ## Use time.Time and time.Duration
-
-> **Source**: Uber Go Style Guide
 
 Always use the `time` package. Avoid raw `int` for time values.
 
@@ -260,8 +233,6 @@ type Config struct {
 
 ## Avoid Mutable Globals
 
-> **Source**: Uber Go Style Guide
-
 Use dependency injection instead of mutable globals.
 
 **Bad**
@@ -307,8 +278,6 @@ func TestSigner(t *testing.T) {
 
 ## Avoid Embedding Types in Public Structs
 
-> **Source**: Uber Go Style Guide
-
 Embedded types leak implementation details and inhibit type evolution.
 
 **Bad**
@@ -340,8 +309,6 @@ Embedding problems:
 
 ## Use Field Tags in Marshaled Structs
 
-> **Source**: Uber Go Style Guide
-
 Always use explicit field tags for JSON, YAML, etc.
 
 **Bad**
@@ -366,8 +333,6 @@ Tags make the serialization contract explicit and safe to refactor.
 ---
 
 ## Crypto Rand
-
-> **Source**: Go Wiki CodeReviewComments (Normative)
 
 Do not use `math/rand` or `math/rand/v2` to generate keys, even throwaway ones. This is a **security concern**.
 
@@ -395,8 +360,6 @@ For text output:
 
 ## Panic and Recover
 
-> **Source**: Effective Go
-
 Use `panic` only for truly unrecoverable situations. Library functions should avoid panic—if the problem can be worked around, let things continue rather than taking down the whole program.
 
 Use `recover` to regain control of a panicking goroutine (only works inside deferred functions):
@@ -418,6 +381,8 @@ func safelyDo(work *Work) {
 - Use recover to isolate panics in server goroutine handlers
 
 For detailed patterns including server protection and package-internal panic/recover, see [references/PANIC-RECOVER.md](references/PANIC-RECOVER.md).
+
+> Read [references/PANIC-RECOVER.md](references/PANIC-RECOVER.md) when writing panic recovery in HTTP servers, using panic as an internal control flow mechanism in parsers, or deciding between log.Fatal and panic.
 
 ---
 
