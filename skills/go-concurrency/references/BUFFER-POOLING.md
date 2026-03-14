@@ -56,7 +56,7 @@ with better integration into the garbage collector:
 
 ```go
 var bufferPool = sync.Pool{
-    New: func() interface{} {
+    New: func() any {
         return new(Buffer)
     },
 }

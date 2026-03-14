@@ -419,6 +419,22 @@ pattern with examples and production alternatives using `sync.Pool`.
 
 ---
 
+## Channels of Channels
+
+Embed a reply channel inside a request struct to build multiplexed, non-blocking
+RPC systems. See [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md)
+when implementing request/response multiplexing with channels.
+
+---
+
+## CPU-Bound Parallelization
+
+Split independent computations across CPU cores using goroutines and a
+completion channel. See [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md)
+when parallelizing CPU-bound computations across cores.
+
+---
+
 ## Quick Reference
 
 | Topic | Guidance | Type |
@@ -432,6 +448,8 @@ pattern with examples and production alternatives using `sync.Pool`.
 | Channel size | One or none by default | Advisory |
 | Atomic operations | Use go.uber.org/atomic | Advisory |
 | Concurrency docs | Document when not obvious | Advisory |
+| Channels of channels | Embed reply channel in request struct | Advisory |
+| Parallelization | Use goroutines + completion channel for CPU work | Advisory |
 
 ### Concurrency Checklist
 
@@ -463,6 +481,7 @@ Before spawning a goroutine, answer:
 - **go-error-handling**: Error handling patterns in concurrent code
 - **go-defensive**: Defensive programming including validation and safety
 - **go-documentation**: General documentation conventions
+- **go-functions**: Function design and multiple return values
 
 ### External Resources
 

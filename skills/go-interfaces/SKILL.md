@@ -121,7 +121,7 @@ A type switch discovers the dynamic type of an interface variable using the
 `.(type)` syntax:
 
 ```go
-var t interface{}
+var t any
 t = functionOfSomeType()
 
 switch t := t.(type) {
@@ -152,7 +152,7 @@ type Stringer interface {
     String() string
 }
 
-var value interface{}
+var value any
 switch str := value.(type) {
 case string:
     return str                // str is string
@@ -292,7 +292,7 @@ job.Logger.SetPrefix("Job: ")
 Define a method on the outer type to override the embedded method:
 
 ```go
-func (job *Job) Printf(format string, args ...interface{}) {
+func (job *Job) Printf(format string, args ...any) {
     job.Logger.Printf("%q: %s", job.Command, fmt.Sprintf(format, args...))
 }
 ```
@@ -317,6 +317,64 @@ type ReadWriter struct {
    any `X` in embedded types
 2. **Same level conflicts are errors**: Embedding two types with the same method
    name at the same level causes an error (unless never accessed)
+
+---
+
+## Methods on Any Named Type
+
+> **Source**: Effective Go
+
+Since almost anything can have methods attached, almost anything can satisfy an
+interface. Methods are not limited to structs—you can define them on any named
+type (except pointers and interfaces).
+
+### The HandlerFunc Adapter Pattern
+
+The `http` package demonstrates this powerfully with `HandlerFunc`, which
+converts an ordinary function into an `http.Handler`:
+
+```go
+type HandlerFunc func(ResponseWriter, *Request)
+
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, req *Request) {
+    f(w, req)
+}
+```
+
+Any function with the right signature becomes an HTTP handler:
+
+```go
+func ArgServer(w http.ResponseWriter, req *http.Request) {
+    fmt.Fprintln(w, os.Args)
+}
+
+// Convert function to Handler
+http.Handle("/args", http.HandlerFunc(ArgServer))
+```
+
+### Methods on Non-Struct Types
+
+You can add methods to integers, channels, functions, and any other named type:
+
+```go
+// Method on a named integer type
+type Counter int
+
+func (ctr *Counter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    *ctr++
+    fmt.Fprintf(w, "counter = %d\n", *ctr)
+}
+
+// Method on a named channel type
+type Chan chan *http.Request
+
+func (ch Chan) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    ch <- req
+    fmt.Fprint(w, "notification sent")
+}
+```
+
+> Interfaces are just sets of methods, which can be defined for almost any type.
 
 ---
 
@@ -361,81 +419,11 @@ no other static conversion that would catch the error.
 
 ## Receiver Type
 
-> **Advisory**: Go Wiki CodeReviewComments
+If in doubt, use a pointer receiver. Don't mix receiver types on a single type—if
+any method needs a pointer, use pointers for all methods. Use value receivers only
+for small, immutable types (`Point`, `time.Time`) or basic types.
 
-Choosing whether to use a value or pointer receiver on methods can be difficult.
-**If in doubt, use a pointer**, but there are times when a value receiver makes
-sense.
-
-### When to Use Pointer Receiver
-
-- **Method mutates receiver**: The receiver must be a pointer
-- **Receiver contains sync.Mutex or similar**: Must be a pointer to avoid copying
-- **Large struct or array**: A pointer receiver is more efficient. If passing all
-  elements as arguments feels too large, it's too large for a value receiver
-- **Concurrent or called methods might mutate**: If changes must be visible in
-  the original receiver, it must be a pointer
-- **Elements are pointers to something mutating**: Prefer pointer receiver to
-  make the intention clearer
-
-### When to Use Value Receiver
-
-- **Small unchanging structs or basic types**: Value receiver for efficiency
-- **Map, func, or chan**: Don't use a pointer to them
-- **Slice without reslicing/reallocating**: Don't use a pointer if the method
-  doesn't reslice or reallocate the slice
-- **Small value types with no mutable fields**: Types like `time.Time` with no
-  mutable fields and no pointers work well as value receivers
-- **Simple basic types**: `int`, `string`, etc.
-
-```go
-// Value receiver: small, immutable type
-type Point struct {
-    X, Y float64
-}
-
-func (p Point) Distance(q Point) float64 {
-    return math.Hypot(q.X-p.X, q.Y-p.Y)
-}
-
-// Pointer receiver: method mutates receiver
-func (p *Point) ScaleBy(factor float64) {
-    p.X *= factor
-    p.Y *= factor
-}
-
-// Pointer receiver: contains sync.Mutex
-type Counter struct {
-    mu    sync.Mutex
-    count int
-}
-
-func (c *Counter) Increment() {
-    c.mu.Lock()
-    c.count++
-    c.mu.Unlock()
-}
-```
-
-### Consistency Rule
-
-**Don't mix receiver types**. Choose either pointers or struct types for all
-available methods on a type. If any method needs a pointer receiver, use pointer
-receivers for all methods.
-
-```go
-// Good: Consistent pointer receivers
-type Buffer struct {
-    data []byte
-}
-
-func (b *Buffer) Write(p []byte) (int, error) { /* ... */ }
-func (b *Buffer) Read(p []byte) (int, error)  { /* ... */ }
-func (b *Buffer) Len() int                     { return len(b.data) }
-
-// Bad: Mixed receiver types
-func (b Buffer) Len() int                      { return len(b.data) }  // inconsistent
-```
+See `references/RECEIVER-TYPE.md` when choosing between pointer and value receivers.
 
 ---
 
@@ -462,3 +450,4 @@ func (b Buffer) Len() int                      { return len(b.data) }  // incons
 - **go-error-handling**: Error interface and custom error types
 - **go-functional-options**: Using interfaces for flexible APIs
 - **go-defensive**: Defensive programming patterns
+- **go-generics**: When generics suffice vs interfaces

@@ -19,17 +19,20 @@ best practices derived from:
 | **go-context** | Context usage patterns, parameter placement, proper propagation |
 | **go-control-flow** | If with initialization, for loops, range, switch, type switch, blank identifier |
 | **go-data-structures** | Allocation (new vs make), arrays, slices, maps, printing, iota constants |
+| **go-declarations** | Variable/const/type declarations, initialization, scope, `any` vs `interface{}` |
 | **go-defensive** | Interface verification, slice/map copying, time handling, defer for cleanup |
 | **go-documentation** | Doc comments, package docs, godoc formatting, examples |
 | **go-error-handling** | Error handling patterns, wrapping, sentinel errors, error flow |
 | **go-functional-options** | Functional options pattern for constructors and APIs with optional config |
+| **go-functions** | Multiple return values, file organization, signature formatting, Printf conventions |
+| **go-generics** | When to use type parameters, constraints, type aliases vs definitions |
 | **go-interfaces** | Interface design, type assertions, type switches, embedding for composition |
 | **go-linting** | Recommended linters and golangci-lint configuration |
 | **go-naming** | Naming conventions for packages, functions, methods, variables, constants |
 | **go-packages** | Package organization, imports, avoiding util packages |
-| **go-performance** | Efficient string handling, type conversions, container capacity hints |
+| **go-performance** | String handling, type conversions, container capacity, string concatenation |
 | **go-style-core** | Core principles (clarity, simplicity, consistency) and formatting rules |
-| **go-testing** | Table-driven tests, test helpers, subtests, parallel tests, assertions |
+| **go-testing** | Table-driven tests, test helpers, subtests, parallel tests, TestMain |
 
 ## Quick Install
 
