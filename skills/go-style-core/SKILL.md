@@ -1,12 +1,10 @@
 ---
 name: go-style-core
 description: Core Go style principles and formatting guidelines from Google and Uber style guides. Use when writing any Go code to ensure clarity, simplicity, and consistency. This is the foundational skill - other Go style skills build on these principles.
+sources: [Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 
 # Go Style Core Principles
-
-> **Normative**: This guidance is required per Google's canonical Go style
-> guide.
 
 ## Style Principles (Priority Order)
 
@@ -40,10 +38,14 @@ Simple code:
 - Has comments explaining "why", not "what"
 - May be mutually exclusive with "clever" code
 
-**Least Mechanism Principle**: Prefer standard tools:
+### Least Mechanism
+
+Where there are several ways to express the same idea, prefer the most standard
+tool:
+
 1. Core language constructs (channel, slice, map, loop, struct)
-2. Standard library tools (http client, template engine)
-3. Core libraries before new dependencies
+2. Standard library (HTTP client, template engine)
+3. Third-party library — only when (1) and (2) don't suffice
 
 ### 3. Concision
 
@@ -115,8 +117,6 @@ gofmt -w .
 
 ### Parentheses
 
-> **Source**: Effective Go
-
 Go needs fewer parentheses than C and Java. Control structures (`if`, `for`, `switch`) don't have parentheses in their syntax. The operator precedence hierarchy is shorter and clearer, so `x<<8 + y<<16` means what the spacing suggests—unlike in other languages.
 
 ### MixedCaps (Camel Case)
@@ -143,8 +143,6 @@ Exceptions:
 There is **no rigid line length limit** in Go, but avoid uncomfortably long
 lines. Uber suggests a soft limit of 99 characters.
 
-> **Combined**: Google + Uber + Go Wiki CodeReviewComments guidance
-
 Guidelines:
 - If a line feels too long, **refactor** rather than just wrap
 - Don't split before indentation changes (function declarations, conditionals)
@@ -153,8 +151,6 @@ Guidelines:
 - If it's already as short as practical, let it remain long
 
 **Break by semantics, not length**:
-
-> **Advisory**: Go Wiki CodeReviewComments
 
 Don't add line breaks just to keep lines short when they are more readable long
 (e.g., repetitive lines). Break lines because of what you're writing, not
@@ -196,8 +192,6 @@ When the style guide is silent, be consistent with nearby code:
 
 ## Reduce Nesting
 
-> **Source**: Uber Go Style Guide
-
 Handle error cases and special conditions first. Return early or continue the loop to keep the "happy path" unindented.
 
 ```go
@@ -232,8 +226,6 @@ for _, v := range data {
 
 ### Unnecessary Else
 
-> **Source**: Uber Go Style Guide
-
 If a variable is set in both branches of an if, use default + override pattern.
 
 ```go
@@ -255,8 +247,6 @@ if b {
 ---
 
 ## Naked Returns
-
-> **Advisory**: Go Wiki CodeReviewComments
 
 A `return` statement without arguments returns the named return values. This is
 known as a "naked" return.
@@ -310,8 +300,6 @@ See **go-documentation** for guidance on Named Result Parameters.
 ---
 
 ## Semicolons
-
-> **Source**: Effective Go
 
 Go's lexer automatically inserts semicolons after any line whose last token is
 an identifier, literal, or one of: `break continue fallthrough return ++ -- ) }`.

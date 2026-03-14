@@ -1,6 +1,7 @@
 ---
 name: go-error-handling
 description: Comprehensive Go error handling patterns from Google and Uber style guides. Covers returning errors, wrapping with %w, sentinel errors, choosing error types, handling errors once, error flow structure, and logging. Use when writing Go code that creates, returns, wraps, or handles errors.
+sources: [Google Style Guide, Uber Style Guide]
 ---
 
 # Go Error Handling
@@ -9,11 +10,18 @@ In Go, [errors are values](https://go.dev/blog/errors-are-values) - they are
 created by code and consumed by code. This skill covers how to return,
 structure, wrap, and handle errors effectively.
 
+## Choosing an Error Strategy
+
+1. Is this a system boundary (RPC, IPC, storage)? → Wrap with `%v` to avoid leaking internals
+2. Does the caller need to match specific error conditions? → Define sentinel or typed error, wrap with `%w`
+3. Does the caller just need context for debugging? → Wrap with `fmt.Errorf("...: %w", err)`
+4. Is this a leaf function with no wrapping needed? → Return the error directly
+
+Default: wrap with `%w` and place it at the end of the format string.
+
 ---
 
 ## Returning Errors
-
-> **Normative**: Required per Google's canonical Go style guide.
 
 ### Use the `error` Type
 
@@ -57,8 +65,6 @@ so callers can determine if the context was cancelled.
 
 ## Error Strings
 
-> **Normative**: Required per Google's canonical Go style guide.
-
 Error strings should **not** be capitalized and should **not** end with
 punctuation:
 
@@ -89,8 +95,6 @@ t.Errorf("Op(%q) failed unexpectedly; err=%v", args, err)
 ---
 
 ## Handling Errors
-
-> **Normative**: Required per Google's canonical Go style guide.
 
 Code that encounters an error must make a **deliberate choice** about how to
 handle it. Do not discard errors using `_` variables.
@@ -133,8 +137,6 @@ if err := g.Wait(); err != nil {
 
 ## Avoid In-Band Errors
 
-> **Normative**: Required per Google's canonical Go style guide.
-
 Do not return special values like `-1`, `nil`, or empty string to signal errors:
 
 ```go
@@ -166,8 +168,6 @@ compile-time error since `Lookup(key)` has 2 outputs.
 ---
 
 ## Indent Error Flow
-
-> **Normative**: Required per Google's canonical Go style guide.
 
 Handle errors before proceeding with normal code. This improves readability by
 enabling the reader to find the normal path quickly.
@@ -220,6 +220,10 @@ if x, err := f(); err != nil {
 
 > **Advisory**: Recommended best practice.
 
+> **Default**: Wrap with `fmt.Errorf("...: %w", err)`. Escalate to sentinel
+> errors only when callers need `errors.Is()`. Escalate to custom error types
+> only when callers need `errors.As()` to extract structured fields.
+
 If callers need to distinguish different error conditions programmatically, give
 errors structure rather than relying on string matching. Choose the right error
 type based on whether callers need to match errors and whether messages are
@@ -237,11 +241,17 @@ static or dynamic.
 For detailed coverage of sentinel errors, structured error types, and error
 checking patterns, see [references/ERROR-TYPES.md](references/ERROR-TYPES.md).
 
+> Read [references/ERROR-TYPES.md](references/ERROR-TYPES.md) when you need to define a new sentinel error, create a custom error type, or choose between error strategies for a package API.
+
 ---
 
 ## Error Wrapping
 
 > **Advisory**: Recommended best practice.
+
+> **Default**: Use `%w` within your application code. Use `%v` at system
+> boundaries (RPC, IPC, storage) to avoid leaking internal error types to
+> external callers.
 
 The choice between `%v` and `%w` significantly impacts how errors are propagated
 and inspected:
@@ -257,11 +267,11 @@ and inspected:
 For detailed coverage of wrapping patterns, placement, adding context, and
 logging best practices, see [references/WRAPPING.md](references/WRAPPING.md).
 
+> Read [references/WRAPPING.md](references/WRAPPING.md) when deciding between %v and %w, or when wrapping errors across package boundaries.
+
 ---
 
 ## Handle Errors Once
-
-> **Source**: Uber Go Style Guide
 
 When a caller receives an error, it should handle each error **only once**.
 Choose ONE response:
@@ -270,8 +280,9 @@ Choose ONE response:
 2. **Log and degrade gracefully** (don't return the error)
 3. **Match and handle** specific error cases, return others
 
-**Never log AND return** - this causes duplicate logging as callers up the stack
-will also handle the error.
+**If you return an error, don't log it yourself** — let the caller handle it.
+Logging and returning the same error is the most common "handle errors once"
+violation, causing duplicate noise as callers up the stack also handle the error.
 
 ```go
 // Bad: Logs AND returns - causes noise in logs

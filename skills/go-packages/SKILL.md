@@ -1,6 +1,7 @@
 ---
 name: go-packages
 description: Go package organization, imports, and dependency management from Google and Uber style guides. Use when creating packages, organizing imports, managing dependencies, using init(), or deciding how to structure Go code into packages.
+sources: [Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 
 # Go Packages and Imports
@@ -57,8 +58,6 @@ things easily.
 
 ### Import Organization
 
-> **Normative**: This is required per Go Wiki CodeReviewComments.
-
 Imports are organized in groups, with blank lines between them. The standard
 library packages are always in the first group.
 
@@ -79,8 +78,6 @@ Use [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) to manage
 this automatically.
 
 ### Import Grouping (Extended)
-
-> **Combined**: Google + Uber guidance
 
 **Minimal grouping (Uber):** stdlib, then everything else.
 
@@ -114,8 +111,6 @@ import (
 
 ### Import Renaming
 
-> **Normative**: This is required per Go Wiki CodeReviewComments and Google's Go style guide.
-
 Avoid renaming imports except to avoid a name collision; good package names
 should not require renaming. In the event of collision, **prefer to rename the
 most local or project-specific import**.
@@ -143,8 +138,6 @@ func parseEndpoint(url string) (*urlpkg.URL, error) {
 
 ### Blank Imports (`import _`)
 
-> **Normative**: This is required per Go Wiki CodeReviewComments and Google's Go style guide.
-
 Packages that are imported only for their side effects (using `import _ "pkg"`)
 should only be imported in the main package of a program, or in tests that
 require them.
@@ -160,8 +153,6 @@ import (
 ```
 
 ### Dot Imports (`import .`)
-
-> **Normative**: This is required per Go Wiki CodeReviewComments and Google's Go style guide.
 
 **Do not** use dot imports. They make programs much harder to read because it is
 unclear whether a name like `Quux` is a top-level identifier in the current
@@ -198,8 +189,6 @@ var myThing = foo.Bar()
 ---
 
 ## Avoid init()
-
-> **Source**: Uber Go Style Guide
 
 Avoid `init()` where possible. When `init()` is unavoidable, code should:
 
@@ -248,8 +237,6 @@ func loadConfig() (Config, error) {
 ---
 
 ## Exit in Main
-
-> **Source**: Uber Go Style Guide
 
 Call `os.Exit` or `log.Fatal*` **only in `main()`**. All other functions should
 return errors to signal failure.

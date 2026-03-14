@@ -43,6 +43,49 @@ func init() {
 }
 ```
 
+### When Panic IS Acceptable
+
+Beyond initialization, panic is acceptable in these narrow cases:
+
+1. **API misuse** — analogous to how core language panics on out-of-bounds
+   access. The `reflect` package uses this approach.
+2. **Internal implementation detail with matching `recover`** at the package
+   boundary. Panic simplifies deeply-nested control flow while the public API
+   still returns errors (the Parse/parseInt pattern below).
+3. **`panic("unreachable")`** after `log.Fatal` when the compiler can't detect
+   unreachable code.
+
+#### Parse/parseInt Pattern
+
+Use panic internally to unwind complex recursion, but always convert to an error
+at the package boundary:
+
+```go
+func parseInt(in string) int {
+    n, err := strconv.Atoi(in)
+    if err != nil {
+        panic(&syntaxError{"not a valid integer"})
+    }
+    return n
+}
+
+func Parse(in string) (_ *Node, err error) {
+    defer func() {
+        if p := recover(); p != nil {
+            sErr, ok := p.(*syntaxError)
+            if !ok {
+                panic(p)  // not ours — re-panic
+            }
+            err = fmt.Errorf("syntax error: %v", sErr.msg)
+        }
+    }()
+    // ... calls parseInt internally
+}
+```
+
+**Key**: The type check `p.(*syntaxError)` ensures only *our* panics are caught.
+Unexpected panics (nil pointer, etc.) propagate normally.
+
 ---
 
 ## Recover Patterns

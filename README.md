@@ -10,29 +10,35 @@ best practices derived from:
 - [Go Wiki
   CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
 
+Skills are tuned following
+[agentskills.io best practices](https://agentskills.io/skill-creation/best-practices):
+content the agent already knows is omitted, procedural decision trees guide
+multi-step tasks, and detailed reference material loads on demand via
+progressive disclosure.
+
 ## Skills Included
 
 | Skill | Description |
 |-------|-------------|
-| **go-code-review** | Quick-reference checklist for Go code review based on CodeReviewComments |
+| **go-code-review** | Review procedure, checklist, automated pre-check with golangci-lint |
 | **go-concurrency** | Goroutine lifecycle, channels, mutex handling, sync primitives |
 | **go-context** | Context usage patterns, parameter placement, proper propagation |
-| **go-control-flow** | If with initialization, for loops, range, switch, type switch, blank identifier |
-| **go-data-structures** | Allocation (new vs make), arrays, slices, maps, printing, iota constants |
-| **go-declarations** | Variable/const/type declarations, initialization, scope, `any` vs `interface{}` |
-| **go-defensive** | Interface verification, slice/map copying, time handling, defer for cleanup |
+| **go-control-flow** | Guard clauses, variable shadowing, expression-less switch, break-with-labels |
+| **go-data-structures** | Composite literals, slice gotchas, nil vs empty slice, iota enums, copying |
+| **go-declarations** | Variable/const/type declarations, initialization, scope reduction |
+| **go-defensive** | Slice/map copying at boundaries, time handling, defer, panic/recover |
 | **go-documentation** | Doc comments, package docs, godoc formatting, examples |
-| **go-error-handling** | Error handling patterns, wrapping, sentinel errors, error flow |
-| **go-functional-options** | Functional options pattern for constructors and APIs with optional config |
-| **go-functions** | Multiple return values, file organization, signature formatting, Printf conventions |
-| **go-generics** | When to use type parameters, constraints, type aliases vs definitions |
-| **go-interfaces** | Interface design, type assertions, type switches, embedding for composition |
+| **go-error-handling** | Error strategy decision tree, wrapping (%v vs %w), sentinels, error flow |
+| **go-functional-options** | Functional options pattern for constructors with optional config |
+| **go-functions** | File ordering, signature formatting, naked parameters, Printf conventions |
+| **go-generics** | When to use generics (decision flow), type aliases vs definitions |
+| **go-interfaces** | Accept interfaces/return concrete, embedding, satisfaction checks, type switch |
 | **go-linting** | Recommended linters and golangci-lint configuration |
 | **go-naming** | Naming conventions for packages, functions, methods, variables, constants |
 | **go-packages** | Package organization, imports, avoiding util packages |
-| **go-performance** | String handling, type conversions, container capacity, string concatenation |
-| **go-style-core** | Core principles (clarity, simplicity, consistency) and formatting rules |
-| **go-testing** | Table-driven tests, test helpers, subtests, parallel tests, TestMain |
+| **go-performance** | String handling, type conversions, container capacity hints |
+| **go-style-core** | Clarity, simplicity, least mechanism, consistency, formatting rules |
+| **go-testing** | Table-driven tests, test helpers, test double naming, subtests, TestMain |
 
 ## Quick Install
 
@@ -69,9 +75,11 @@ which works across multiple AI coding tools. When you're writing Go code:
 
 1. **Automatic activation**: The AI agent loads relevant skills based on context
    (e.g., `go-naming` when you're writing a new function)
-2. **On-demand guidance**: Skills provide actionable rules with good/bad code
-   examples
-3. **Cross-references**: Skills link to each other for comprehensive coverage
+2. **Procedural guidance**: Decision trees and step-by-step procedures for
+   multi-step tasks like code review and error strategy selection
+3. **Progressive disclosure**: Core rules load immediately; detailed reference
+   material (`references/` files) loads on demand when specific situations arise
+4. **Cross-references**: Skills link to each other for comprehensive coverage
 
 ## License
 

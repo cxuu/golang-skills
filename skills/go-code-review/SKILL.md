@@ -1,12 +1,18 @@
 ---
 name: go-code-review
 description: Quick-reference checklist for Go code review based on the Go Wiki CodeReviewComments. Maps to detailed skills for comprehensive guidance. Use when reviewing Go code or checking code against community style standards.
+sources: [Go Wiki CodeReviewComments, Uber Style Guide]
 ---
 
 # Go Code Review Checklist
 
-> Based on [Go Wiki CodeReviewComments](https://github.com/golang/wiki/blob/master/CodeReviewComments.md).
-> This checklist provides quick review points with references to detailed skills.
+## Review Procedure
+
+1. Run `gofmt -d .` and `go vet ./...` to catch mechanical issues first
+2. Read the diff file-by-file; for each file, check the categories below in order
+3. Flag issues with specific line references and the rule name
+4. After reviewing all files, re-read flagged items to verify they're genuine issues
+5. Summarize findings grouped by severity (must-fix, should-fix, nit)
 
 ---
 
@@ -128,18 +134,68 @@ description: Quick-reference checklist for Go code review based on the Go Wiki C
 
 ---
 
-## Quick Review Commands
+## Automated Checks
+
+More important than any "blessed" set of linters: **lint consistently across a codebase**.
+
+### Minimum Recommended Linters
+
+| Linter | Purpose |
+|--------|---------|
+| [errcheck](https://github.com/kisielk/errcheck) | Ensure errors are handled |
+| [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) | Format code and manage imports |
+| [revive](https://github.com/mgechev/revive) | Common style mistakes (modern replacement for golint) |
+| [govet](https://pkg.go.dev/cmd/vet) | Analyze code for common mistakes |
+| [staticcheck](https://staticcheck.dev) | Various static analysis checks |
+
+### golangci-lint Configuration
+
+Use [golangci-lint](https://github.com/golangci/golangci-lint) as your lint runner. Create `.golangci.yml` in your project root:
+
+```yaml
+linters:
+  enable:
+    - errcheck
+    - goimports
+    - revive
+    - govet
+    - staticcheck
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/your-org/your-repo
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: error-return
+      - name: error-strings
+      - name: exported
+
+run:
+  timeout: 5m
+```
+
+### Running
 
 ```bash
-# Format and organize imports
-goimports -w .
+# Install
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
-# Run linter suite
+# Run all linters
 golangci-lint run
 
-# Check for common issues
-go vet ./...
+# Run on specific paths
+golangci-lint run ./pkg/...
 ```
+
+---
+
+## Automated Pre-Check
+
+1. Run: `gofmt -l . && go vet ./... && golangci-lint run ./...`
+2. If any output, fix those issues first before manual review
+3. Re-run until clean, then proceed to the checklist above
 
 ---
 

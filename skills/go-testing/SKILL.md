@@ -1,6 +1,7 @@
 ---
 name: go-testing
 description: Go testing patterns from Google and Uber style guides including test naming, table-driven tests, subtests, parallel tests, test helpers, test doubles, and assertions. Use when writing or reviewing Go test code, creating test helpers, or setting up table-driven tests.
+sources: [Google Style Guide, Uber Style Guide]
 ---
 
 # Go Testing
@@ -192,8 +193,6 @@ the same type.
 
 ### Avoid Complexity in Table Tests
 
-> **Source**: Uber Go Style Guide
-
 When test cases need complex setup, conditional mocking, or multiple branches,
 prefer separate test functions over table tests.
 
@@ -281,8 +280,6 @@ func TestTranslate(t *testing.T) {
 ```
 
 ### Parallel Tests
-
-> **Source**: Uber Go Style Guide
 
 When using `t.Parallel()` in table tests, be aware of loop variable capture:
 
@@ -446,6 +443,8 @@ See `references/INTEGRATION.md` when building reusable interface validation suit
 For HTTP/RPC integration tests, prefer `httptest.NewServer` with a real client
 over hand-implemented mocks to exercise real code paths.
 See `references/INTEGRATION.md` when testing HTTP or RPC integrations.
+
+> Read [references/INTEGRATION.md](references/INTEGRATION.md) when writing TestMain, acceptance tests, or tests that need real HTTP/RPC transports.
 
 ---
 
