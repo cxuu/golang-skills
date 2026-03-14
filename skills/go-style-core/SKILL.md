@@ -309,6 +309,33 @@ See **go-documentation** for guidance on Named Result Parameters.
 
 ---
 
+## Semicolons
+
+> **Source**: Effective Go
+
+Go's lexer automatically inserts semicolons after any line whose last token is
+an identifier, literal, or one of: `break continue fallthrough return ++ -- ) }`.
+
+This means **opening braces must be on the same line** as the control structure:
+
+```go
+// Good: brace on same line
+if i < f() {
+    g()
+}
+
+// Bad: brace on next line — lexer inserts semicolon after f()
+if i < f()  // wrong!
+{           // wrong!
+    g()
+}
+```
+
+Idiomatic Go only has explicit semicolons in `for` loop clauses and to separate
+multiple statements on a single line.
+
+---
+
 ## Quick Reference
 
 | Principle | Key Question |

@@ -192,6 +192,69 @@ func process(s string) {
 
 ---
 
+## String Concatenation
+
+> **Source**: Google Go Style Guide (best-practices)
+
+Choose the right string building strategy based on complexity:
+
+### Use `+` for Simple Cases
+
+```go
+key := "projectid: " + p
+```
+
+### Use `fmt.Sprintf` for Formatting
+
+```go
+// Good: clear formatting
+str := fmt.Sprintf("%s [%s:%d]-> %s", src, qos, mtu, dst)
+
+// Bad: + with manual conversions
+str := src.String() + " [" + qos.String() + ":" + strconv.Itoa(mtu) + "]-> " + dst.String()
+```
+
+When writing to an `io.Writer`, use `fmt.Fprintf` directly instead of building a
+temporary string with `fmt.Sprintf`.
+
+### Use `strings.Builder` for Piecemeal Construction
+
+`strings.Builder` takes amortized linear time, whereas repeated `+` or
+`fmt.Sprintf` take quadratic time when building a large string:
+
+```go
+b := new(strings.Builder)
+for i, d := range digitsOfPi {
+    fmt.Fprintf(b, "the %d digit of pi is: %d\n", i, d)
+}
+str := b.String()
+```
+
+### Use Backticks for Constant Multi-line Strings
+
+```go
+// Good: raw string literal
+usage := `Usage:
+
+custom_tool [args]`
+
+// Bad: concatenation with escape sequences
+usage := "" +
+    "Usage:\n" +
+    "\n" +
+    "custom_tool [args]"
+```
+
+| Method | Best For | Performance |
+|--------|----------|-------------|
+| `+` | Few strings, simple concat | O(n) for small n |
+| `fmt.Sprintf` | Formatted output | Slower, but clearer |
+| `strings.Builder` | Loop/piecemeal construction | Amortized O(n) |
+| `strings.Join` | Joining a slice | O(n) |
+| Backtick literal | Constant multi-line text | Zero cost |
+
+---
+
 ## Quick Reference
 
 | Pattern | Bad | Good | Improvement |
@@ -201,6 +264,8 @@ func process(s string) {
 | Map initialization | `make(map[K]V)` | `make(map[K]V, size)` | Fewer allocs |
 | Slice initialization | `make([]T, 0)` | `make([]T, 0, cap)` | ~12x faster |
 | Small fixed-size args | `*string`, `*io.Reader` | `string`, `io.Reader` | No indirection |
+| Simple string join | `s1 + " " + s2` | (already good) | Use `+` for few strings |
+| Loop string build | Repeated `+=` | `strings.Builder` | O(n) vs O(n^2) |
 
 ---
 
@@ -208,3 +273,4 @@ func process(s string) {
 
 - For core style principles: `go-style-core`
 - For naming conventions: `go-naming`
+- For declaration patterns: `go-declarations`

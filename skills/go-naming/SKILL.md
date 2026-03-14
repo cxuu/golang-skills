@@ -275,6 +275,19 @@ func Load() error              // db.Load()
 
 ---
 
+## Avoid Built-In Names
+
+> **Source**: Uber Go Style Guide
+
+Never shadow Go's predeclared identifiers (`error`, `string`, `len`, `cap`,
+`append`, `copy`, `new`, `make`, etc.) as variable, parameter, or type names.
+Shadowing built-ins creates latent bugs that the compiler won't catch.
+
+**For detailed guidance and examples**: See `go-declarations` — "Avoid Using
+Built-In Names" section.
+
+---
+
 ## Quick Reference
 
 | Element | Rule | Example |
@@ -286,6 +299,7 @@ func Load() error              // db.Load()
 | Constant | MixedCaps, never ALL_CAPS | `const MaxSize = 100` |
 | Initialism | consistent case | `userID`, `XMLAPI` |
 | Variable | length ~ scope size | `i` (small), `userCount` (large) |
+| Built-in names | Never shadow predeclared identifiers | See `go-declarations` |
 
 ## See Also
 
@@ -295,3 +309,4 @@ func Load() error              // db.Load()
 - For testing best practices: `go-testing`
 - For defensive programming: `go-defensive`
 - For performance optimization: `go-performance`
+- For declaration and initialization patterns: `go-declarations`

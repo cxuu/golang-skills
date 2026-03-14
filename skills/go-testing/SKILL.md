@@ -425,6 +425,30 @@ func init() {
 
 ---
 
+## TestMain
+
+Use `TestMain(m *testing.M)` when all tests in a package need shared setup with
+teardown (e.g., a database). Prefer `t.Cleanup` or scoped helpers first.
+See `references/INTEGRATION.md` when setting up package-wide test infrastructure.
+
+---
+
+## Acceptance Testing
+
+Acceptance tests validate that an implementation upholds a contract as a black
+box. Export a validation function in a `*test` package for reuse.
+See `references/INTEGRATION.md` when building reusable interface validation suites.
+
+---
+
+## Use Real Transports
+
+For HTTP/RPC integration tests, prefer `httptest.NewServer` with a real client
+over hand-implemented mocks to exercise real code paths.
+See `references/INTEGRATION.md` when testing HTTP or RPC integrations.
+
+---
+
 ## Quick Reference
 
 | Situation | Approach |
@@ -436,6 +460,9 @@ func init() {
 | Goroutine failures | `t.Error` only, never `t.Fatal` |
 | Test helper | Call `t.Helper()` first |
 | Large test data | Table-driven with subtests |
+| Package-wide setup | `TestMain` with helper function |
+| Interface validation | Acceptance test in `*test` package |
+| HTTP integration | `httptest.NewServer` + real client |
 
 ## See Also
 
@@ -443,3 +470,4 @@ func init() {
 - For naming conventions: `go-naming`
 - For error handling patterns: `go-error-handling`
 - For linter configuration: `go-linting`
+- For function design: `go-functions`
