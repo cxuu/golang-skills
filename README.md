@@ -50,7 +50,7 @@ npx skills add cxuu/golang-skills --all
 /plugin marketplace add cxuu/golang-skills
 
 # Install the skills
-/plugin install go-skills@cxuu-golang-skills
+/plugin install golang-skills@cxuu-golang-skills
 ```
 
 ### Cursor (Native Remote Rule)

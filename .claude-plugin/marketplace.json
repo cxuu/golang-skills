@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "go-skills",
+      "name": "golang-skills",
       "source": "./",
       "description": "16 Go skills covering style, naming, error handling, testing, documentation, concurrency, context, interfaces, data structures, control flow, performance, linting, code review, and defensive programming",
       "version": "1.0.0"
