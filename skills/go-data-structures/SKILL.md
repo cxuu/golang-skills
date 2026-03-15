@@ -27,6 +27,8 @@ What do you need?
    └─ Copy at the boundary if the caller might mutate it
 ```
 
+> **When this skill does NOT apply**: For concurrent access to data structures (mutexes, atomic operations), see [go-concurrency](../go-concurrency/SKILL.md). For defensive copying at API boundaries, see [go-defensive](../go-defensive/SKILL.md). For pre-sizing capacity for performance, see [go-performance](../go-performance/SKILL.md).
+
 ---
 
 ## Slices

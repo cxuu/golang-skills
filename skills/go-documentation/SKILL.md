@@ -4,6 +4,7 @@ description: Use when writing or reviewing documentation for Go packages, types,
 license: Apache-2.0
 metadata:
   sources: "Google Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Documentation
@@ -35,6 +36,8 @@ func Encode(w io.Writer, req *Request) { ...
 ```
 
 Unexported types/functions with unobvious behavior should also have doc comments.
+
+> **Validation**: After adding doc comments, run `bash scripts/check-docs.sh` to verify no exported symbols are missing documentation. Fix any gaps before proceeding.
 
 ---
 

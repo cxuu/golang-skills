@@ -49,29 +49,31 @@ system without a mutex in sight.
 
 ## CPU-Bound Parallelization
 
-> **Source**: Effective Go
+> **Source**: Effective Go (modernized)
 
 When a computation can be broken into independent pieces, parallelize it across
-CPU cores using a channel to signal completion:
+CPU cores using a `sync.WaitGroup` to wait for completion:
 
 ```go
 type Vector []float64
 
-func (v Vector) DoSome(i, n int, u Vector, c chan int) {
+func (v Vector) DoSome(i, n int, u Vector) {
     for ; i < n; i++ {
         v[i] += u.Op(v[i])
     }
-    c <- 1
 }
 
 func (v Vector) DoAll(u Vector) {
-    c := make(chan int, runtime.NumCPU())
-    for i := 0; i < runtime.NumCPU(); i++ {
-        go v.DoSome(i*len(v)/runtime.NumCPU(), (i+1)*len(v)/runtime.NumCPU(), u, c)
+    numCPU := runtime.NumCPU()
+    var wg sync.WaitGroup
+    wg.Add(numCPU)
+    for i := 0; i < numCPU; i++ {
+        go func(i int) {
+            defer wg.Done()
+            v.DoSome(i*len(v)/numCPU, (i+1)*len(v)/numCPU, u)
+        }(i)
     }
-    for i := 0; i < runtime.NumCPU(); i++ {
-        <-c
-    }
+    wg.Wait()
 }
 ```
 
@@ -82,3 +84,63 @@ the user's resource configuration.
 > independently executing components) with parallelism (executing calculations
 > simultaneously on multiple CPUs). Go is a concurrent language; not all
 > parallelization problems fit its model.
+
+---
+
+## Common Mistakes
+
+### Forgetting to signal completion
+
+If a goroutine never calls `wg.Done()` (or never sends on a done channel), the
+waiting goroutine blocks forever:
+
+```go
+// Bad: Missing wg.Done — deadlocks
+var wg sync.WaitGroup
+wg.Add(1)
+go func() {
+    doWork()
+}()
+wg.Wait()
+
+// Good: Always defer wg.Done
+var wg sync.WaitGroup
+wg.Add(1)
+go func() {
+    defer wg.Done()
+    doWork()
+}()
+wg.Wait()
+```
+
+### Unbounded goroutine spawning
+
+Launching one goroutine per work item with no limit can exhaust memory or
+overwhelm downstream resources. Use a semaphore to cap concurrency:
+
+```go
+// Bad: Spawns len(items) goroutines at once
+var wg sync.WaitGroup
+for _, item := range items {
+    wg.Add(1)
+    go func(it Item) {
+        defer wg.Done()
+        process(it)
+    }(item)
+}
+wg.Wait()
+
+// Good: Semaphore limits concurrency to maxWorkers
+var wg sync.WaitGroup
+sem := make(chan struct{}, maxWorkers)
+for _, item := range items {
+    wg.Add(1)
+    sem <- struct{}{}
+    go func(it Item) {
+        defer wg.Done()
+        defer func() { <-sem }()
+        process(it)
+    }(item)
+}
+wg.Wait()
+```

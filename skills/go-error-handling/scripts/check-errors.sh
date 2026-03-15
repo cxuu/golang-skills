@@ -24,6 +24,7 @@ OPTIONS
     -v, --version    Show version
     --json           Output results as JSON
     --no-bare-return Skip the bare 'return err' check (high false-positive rate)
+    --limit N        Show at most N results (default: all)
 
 ARGUMENTS
     path             Directory or file to check (default: current directory)
@@ -38,6 +39,7 @@ EOF
 
 JSON_OUTPUT=false
 CHECK_BARE_RETURN=true
+LIMIT=0
 TARGET=""
 
 while [[ $# -gt 0 ]]; do
@@ -46,6 +48,7 @@ while [[ $# -gt 0 ]]; do
         -v|--version)      echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --json)            JSON_OUTPUT=true; shift ;;
         --no-bare-return)  CHECK_BARE_RETURN=false; shift ;;
+        --limit)           LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
         -*)                echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)                 TARGET="$1"; shift ;;
     esac
@@ -201,8 +204,17 @@ for file in "${FILES[@]}"; do
     check_log_and_return "$file"
 done
 
+# Truncation
+TOTAL=${#FINDINGS[@]}
+TRUNCATED=false
+if [[ $LIMIT -gt 0 && $TOTAL -gt $LIMIT ]]; then
+    FINDINGS=("${FINDINGS[@]:0:$LIMIT}")
+    TRUNCATED=true
+fi
+
 if $JSON_OUTPUT; then
-    echo "["
+    echo "{"
+    echo '  "findings": ['
     first=true
     for entry in "${FINDINGS[@]+"${FINDINGS[@]}"}"; do
         IFS='|' read -r location rule message <<< "$entry"
@@ -210,13 +222,16 @@ if $JSON_OUTPUT; then
         line="${location#*:}"
         $first || echo ","
         first=false
-        printf '  {"file":"%s","line":%s,"rule":"%s","message":"%s"}' \
+        printf '    {"file":"%s","line":%s,"rule":"%s","message":"%s"}' \
             "$file" "$line" "$rule" "$message"
     done
     echo ""
-    echo "]"
+    echo "  ],"
+    printf '  "total": %d,\n' "$TOTAL"
+    printf '  "truncated": %s\n' "$TRUNCATED"
+    echo "}"
 else
-    if [[ ${#FINDINGS[@]} -eq 0 ]]; then
+    if [[ $TOTAL -eq 0 ]]; then
         echo "No error handling anti-patterns found."
         exit 0
     fi
@@ -227,11 +242,14 @@ else
         IFS='|' read -r location rule message <<< "$entry"
         printf "  %s  [%s] %s\n" "$location" "$rule" "$message"
     done
+    if $TRUNCATED; then
+        echo "  ... and $((TOTAL - LIMIT)) more (use --limit to adjust)"
+    fi
     echo ""
-    echo "Total: ${#FINDINGS[@]} finding(s)"
+    echo "Total: $TOTAL finding(s)"
 fi
 
-if [[ ${#FINDINGS[@]} -gt 0 ]]; then
+if [[ $TOTAL -gt 0 ]]; then
     exit 1
 fi
 exit 0

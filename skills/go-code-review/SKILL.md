@@ -5,6 +5,7 @@ license: Apache-2.0
 compatibility: Web server example in references uses slog (Go 1.21+)
 metadata:
   sources: "Go Wiki CodeReviewComments, Uber Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Code Review Checklist
@@ -18,6 +19,8 @@ metadata:
 3. Flag issues with specific line references and the rule name
 4. After reviewing all files, re-read flagged items to verify they're genuine issues
 5. Summarize findings grouped by severity (must-fix, should-fix, nit)
+
+> **Validation**: After completing the review, re-read the diff once more to verify every flagged issue is real. Remove any finding you cannot justify with a specific line reference.
 
 ---
 
@@ -114,6 +117,15 @@ metadata:
 
 ---
 
+## Logging
+
+- [ ] **Use slog**: New code uses `log/slog`, not `log` or `fmt.Println` for operational logging → [go-logging](../go-logging/SKILL.md)
+- [ ] **Structured fields**: Log messages use static strings with key-value attributes, not fmt.Sprintf → [go-logging](../go-logging/SKILL.md)
+- [ ] **Appropriate levels**: Debug for developer tracing, Info for notable events, Warn for recoverable issues, Error for failures → [go-logging](../go-logging/SKILL.md)
+- [ ] **No secrets in logs**: PII, credentials, and tokens are never logged → [go-logging](../go-logging/SKILL.md)
+
+---
+
 ## Imports
 
 - [ ] **Import groups**: Standard library first, then blank line, then external packages → [go-packages](../go-packages/SKILL.md)
@@ -144,7 +156,8 @@ metadata:
 Run automated pre-review checks:
 
 ```bash
-bash scripts/pre-review.sh ./...
+bash scripts/pre-review.sh ./...         # text output
+bash scripts/pre-review.sh --json ./...  # structured JSON output
 ```
 
 Or manually: `gofmt -l . && go vet ./... && golangci-lint run ./...`
@@ -167,3 +180,4 @@ Fix any issues before proceeding to the checklist above. For linter setup and co
 - **Naming conventions**: See [go-naming](../go-naming/SKILL.md) when evaluating identifier names, receiver names, or package-symbol stuttering
 - **Testing patterns**: See [go-testing](../go-testing/SKILL.md) when reviewing test code for table-driven structure, failure messages, or helper usage
 - **Concurrency safety**: See [go-concurrency](../go-concurrency/SKILL.md) when reviewing goroutine lifetimes, channel usage, or mutex placement
+- **Logging practices**: See [go-logging](../go-logging/SKILL.md) when reviewing log usage, structured logging, or slog configuration

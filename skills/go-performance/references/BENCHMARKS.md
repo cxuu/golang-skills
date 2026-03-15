@@ -236,3 +236,53 @@ Access profiles at `http://localhost:6060/debug/pprof/`.
 3. **Optimize** using patterns from this skill
 4. **Re-benchmark** to verify improvement with benchstat
 5. **Re-profile** to check for new bottlenecks
+
+---
+
+## Common Mistakes
+
+### Ignoring b.N
+
+The testing framework adjusts `b.N` to get stable timing. Using a fixed
+iteration count produces meaningless results:
+
+```go
+// Bad: Ignores b.N — benchmark framework can't calibrate
+func BenchmarkFixed(b *testing.B) {
+    for i := 0; i < 1000; i++ {
+        doWork()
+    }
+}
+
+// Good: Use b.N as the loop bound
+func BenchmarkCorrect(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        doWork()
+    }
+}
+```
+
+### Not preventing compiler elision
+
+If the result of a function call is unused, the compiler may optimize the call
+away entirely. Assign results to a package-level variable:
+
+```go
+// Bad: Compiler may optimize away the call
+func BenchmarkElided(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        expensiveFunc()
+    }
+}
+
+// Good: Assign to package-level var to prevent elision
+var benchResult int
+
+func BenchmarkKept(b *testing.B) {
+    var r int
+    for i := 0; i < b.N; i++ {
+        r = expensiveFunc()
+    }
+    benchResult = r
+}
+```

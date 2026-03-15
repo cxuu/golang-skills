@@ -4,6 +4,7 @@ description: Use when defining or implementing Go interfaces, designing abstract
 license: Apache-2.0
 metadata:
   sources: "Effective Go, Google Style Guide, Uber Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Interfaces and Composition
@@ -126,6 +127,8 @@ Use this pattern when:
 
 **Don't** add these checks for every interface — only when no other static
 conversion would catch the error.
+
+> **Validation**: After defining interfaces or implementations, run `bash scripts/check-interface-compliance.sh` to verify all concrete types have compile-time `var _ I = (*T)(nil)` checks.
 
 ---
 

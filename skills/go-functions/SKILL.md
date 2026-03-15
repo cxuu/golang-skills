@@ -8,6 +8,8 @@ metadata:
 
 # Go Function Design
 
+> **When this skill does NOT apply**: For functional options constructors (`WithTimeout`, `WithLogger`), see [go-functional-options](../go-functional-options/SKILL.md). For error return conventions, see [go-error-handling](../go-error-handling/SKILL.md). For naming functions and methods, see [go-naming](../go-naming/SKILL.md).
+
 ---
 
 ## Function Grouping and Ordering

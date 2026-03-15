@@ -8,6 +8,8 @@ metadata:
 
 # Go Packages and Imports
 
+> **When this skill does NOT apply**: For naming individual identifiers within a package, see [go-naming](../go-naming/SKILL.md). For organizing functions within a single file, see [go-functions](../go-functions/SKILL.md). For configuring linters that enforce import rules, see [go-linting](../go-linting/SKILL.md).
+
 ## Package Organization
 
 ### Avoid Util Packages

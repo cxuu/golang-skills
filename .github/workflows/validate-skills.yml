@@ -1,0 +1,22 @@
+name: Validate Skills
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate all skills
+        run: |
+          for skill_dir in skills/*/; do
+            echo "Validating ${skill_dir}..."
+            npx agentskills-validate "${skill_dir}"
+          done

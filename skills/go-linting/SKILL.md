@@ -4,6 +4,7 @@ description: Use when setting up linting for a Go project, configuring golangci-
 license: Apache-2.0
 metadata:
   sources: "Uber Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Linting
@@ -162,7 +163,12 @@ Use `--new-from-rev` to lint only changed code, keeping the feedback loop fast.
 
 ```bash
 bash scripts/setup-lint.sh github.com/your-org/your-repo
+bash scripts/setup-lint.sh --force github.com/your-org/your-repo  # overwrite existing
+bash scripts/setup-lint.sh --dry-run                               # preview config
+bash scripts/setup-lint.sh --json                                  # structured output
 ```
+
+> **Validation**: After generating `.golangci.yml`, run `golangci-lint run ./...` to verify the configuration is valid and produces expected output. If it fails with a config error, fix and retry.
 
 ---
 

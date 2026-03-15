@@ -122,3 +122,32 @@ func TestAPIIntegration(t *testing.T) {
 
 Using the production client with a test server ensures your test exercises as
 much real code as possible, avoiding the complexity of imitating client behavior.
+
+---
+
+## Common Mistakes
+
+### Calling os.Exit directly in TestMain
+
+`os.Exit` terminates the process immediately — deferred cleanup functions never
+run. Extract setup/teardown into a helper so `defer` works correctly:
+
+```go
+// Bad: defers won't run
+func TestMain(m *testing.M) {
+    setup()
+    defer cleanup()
+    os.Exit(m.Run()) // cleanup() never executes
+}
+
+// Good: Extract to a helper function so defer runs before os.Exit
+func runTests(m *testing.M) int {
+    setup()
+    defer cleanup()
+    return m.Run()
+}
+
+func TestMain(m *testing.M) {
+    os.Exit(runTests(m))
+}
+```

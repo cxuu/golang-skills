@@ -5,6 +5,7 @@ license: Apache-2.0
 compatibility: Requires Go 1.13+ for errors.Is/errors.As and fmt.Errorf %w wrapping. Structured logging examples use slog (Go 1.21+).
 metadata:
   sources: "Google Style Guide, Uber Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Error Handling
@@ -166,6 +167,8 @@ annotation adds nothing, return `err` directly.
 
 > Read [references/WRAPPING.md](references/WRAPPING.md) when deciding between %v and %w, wrapping errors across package boundaries, or adding contextual information.
 
+> **Validation**: After implementing error handling, run `bash scripts/check-errors.sh` to detect common anti-patterns. Then run `go vet ./...` to catch additional issues.
+
 ---
 
 ## Related Skills
@@ -174,6 +177,7 @@ annotation adds nothing, return `err` directly.
 - **Testing errors**: See [go-testing](../go-testing/SKILL.md) when testing error semantics with `errors.Is`/`errors.As` or writing error-checking helpers
 - **Panic handling**: See [go-defensive](../go-defensive/SKILL.md) when deciding between panic and error returns, or writing recover guards
 - **Guard clauses**: See [go-control-flow](../go-control-flow/SKILL.md) when structuring early-return error flow or reducing nesting
+- **Logging decisions**: See [go-logging](../go-logging/SKILL.md) when choosing log levels, configuring structured logging, or deciding what context to include in log messages
 
 ### Reference Files
 
