@@ -1,7 +1,10 @@
 ---
 name: go-generics
 description: Use when deciding whether to use Go generics, writing generic functions or types, choosing constraints, or picking between type aliases and type definitions. Also use when a user is writing a utility function that could work with multiple types, or is unsure whether generics are appropriate for their use case — even if they don't mention generics explicitly. Helps decide when to prefer generics vs interfaces, how to name type parameters, and how to document generic APIs.
-sources: [Google Style Guide]
+license: Apache-2.0
+compatibility: Requires Go 1.18+ (generics were introduced in Go 1.18)
+metadata:
+  sources: "Google Style Guide"
 ---
 
 # Go Generics and Type Parameters
@@ -116,6 +119,69 @@ refactoring. Don't use aliasing when it is not needed.
 
 ---
 
+## Constraint Composition
+
+Combine constraints with `~` (underlying type) and `|` (union):
+
+```go
+type Numeric interface {
+    ~int | ~int8 | ~int16 | ~int32 | ~int64 |
+    ~float32 | ~float64
+}
+
+func Sum[T Numeric](vals []T) T {
+    var total T
+    for _, v := range vals {
+        total += v
+    }
+    return total
+}
+```
+
+Use the `constraints` package or `cmp` package (Go 1.21+) for standard constraints
+like `cmp.Ordered` instead of writing your own.
+
+---
+
+## Common Pitfalls
+
+### Don't Wrap Standard Library Types
+
+```go
+// Bad: generic wrapper adds complexity without value
+type Set[T comparable] struct {
+    m map[T]struct{}
+}
+
+// Better: use map[T]struct{} directly when the usage is simple
+seen := map[string]struct{}{}
+```
+
+Generics justify their complexity when they eliminate duplication across
+**multiple call sites**. A single-use generic is just indirection.
+
+### Don't Use Generics for Interface Satisfaction
+
+```go
+// Bad: T is only used to satisfy an interface — just use the interface
+func Process[T io.Reader](r T) error { ... }
+
+// Good: accept the interface directly
+func Process(r io.Reader) error { ... }
+```
+
+### Avoid Over-Constraining
+
+```go
+// Bad: constraint is more restrictive than needed
+func Contains[T interface{ ~int | ~string }](slice []T, target T) bool { ... }
+
+// Good: comparable is sufficient
+func Contains[T comparable](slice []T, target T) bool { ... }
+```
+
+---
+
 ## Quick Reference
 
 | Topic | Guidance |
@@ -126,12 +192,14 @@ refactoring. Don't use aliasing when it is not needed.
 | Documentation | Thorough docs + runnable examples for exported generic APIs |
 | Type definitions | New distinct type with own method set |
 | Type aliases | Same type, alternate name; use only for migration |
+| Constraint composition | Use `~` for underlying types, `|` for unions; prefer `cmp.Ordered` over custom |
+| Common pitfall | Don't genericize single-use code or when interfaces suffice |
 
 ---
 
 ## See Also
 
-- **go-interfaces**: Interface design and when interfaces suffice
-- **go-declarations**: Variable and type declaration patterns
-- **go-documentation**: Documenting APIs and writing examples
-- **go-naming**: Naming conventions for types and functions
+- [go-interfaces](../go-interfaces/SKILL.md): Interface design and when interfaces suffice
+- [go-declarations](../go-declarations/SKILL.md): Variable and type declaration patterns
+- [go-documentation](../go-documentation/SKILL.md): Documenting APIs and writing examples
+- [go-naming](../go-naming/SKILL.md): Naming conventions for types and functions

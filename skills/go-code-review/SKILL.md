@@ -1,7 +1,9 @@
 ---
 name: go-code-review
 description: Use when reviewing Go code or checking code against community style standards. Use proactively before submitting a Go PR or when reviewing any Go code changes, even if the user doesn't explicitly request a style review. Provides a systematic checklist covering formatting, documentation, error handling, naming, concurrency, interfaces, security, and testing, with cross-references to detailed skills for each area.
-sources: [Go Wiki CodeReviewComments, Uber Style Guide]
+license: Apache-2.0
+metadata:
+  sources: "Go Wiki CodeReviewComments, Uber Style Guide"
 ---
 
 # Go Code Review Checklist
@@ -136,86 +138,41 @@ sources: [Go Wiki CodeReviewComments, Uber Style Guide]
 
 ## Automated Checks
 
-More important than any "blessed" set of linters: **lint consistently across a codebase**.
-
-### Minimum Recommended Linters
-
-| Linter | Purpose |
-|--------|---------|
-| [errcheck](https://github.com/kisielk/errcheck) | Ensure errors are handled |
-| [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) | Format code and manage imports |
-| [revive](https://github.com/mgechev/revive) | Common style mistakes (modern replacement for golint) |
-| [govet](https://pkg.go.dev/cmd/vet) | Analyze code for common mistakes |
-| [staticcheck](https://staticcheck.dev) | Various static analysis checks |
-
-### golangci-lint Configuration
-
-Use [golangci-lint](https://github.com/golangci/golangci-lint) as your lint runner. Create `.golangci.yml` in your project root:
-
-```yaml
-linters:
-  enable:
-    - errcheck
-    - goimports
-    - revive
-    - govet
-    - staticcheck
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/your-org/your-repo
-  revive:
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: error-return
-      - name: error-strings
-      - name: exported
-
-run:
-  timeout: 5m
-```
-
-### Running
+Run automated pre-review checks:
 
 ```bash
-# Install
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
-# Run all linters
-golangci-lint run
-
-# Run on specific paths
-golangci-lint run ./pkg/...
+bash scripts/pre-review.sh ./...
 ```
+
+Or manually: `gofmt -l . && go vet ./... && golangci-lint run ./...`
+
+Fix any issues before proceeding to the checklist above. For linter setup and configuration, see [go-linting](../go-linting/SKILL.md).
 
 ---
 
-## Automated Pre-Check
+## Integrative Example
 
-1. Run: `gofmt -l . && go vet ./... && golangci-lint run ./...`
-2. If any output, fix those issues first before manual review
-3. Re-run until clean, then proceed to the checklist above
+> For a complete web server example showing how all skills apply together, see [references/WEB-SERVER.md](references/WEB-SERVER.md).
 
 ---
 
 ## See Also
 
-- **go-linting**: Automated tooling for style enforcement
-- **go-style-core**: Core Go style principles
-- **go-documentation**: Documentation and comment standards
-- **go-error-handling**: Error handling patterns
-- **go-naming**: Naming conventions
-- **go-packages**: Package design and imports
-- **go-interfaces**: Interface design patterns
-- **go-concurrency**: Concurrency patterns
-- **go-context**: Context usage patterns
-- **go-data-structures**: Data structure idioms
-- **go-defensive**: Defensive programming
-- **go-testing**: Testing patterns
-- **go-performance**: Performance considerations
-- **go-control-flow**: Control flow idioms and blank identifier
-- **go-functional-options**: Functional options pattern
-- **go-declarations**: Declaration and initialization patterns
-- **go-functions**: Function design and file organization
-- **go-generics**: Generics and type parameters
+- [go-linting](../go-linting/SKILL.md): Automated tooling for style enforcement
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
+- [go-documentation](../go-documentation/SKILL.md): Documentation and comment standards
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns
+- [go-naming](../go-naming/SKILL.md): Naming conventions
+- [go-packages](../go-packages/SKILL.md): Package design and imports
+- [go-interfaces](../go-interfaces/SKILL.md): Interface design patterns
+- [go-concurrency](../go-concurrency/SKILL.md): Concurrency patterns
+- [go-context](../go-context/SKILL.md): Context usage patterns
+- [go-data-structures](../go-data-structures/SKILL.md): Data structure idioms
+- [go-defensive](../go-defensive/SKILL.md): Defensive programming
+- [go-testing](../go-testing/SKILL.md): Testing patterns
+- [go-performance](../go-performance/SKILL.md): Performance considerations
+- [go-control-flow](../go-control-flow/SKILL.md): Control flow idioms and blank identifier
+- [go-functional-options](../go-functional-options/SKILL.md): Functional options pattern
+- [go-declarations](../go-declarations/SKILL.md): Declaration and initialization patterns
+- [go-functions](../go-functions/SKILL.md): Function design and file organization
+- [go-generics](../go-generics/SKILL.md): Generics and type parameters

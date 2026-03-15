@@ -1,7 +1,9 @@
 ---
 name: go-naming
 description: Use when naming any Go identifier — packages, types, functions, methods, variables, constants, or receivers — to ensure idiomatic, clear names. Also use proactively when a user is creating new types, packages, or exported APIs, even if they don't explicitly ask about naming conventions. Addresses MixedCaps rules, package naming, interface -er suffixes, receiver abbreviations, getter/setter patterns, initialisms, and how name length should scale with scope.
-sources: [Google Style Guide, Uber Style Guide]
+license: Apache-2.0
+metadata:
+  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Naming Conventions
@@ -15,6 +17,24 @@ Names should:
 
 Naming is more art than science—Go names tend to be shorter than in other
 languages.
+
+---
+
+## Naming Decision Flow
+
+```
+What are you naming?
+├─ Package       → Short, lowercase, singular noun (no underscores, no mixedCaps)
+├─ Interface     → Method name + "-er" suffix when single-method (Reader, Writer)
+├─ Receiver      → 1-2 letter abbreviation of type (c for Client); consistent across methods
+├─ Constant      → MixedCaps; use iota for enums; no ALL_CAPS
+├─ Exported func → Verb or verb-phrase in MixedCaps; no Get prefix for getters
+├─ Variable      → Length proportional to scope distance
+│                  ├─ Tiny scope (1-7 lines) → single letter (i, n, r)
+│                  ├─ Medium scope           → short word (count, buf)
+│                  └─ Package-level / wide   → descriptive (userAccountCount)
+└─ Any name      → Check: does it repeat package name or context? If yes, shorten it
+```
 
 ---
 
@@ -298,10 +318,10 @@ Built-In Names" section.
 
 ## See Also
 
-- For interface design patterns: `go-interfaces`
-- For core style principles: `go-style-core`
-- For error handling patterns: `go-error-handling`
-- For testing best practices: `go-testing`
-- For defensive programming: `go-defensive`
-- For performance optimization: `go-performance`
-- For declaration and initialization patterns: `go-declarations`
+- [go-interfaces](../go-interfaces/SKILL.md): Interface design patterns
+- [go-style-core](../go-style-core/SKILL.md): Core style principles
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns
+- [go-testing](../go-testing/SKILL.md): Testing best practices
+- [go-defensive](../go-defensive/SKILL.md): Defensive programming
+- [go-performance](../go-performance/SKILL.md): Performance optimization
+- [go-declarations](../go-declarations/SKILL.md): Declaration and initialization patterns

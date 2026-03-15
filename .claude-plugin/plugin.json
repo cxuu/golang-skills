@@ -1,7 +1,7 @@
 {
   "name": "golang-skills",
   "description": "19 modular skills that teach AI coding assistants idiomatic Go — covering error handling, naming, testing, concurrency, interfaces, style, documentation, and more. Each skill activates automatically based on context and provides procedural guidance with progressive disclosure.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "author": {
     "name": "cxuu"
   },

@@ -1,10 +1,30 @@
 ---
 name: go-defensive
 description: Use when hardening Go code at API boundaries — copying slices and maps to prevent mutation, verifying interface compliance at compile time, using defer for cleanup, handling time correctly with time.Time and time.Duration, avoiding mutable globals, or designing enums that start at one. Also use when reviewing Go code for robustness concerns like missing cleanup, shared mutable state, or unsafe crypto usage — even if the user doesn't mention "defensive programming" or "hardening" explicitly.
-sources: [Effective Go, Uber Style Guide, Go Wiki CodeReviewComments]
+license: Apache-2.0
+metadata:
+  sources: "Effective Go, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Defensive Programming Patterns
+
+## Defensive Checklist Priority
+
+When hardening code at API boundaries, check in this order:
+
+```
+Reviewing an API boundary?
+├─ 1. Error handling     → Return errors; don't panic (see go-error-handling)
+├─ 2. Input validation   → Copy slices/maps received from callers
+├─ 3. Output safety      → Copy slices/maps before returning to callers
+├─ 4. Resource cleanup   → Use defer for Close/Unlock/Cancel
+├─ 5. Interface checks   → var _ Interface = (*Type)(nil) for compile-time verification
+├─ 6. Time correctness   → Use time.Time and time.Duration, not int/float
+├─ 7. Enum safety        → Start iota at 1 so zero-value is invalid
+└─ 8. Crypto safety      → crypto/rand for keys, never math/rand
+```
+
+---
 
 ## Verify Interface Compliance
 
@@ -175,61 +195,9 @@ const (
 
 **Exception**: When zero is the sensible default (e.g., `LogToStdout = iota`).
 
-## Use time.Time and time.Duration
+## Time, Struct Tags, and Embedding
 
-Always use the `time` package. Avoid raw `int` for time values.
-
-### Instants
-
-**Bad**
-```go
-func isActive(now, start, stop int) bool {
-  return start <= now && now < stop
-}
-```
-
-**Good**
-```go
-func isActive(now, start, stop time.Time) bool {
-  return (start.Before(now) || start.Equal(now)) && now.Before(stop)
-}
-```
-
-### Durations
-
-**Bad**
-```go
-func poll(delay int) {
-  time.Sleep(time.Duration(delay) * time.Millisecond)
-}
-poll(10)  // seconds? milliseconds?
-```
-
-**Good**
-```go
-func poll(delay time.Duration) {
-  time.Sleep(delay)
-}
-poll(10 * time.Second)
-```
-
-### JSON Fields
-
-When `time.Duration` isn't possible, include unit in field name:
-
-**Bad**
-```go
-type Config struct {
-  Interval int `json:"interval"`
-}
-```
-
-**Good**
-```go
-type Config struct {
-  IntervalMillis int `json:"intervalMillis"`
-}
-```
+> For detailed guidance on using `time.Time`/`time.Duration` instead of raw ints, field tags in marshaled structs, and avoiding embedded types in public structs, see [references/TIME-ENUMS-TAGS.md](references/TIME-ENUMS-TAGS.md).
 
 ## Avoid Mutable Globals
 
@@ -275,60 +243,6 @@ func TestSigner(t *testing.T) {
   assert.Equal(t, want, s.Sign(give))
 }
 ```
-
-## Avoid Embedding Types in Public Structs
-
-Embedded types leak implementation details and inhibit type evolution.
-
-**Bad**
-```go
-type ConcreteList struct {
-  *AbstractList
-}
-```
-
-**Good**
-```go
-type ConcreteList struct {
-  list *AbstractList
-}
-
-func (l *ConcreteList) Add(e Entity) {
-  l.list.Add(e)
-}
-
-func (l *ConcreteList) Remove(e Entity) {
-  l.list.Remove(e)
-}
-```
-
-Embedding problems:
-- Adding methods to embedded interface is a breaking change
-- Removing methods from embedded struct is a breaking change
-- Replacing the embedded type is a breaking change
-
-## Use Field Tags in Marshaled Structs
-
-Always use explicit field tags for JSON, YAML, etc.
-
-**Bad**
-```go
-type Stock struct {
-  Price int
-  Name  string
-}
-```
-
-**Good**
-```go
-type Stock struct {
-  Price int    `json:"price"`
-  Name  string `json:"name"`
-  // Safe to rename Name to Symbol
-}
-```
-
-Tags make the serialization contract explicit and safe to refactor.
 
 ---
 
@@ -386,27 +300,47 @@ For detailed patterns including server protection and package-internal panic/rec
 
 ---
 
-## Quick Reference
+## Must Functions
 
-| Pattern | Rule |
-|---------|------|
-| Interface compliance | `var _ Interface = (*Type)(nil)` |
-| Receiving slices/maps | Copy before storing |
-| Returning slices/maps | Return a copy |
-| Resource cleanup | Use `defer` |
-| Defer argument timing | Evaluated at defer, not call time |
-| Enums | Start at `iota + 1` |
-| Time instants | Use `time.Time` |
-| Time durations | Use `time.Duration` |
-| Mutable globals | Use dependency injection |
-| Type embedding | Use explicit delegation |
-| Serialization | Always use field tags |
-| Key generation | Use `crypto/rand`, never `math/rand` |
-| Panic usage | Only for truly unrecoverable situations |
-| Recover pattern | Use in defer; convert to error at API boundary |
+`Must` functions panic on error — use them **only** for program initialization
+where failure means the program cannot run.
+
+```go
+// Good: MustCompile in package-level var — panics at startup if invalid
+var validID = regexp.MustCompile(`^[a-z][a-z0-9-]{0,62}$`)
+
+// Good: template.Must for compile-time template parsing
+var tmpl = template.Must(template.ParseFiles("index.html"))
+```
+
+### When to Use Must
+
+```
+Is this called during program initialization (package-level var, init, main setup)?
+├─ Yes → Is failure unrecoverable (config, regex, template)?
+│        ├─ Yes → Must is appropriate
+│        └─ No  → Return error instead
+└─ No  → Never use Must — return error
+```
+
+### Writing a Must Function
+
+```go
+func MustParseConfig(path string) *Config {
+    cfg, err := ParseConfig(path)
+    if err != nil {
+        panic(fmt.Sprintf("parsing config %s: %v", path, err))
+    }
+    return cfg
+}
+```
+
+Name them `MustX` where `X` is the fallible function name. Document that they panic.
+
+---
 
 ## See Also
 
-- `go-style-core` - Core Go style principles
-- `go-concurrency` - Goroutine and channel patterns
-- `go-error-handling` - Error handling best practices
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
+- [go-concurrency](../go-concurrency/SKILL.md): Goroutine and channel patterns
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling best practices

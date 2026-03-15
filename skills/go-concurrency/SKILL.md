@@ -1,16 +1,12 @@
 ---
 name: go-concurrency
-description: Use when writing concurrent Go code, spawning goroutines, using channels or mutexes, or documenting thread-safety guarantees. Also use when a user wants to parallelize work, fix data races, protect shared state, or make code thread-safe — even if they don't explicitly mention goroutines or channels. Helps with goroutine lifecycle management, channel direction and sizing, sync primitives, atomic operations, and context-based cancellation.
-sources: [Google Style Guide, Uber Style Guide]
+description: Use when writing concurrent Go code — goroutines, channels, mutexes, or thread-safety guarantees. Also use when parallelizing work, fixing data races, or protecting shared state, even if the user doesn't explicitly mention concurrency primitives. Covers goroutine lifecycle, channel direction and sizing, sync primitives, atomic operations, and context-based cancellation.
+license: Apache-2.0
+metadata:
+  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Concurrency
-
-This skill covers concurrency patterns and best practices from Google's Go Style
-Guide and Uber's Go Style Guide, including goroutine management, channel usage,
-mutex handling, and synchronization.
-
----
 
 ## Goroutine Lifetimes
 
@@ -402,7 +398,7 @@ operations are not. Document concurrency when:
 
 ## Context Usage
 
-> Read [references/CONTEXT.md](references/CONTEXT.md) when passing context.Context through function chains, deciding where to store context, or deriving contexts with cancellation.
+> For context.Context guidance (parameter placement, struct storage, custom types, derivation patterns), see the dedicated [go-context](../go-context/SKILL.md) skill.
 
 ---
 
@@ -436,53 +432,13 @@ when parallelizing CPU-bound computations across cores.
 
 ---
 
-## Quick Reference
-
-| Topic | Guidance | Type |
-|-------|----------|------|
-| Goroutine lifetimes | Make exit conditions clear | Normative |
-| Fire-and-forget | Don't do it - always have stop mechanism | Normative |
-| Zero-value mutexes | Valid; don't use pointers | Advisory |
-| Mutex embedding | Don't embed; use named field | Advisory |
-| Synchronous functions | Prefer over async | Normative |
-| Channel direction | Always specify | Normative |
-| Channel size | One or none by default | Advisory |
-| Atomic operations | Use go.uber.org/atomic | Advisory |
-| Concurrency docs | Document when not obvious | Advisory |
-| Channels of channels | Embed reply channel in request struct | Advisory |
-| Parallelization | Use goroutines + completion channel for CPU work | Advisory |
-
-### Concurrency Checklist
-
-Before spawning a goroutine, answer:
-- [ ] How will this goroutine exit?
-- [ ] Can I signal it to stop?
-- [ ] Can I wait for it to finish?
-- [ ] Who owns the channels it uses?
-- [ ] What happens when the context is cancelled?
-- [ ] Should this be a synchronous function instead?
-
-### Anti-Patterns to Avoid
-
-| Anti-Pattern | Problem | Fix |
-|--------------|---------|-----|
-| Fire-and-forget goroutines | Resource leaks, undefined behavior | Use WaitGroup, done channel, or context |
-| Goroutines in init() | Uncontrollable lifecycle | Use explicit object with Shutdown method |
-| Embedded mutexes | Leaks Lock/Unlock into API | Use named `mu` field |
-| Pointer to mutex | Unnecessary indirection | Zero-value is valid |
-| Arbitrary channel buffers | Hidden blocking issues | Default to 0 or 1 |
-| Raw sync/atomic | Easy to forget atomic reads | Use go.uber.org/atomic |
-| Undocumented thread-safety | Callers may race | Document when unclear |
-
----
-
 ## See Also
 
-- **go-style-core**: Foundational style principles (clarity, simplicity)
-- **go-error-handling**: Error handling patterns in concurrent code
-- **go-defensive**: Defensive programming including validation and safety
-- **go-documentation**: General documentation conventions
-- **go-functions**: Function design and multiple return values
+- [go-style-core](../go-style-core/SKILL.md): Foundational style principles (clarity, simplicity)
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns in concurrent code
+- [go-defensive](../go-defensive/SKILL.md): Defensive programming including validation and safety
+- [go-documentation](../go-documentation/SKILL.md): General documentation conventions
+- [go-functions](../go-functions/SKILL.md): Function design and multiple return values
 
 ### External Resources
 

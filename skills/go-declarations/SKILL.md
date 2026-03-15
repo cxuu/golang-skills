@@ -1,7 +1,9 @@
 ---
 name: go-declarations
-description: Use when declaring or initializing Go variables, constants, structs, or maps — including choosing between var and :=, reducing variable scope with if-init, formatting composite literals, designing iota enums, and using modern idioms like any instead of interface{}. Also use when a user is writing a new struct or const block, even if they don't ask about declaration style. For allocation (new vs make) and slice/map operations, see go-data-structures.
-sources: [Google Style Guide, Uber Style Guide]
+description: Use when declaring or initializing Go variables, constants, structs, or maps — including var vs :=, reducing scope with if-init, formatting composite literals, designing iota enums, and using any instead of interface{}. Also use when writing a new struct or const block, even without asking about declaration style.
+license: Apache-2.0
+metadata:
+  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Declarations and Initialization
@@ -456,27 +458,16 @@ Tools such as `go vet` can detect shadowing of predeclared identifiers.
 
 ---
 
-## Quick Reference
+## Variable Shadowing
 
-| Topic | Rule | Source |
-|-------|------|--------|
-| Grouping | Group related `var`/`const`/`type`; separate unrelated | Uber |
-| `iota` enums | Start at one unless zero value is a meaningful default | Uber |
-| Top-level vars | Use `var`; omit type unless it differs | Uber |
-| Local vars | `:=` for explicit values; `var` for intentional zero | Uber |
-| Variable scope | Move close to usage; use if-init | Uber |
-| Struct init | Field names always; omit zero fields; `var` for zero struct | Uber |
-| Map init | `make()` for dynamic; literal for fixed | Uber |
-| Raw strings | Backticks for escapes, regex, multi-line | Uber |
-| `any` vs `interface{}` | Prefer `any` in new code | Google |
-| Built-in names | Never shadow predeclared identifiers | Uber |
+> Be aware that `:=` in inner scopes creates a new variable that shadows the outer one. See [references/SHADOWING.md](references/SHADOWING.md) for the trap, fix patterns, and linter detection.
 
 ---
 
 ## See Also
 
-- **go-style-core**: Foundational style principles
-- **go-naming**: Naming conventions including variable name length
-- **go-data-structures**: Allocation with `new` vs `make`, slices, maps
-- **go-control-flow**: If-init patterns, `:=` redeclaration rules
-- **go-performance**: Container capacity hints for maps and slices
+- [go-style-core](../go-style-core/SKILL.md): Foundational style principles
+- [go-naming](../go-naming/SKILL.md): Naming conventions including variable name length
+- [go-data-structures](../go-data-structures/SKILL.md): Allocation with `new` vs `make`, slices, maps
+- [go-control-flow](../go-control-flow/SKILL.md): If-init patterns, `:=` redeclaration rules
+- [go-performance](../go-performance/SKILL.md): Container capacity hints for maps and slices
