@@ -1,6 +1,6 @@
 ---
 name: go-linting
-description: Use when setting up linting for a Go project, configuring golangci-lint, or adding Go checks to a CI/CD pipeline. Also use when starting a new Go project and deciding which linters to enable, even if the user only asks about "code quality" or "static analysis" without mentioning specific linter names. Recommends minimum linters (errcheck, goimports, revive, govet, staticcheck) and provides an example .golangci.yml configuration.
+description: Use when setting up linting for a Go project, configuring golangci-lint, or adding Go checks to a CI/CD pipeline. Also use when starting a new Go project and deciding which linters to enable, even if the user only asks about "code quality" or "static analysis" without mentioning specific linter names. Does not cover code review process (see go-code-review).
 license: Apache-2.0
 metadata:
   sources: "Uber Style Guide"
@@ -43,17 +43,13 @@ These linters catch the most common issues while maintaining a high quality bar:
 
 ## Lint Runner: golangci-lint
 
-Use [golangci-lint](https://github.com/golangci/golangci-lint) as your lint runner:
-
-- **Performance**: Optimized for large codebases
-- **Unified config**: Configure many linters at once
-- **Extensible**: Add linters as needed for your project
-
-See the [example .golangci.yml](https://github.com/uber-go/guide/blob/master/.golangci.yml) from uber-go/guide.
+Use [golangci-lint](https://github.com/golangci/golangci-lint) as your lint runner. See the [example .golangci.yml](https://github.com/uber-go/guide/blob/master/.golangci.yml) from uber-go/guide.
 
 ---
 
 ## Example Configuration
+
+> See `assets/golangci.yml` when creating a new `.golangci.yml` or comparing your existing config against a recommended baseline.
 
 Create `.golangci.yml` in your project root:
 
@@ -195,7 +191,9 @@ bash scripts/setup-lint.sh github.com/your-org/your-repo
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Core style principles
-- [go-testing](../go-testing/SKILL.md): Testing best practices
+- **Style foundations**: See [go-style-core](../go-style-core/SKILL.md) when resolving style questions that linters enforce (formatting, nesting, naming)
+- **Code review**: See [go-code-review](../go-code-review/SKILL.md) when combining linter output with a manual review checklist
+- **Error handling**: See [go-error-handling](../go-error-handling/SKILL.md) when errcheck flags unhandled errors and you need to decide how to handle them
+- **Testing**: See [go-testing](../go-testing/SKILL.md) when running linters alongside tests in CI pipelines

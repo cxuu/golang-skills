@@ -1,6 +1,6 @@
 ---
 name: go-functional-options
-description: Use when designing a Go constructor or factory function with optional configuration — especially with 3+ optional parameters or when the API needs to be extensible. Also use when a user is building a New* function that takes many settings, even if they don't mention "functional options" by name. This is the detailed implementation guide for the pattern; for general function design (organization, signatures, Printf), see go-functions instead.
+description: Use when designing a Go constructor or factory function with optional configuration — especially with 3+ optional parameters or extensible APIs. Also use when building a New* function that takes many settings, even if they don't mention "functional options" by name. Does not cover general function design (see go-functions).
 license: Apache-2.0
 metadata:
   sources: "Uber Style Guide"
@@ -137,6 +137,8 @@ db.Open(
 
 **Prefer Config Struct when**: Fewer than 3 options, options rarely change, all options usually specified together, or internal APIs only.
 
+> Read [references/OPTIONS-VS-STRUCTS.md](references/OPTIONS-VS-STRUCTS.md) when deciding between functional options and config structs, designing a config struct API with proper defaults, or evaluating the hybrid approach for complex constructors.
+
 ## Why Not Closures?
 
 An alternative implementation uses closures:
@@ -195,10 +197,14 @@ func New(required string, opts ...Option) (*Thing, error) {
 - [ ] Defaults are set before applying options
 - [ ] Required parameters are separate from `...Option`
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
-- [go-naming](../go-naming/SKILL.md): Naming conventions for Go
-- [go-defensive](../go-defensive/SKILL.md): Defensive programming patterns
+- **Interface design**: See [go-interfaces](../go-interfaces/SKILL.md) when designing the `Option` interface or choosing between interface and closure approaches
+- **Naming conventions**: See [go-naming](../go-naming/SKILL.md) when naming `With*` constructors, option types, or the unexported options struct
+- **Function design**: See [go-functions](../go-functions/SKILL.md) when organizing constructors within a file or formatting variadic signatures
+- **Documentation**: See [go-documentation](../go-documentation/SKILL.md) when documenting `Option` types, `With*` functions, or constructor behavior
+
+### External Resources
+
 - [Self-referential functions and the design of options](https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html) - Rob Pike
 - [Functional options for friendly APIs](https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis) - Dave Cheney

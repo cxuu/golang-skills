@@ -1,6 +1,6 @@
 ---
 name: go-performance
-description: Use when optimizing Go code, investigating slow performance, or writing performance-critical sections. Also use when a user mentions slow Go code, string concatenation in loops, or asks about benchmarking — even without explicitly requesting "performance patterns." Helps choose strconv over fmt, avoid repeated string-to-byte conversions, specify map and slice capacity hints, pick the right string concatenation strategy, and decide when to pass values vs pointers.
+description: Use when optimizing Go code, investigating slow performance, or writing performance-critical sections. Also use when a user mentions slow Go code, string concatenation in loops, or asks about benchmarking, even if the user doesn't explicitly mention performance patterns. Does not cover concurrent performance patterns (see go-concurrency).
 license: Apache-2.0
 metadata:
   sources: "Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments"
@@ -8,68 +8,43 @@ metadata:
 
 # Go Performance Patterns
 
+## Available Scripts
+
+- **`scripts/bench-compare.sh`** — Runs Go benchmarks N times with optional baseline comparison via benchstat. Supports saving results for future comparison. Run `bash scripts/bench-compare.sh --help` for options.
+
 Performance-specific guidelines apply only to the **hot path**. Don't prematurely optimize—focus these patterns where they matter most.
 
 ---
 
 ## Prefer strconv over fmt
 
-When converting primitives to/from strings, `strconv` is faster than `fmt`.
-
-**Bad:**
+When converting primitives to/from strings, `strconv` is faster than `fmt`:
 
 ```go
-for i := 0; i < b.N; i++ {
-    s := fmt.Sprint(rand.Int())
-}
+s := strconv.Itoa(rand.Int()) // ~2x faster than fmt.Sprint()
 ```
-
-**Good:**
-
-```go
-for i := 0; i < b.N; i++ {
-    s := strconv.Itoa(rand.Int())
-}
-```
-
-**Benchmark comparison:**
 
 | Approach | Speed | Allocations |
 |----------|-------|-------------|
 | `fmt.Sprint` | 143 ns/op | 2 allocs/op |
 | `strconv.Itoa` | 64.2 ns/op | 1 allocs/op |
 
+> Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when choosing between strconv and fmt for type conversions, or for the full conversion table.
+
 ---
 
 ## Avoid Repeated String-to-Byte Conversions
 
-Do not create byte slices from a fixed string repeatedly. Instead, perform the conversion once and capture the result.
-
-**Bad:**
-
-```go
-for i := 0; i < b.N; i++ {
-    w.Write([]byte("Hello world"))
-}
-```
-
-**Good:**
+Convert a fixed string to `[]byte` once outside the loop:
 
 ```go
 data := []byte("Hello world")
 for i := 0; i < b.N; i++ {
-    w.Write(data)
+    w.Write(data) // ~7x faster than []byte("...") each iteration
 }
 ```
 
-**Benchmark comparison:**
-
-| Approach | Speed |
-|----------|-------|
-| Repeated conversion | 22.2 ns/op |
-| Single conversion | 3.25 ns/op |
-
-The good version is **~7x faster** because it avoids allocating a new byte slice on each iteration.
+> Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when optimizing repeated byte conversions in hot loops.
 
 ---
 
@@ -79,78 +54,30 @@ Specify container capacity where possible to allocate memory up front. This mini
 
 ### Map Capacity Hints
 
-Provide capacity hints when initializing maps with `make()`.
+Provide capacity hints when initializing maps with `make()`:
 
 ```go
-make(map[T1]T2, hint)
+m := make(map[string]os.DirEntry, len(files))
 ```
 
 **Note**: Unlike slices, map capacity hints do not guarantee complete preemptive allocation—they approximate the number of hashmap buckets required.
 
-**Bad:**
-
-```go
-files, _ := os.ReadDir("./files")
-
-m := make(map[string]os.DirEntry)
-for _, f := range files {
-    m[f.Name()] = f
-}
-// Map resizes dynamically, causing multiple allocations
-```
-
-**Good:**
-
-```go
-files, _ := os.ReadDir("./files")
-
-m := make(map[string]os.DirEntry, len(files))
-for _, f := range files {
-    m[f.Name()] = f
-}
-// Map is right-sized at initialization, fewer allocations
-```
-
 ### Slice Capacity
 
-Provide capacity hints when initializing slices with `make()`, particularly when appending.
+Provide capacity hints when initializing slices with `make()`, particularly when appending:
 
 ```go
-make([]T, length, capacity)
+data := make([]int, 0, size)
 ```
 
 Unlike maps, slice capacity is **not a hint**—the compiler allocates exactly that much memory. Subsequent `append()` operations incur zero allocations until capacity is reached.
-
-**Bad:**
-
-```go
-for n := 0; n < b.N; n++ {
-    data := make([]int, 0)
-    for k := 0; k < size; k++ {
-        data = append(data, k)
-    }
-}
-```
-
-**Good:**
-
-```go
-for n := 0; n < b.N; n++ {
-    data := make([]int, 0, size)
-    for k := 0; k < size; k++ {
-        data = append(data, k)
-    }
-}
-```
-
-**Benchmark comparison:**
 
 | Approach | Time (100M iterations) |
 |----------|------------------------|
 | No capacity | 2.48s |
 | With capacity | 0.21s |
 
-The good version is **~12x faster** due to zero reallocations during append.
+The capacity version is **~12x faster** due to zero reallocations during append.
 
 ---
 
@@ -158,28 +85,15 @@ The good version is **~12x faster** due to zero reallocations during append.
 
 Don't pass pointers as function arguments just to save a few bytes. If a function refers to its argument `x` only as `*x` throughout, then the argument shouldn't be a pointer.
 
-**Common instances where values should be passed directly:**
-
-- Pointer to a string (`*string`) — strings are already small fixed-size headers
-- Pointer to an interface value (`*io.Reader`) — interfaces are fixed-size (type + data pointers)
-
-**Bad:**
-
 ```go
-func process(s *string) {
-	fmt.Println(*s)  // only dereferences, never modifies
+func process(s string) { // not *string — strings are small fixed-size headers
+    fmt.Println(s)
 }
 ```
 
-**Good:**
+**Common pass-by-value types**: `string`, `io.Reader`, small structs.
 
-```go
-func process(s string) {
-	fmt.Println(s)
-}
-```
-
-**Exceptions:**
+**Exceptions**:
 - Large structs where copying is expensive
 - Small structs that might grow in the future
 
@@ -187,62 +101,29 @@ func process(s string) {
 
 ## String Concatenation
 
-Choose the right string building strategy based on complexity:
+Choose the right strategy based on complexity:
 
-### Use `+` for Simple Cases
+| Method | Best For |
+|--------|----------|
+| `+` | Few strings, simple concat |
+| `fmt.Sprintf` | Formatted output with mixed types |
+| `strings.Builder` | Loop/piecemeal construction |
+| `strings.Join` | Joining a slice |
+| Backtick literal | Constant multi-line text |
 
-```go
-key := "projectid: " + p
+> Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when choosing a string concatenation strategy, using strings.Builder in loops, or deciding between fmt.Sprintf and manual concatenation.
+
+---
+
+## Benchmarking and Profiling
+
+Always measure before and after optimizing. Use Go's built-in benchmark framework and profiling tools.
+
+```bash
+go test -bench=. -benchmem -count=10 ./...
 ```
 
-### Use `fmt.Sprintf` for Formatting
-
-```go
-// Good: clear formatting
-str := fmt.Sprintf("%s [%s:%d]-> %s", src, qos, mtu, dst)
-
-// Bad: + with manual conversions
-str := src.String() + " [" + qos.String() + ":" + strconv.Itoa(mtu) + "]-> " + dst.String()
-```
-
-When writing to an `io.Writer`, use `fmt.Fprintf` directly instead of building a
-temporary string with `fmt.Sprintf`.
-
-### Use `strings.Builder` for Piecemeal Construction
-
-`strings.Builder` takes amortized linear time, whereas repeated `+` or
-`fmt.Sprintf` take quadratic time when building a large string:
-
-```go
-b := new(strings.Builder)
-for i, d := range digitsOfPi {
-    fmt.Fprintf(b, "the %d digit of pi is: %d\n", i, d)
-}
-str := b.String()
-```
-
-### Use Backticks for Constant Multi-line Strings
-
-```go
-// Good: raw string literal
-usage := `Usage:
-
-custom_tool [args]`
-
-// Bad: concatenation with escape sequences
-usage := "" +
-    "Usage:\n" +
-    "\n" +
-    "custom_tool [args]"
-```
-
-| Method | Best For | Performance |
-|--------|----------|-------------|
-| `+` | Few strings, simple concat | O(n) for small n |
-| `fmt.Sprintf` | Formatted output | Slower, but clearer |
-| `strings.Builder` | Loop/piecemeal construction | Amortized O(n) |
-| `strings.Join` | Joining a slice | O(n) |
-| Backtick literal | Constant multi-line text | Zero cost |
+> Read [references/BENCHMARKS.md](references/BENCHMARKS.md) when writing benchmarks, comparing results with benchstat, profiling with pprof, or interpreting benchmark output.
 
 ---
 
@@ -256,12 +137,13 @@ usage := "" +
 | Slice initialization | `make([]T, 0)` | `make([]T, 0, cap)` | ~12x faster |
 | Small fixed-size args | `*string`, `*io.Reader` | `string`, `io.Reader` | No indirection |
 | Simple string join | `s1 + " " + s2` | (already good) | Use `+` for few strings |
-| Loop string build | Repeated `+=` | `strings.Builder` | O(n) vs O(n^2) |
+| Loop string build | Repeated `+=` | `strings.Builder` | O(n) vs O(n²) |
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Core style principles
-- [go-naming](../go-naming/SKILL.md): Naming conventions
-- [go-declarations](../go-declarations/SKILL.md): Declaration patterns
+- **Data structures**: See [go-data-structures](../go-data-structures/SKILL.md) when choosing between slices, maps, and arrays, or understanding allocation semantics
+- **Declaration patterns**: See [go-declarations](../go-declarations/SKILL.md) when using `make` with capacity hints or initializing maps and slices
+- **Concurrency**: See [go-concurrency](../go-concurrency/SKILL.md) when parallelizing work across goroutines or using sync.Pool for buffer reuse
+- **Style principles**: See [go-style-core](../go-style-core/SKILL.md) when deciding whether an optimization is worth the readability cost

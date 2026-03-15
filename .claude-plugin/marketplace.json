@@ -4,15 +4,15 @@
     "name": "cxuu"
   },
   "metadata": {
-    "description": "19 modular skills that teach AI coding assistants idiomatic Go, derived from Effective Go, Google Go Style Guide, Uber Go Style Guide, and Go Wiki CodeReviewComments",
-    "version": "1.4.0"
+    "description": "19 modular skills for idiomatic Go, derived from Effective Go, Google Go Style Guide, Uber Go Style Guide, and Go Wiki CodeReviewComments. Backed by 46 reference files, 8 automation scripts, and 4 asset templates.",
+    "version": "1.5.0"
   },
   "plugins": [
     {
       "name": "golang-skills",
       "source": "./",
-      "description": "19 Go skills that activate automatically to guide idiomatic style, naming, error handling, testing, concurrency, documentation, and more. Tuned per agentskills.io best practices with procedural guidance and progressive disclosure.",
-      "version": "1.4.0"
+      "description": "19 Go skills (each under 210 lines) with progressive disclosure, conditional cross-references, and bundled automation. Covers style, naming, error handling, testing, concurrency, generics, documentation, performance, and more.",
+      "version": "1.5.0"
     }
   ]
 }

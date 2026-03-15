@@ -1,20 +1,20 @@
 # Agent Skills For Go
 
 AI [Agent Skills](https://agentskills.io/) for writing idiomatic,
-production-quality Go code. These modular skills teach AI coding assistants Go
+production-quality Go code. 19 modular skills teach AI coding assistants Go
 best practices derived from:
 
 - [Google Go Style Guide](https://google.github.io/styleguide/go/)
 - [Effective Go](https://go.dev/doc/effective_go)
 - [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md)
-- [Go Wiki
-  CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
+- [Go Wiki CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
 
 Skills are tuned following
 [agentskills.io best practices](https://agentskills.io/skill-creation/best-practices):
 content the agent already knows is omitted, procedural decision trees guide
-multi-step tasks, detailed reference material loads on demand via progressive
-disclosure, and bundled scripts automate common workflows.
+multi-step tasks, 46 reference files load on demand via progressive disclosure,
+8 bundled scripts automate common checks, and 4 asset templates ensure
+consistent output.
 
 ## Skills Included
 
@@ -39,6 +39,22 @@ disclosure, and bundled scripts automate common workflows.
 | **go-performance** | String optimization, capacity hints, benchmarking, strconv over fmt |
 | **go-style-core** | Formatting, nesting reduction, style principles, fallback style guide |
 | **go-testing** | Table-driven tests, subtests, test helpers, assertions, test organization |
+
+## Bundled Scripts
+
+8 scripts automate common Go checks. Each supports `--help` and uses meaningful
+exit codes (0 = clean, 1 = issues found).
+
+| Script | Skill | Purpose |
+|--------|-------|---------|
+| `pre-review.sh` | go-code-review | Run gofmt + go vet + golangci-lint before review |
+| `check-naming.sh` | go-naming | Detect SCREAMING_SNAKE, Get-prefixed getters, bad package names |
+| `check-docs.sh` | go-documentation | Find exported symbols missing doc comments |
+| `check-errors.sh` | go-error-handling | Catch bare returns, string comparison on errors, log-and-return |
+| `check-interface-compliance.sh` | go-interfaces | Find interfaces missing compile-time verification |
+| `bench-compare.sh` | go-performance | Run benchmarks with optional benchstat comparison |
+| `setup-lint.sh` | go-linting | Generate .golangci.yml with recommended linters |
+| `gen-table-test.sh` | go-testing | Scaffold a table-driven test file |
 
 ## Quick Install
 
@@ -77,9 +93,26 @@ which works across multiple AI coding tools. When you're writing Go code:
    (e.g., `go-naming` when you're writing a new function)
 2. **Procedural guidance**: Decision trees and step-by-step procedures for
    multi-step tasks like code review and error strategy selection
-3. **Progressive disclosure**: Core rules load immediately; detailed reference
-   material (`references/` files) loads on demand when specific situations arise
-4. **Cross-references**: Skills link to each other for comprehensive coverage
+3. **Progressive disclosure**: Core rules load immediately; 46 reference files
+   load on demand when specific situations arise
+4. **Automation**: 8 bundled scripts handle repetitive checks so the agent
+   focuses on higher-level guidance
+5. **Conditional cross-references**: Skills link to each other with "when"
+   conditions to avoid unnecessary context loading
+
+## Project Structure
+
+```
+skills/
+├── go-*/
+│   ├── SKILL.md          # Core rules (< 210 lines each)
+│   ├── references/       # Detailed guidance, loaded on demand
+│   ├── scripts/          # Automation scripts (8 skills)
+│   └── assets/           # Output templates (4 skills)
+├── evals/
+│   └── evals.json        # 45 trigger evals + 12 quality evals
+└── source/               # Original style guide sources
+```
 
 ## License
 

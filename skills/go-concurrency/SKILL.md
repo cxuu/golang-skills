@@ -1,7 +1,8 @@
 ---
 name: go-concurrency
-description: Use when writing concurrent Go code — goroutines, channels, mutexes, or thread-safety guarantees. Also use when parallelizing work, fixing data races, or protecting shared state, even if the user doesn't explicitly mention concurrency primitives. Covers goroutine lifecycle, channel direction and sizing, sync primitives, atomic operations, and context-based cancellation.
+description: Use when writing concurrent Go code — goroutines, channels, mutexes, or thread-safety guarantees. Also use when parallelizing work, fixing data races, or protecting shared state, even if the user doesn't explicitly mention concurrency primitives. Does not cover context.Context patterns (see go-context).
 license: Apache-2.0
+compatibility: Requires go.uber.org/atomic for atomic operation wrappers
 metadata:
   sources: "Google Style Guide, Uber Style Guide"
 ---
@@ -13,263 +14,81 @@ metadata:
 > **Normative**: When you spawn goroutines, make it clear when or whether they
 > exit.
 
-### Why Goroutine Lifetimes Matter
+Goroutines can leak by blocking on channel sends/receives. The GC **will not
+terminate** a blocked goroutine even if no other goroutine holds a reference to
+the channel. Even non-leaking in-flight goroutines cause panics (send on closed
+channel), data races, memory issues, and resource leaks.
 
-Goroutines can leak by blocking on channel sends or receives. The garbage
-collector **will not terminate** a goroutine blocked on a channel even if no
-other goroutine has a reference to the channel.
+### Core Rules
 
-Even when goroutines do not leak, leaving them in-flight when no longer needed
-causes:
-- **Panics**: Sending on a closed channel causes a panic
-- **Data races**: Modifying still-in-use inputs after the result isn't needed
-- **Memory issues**: Unpredictable memory usage from long-lived goroutines
-- **Resource leaks**: Preventing unused objects from being garbage collected
-
-```go
-// Bad: Sending on closed channel causes panic
-ch := make(chan int)
-ch <- 42
-close(ch)
-ch <- 13 // panic
-```
-
-### Make Lifetimes Obvious
-
-Write concurrent code so goroutine lifetimes are evident. Keep
-synchronization-related code constrained within function scope and factor logic
-into synchronous functions.
+1. **Every goroutine needs a stop mechanism** — a predictable end time, a
+   cancellation signal, or both
+2. **Code must be able to wait** for the goroutine to finish
+3. **No goroutines in `init()`** — expose lifecycle methods (`Close`, `Stop`,
+   `Shutdown`) instead
+4. **Keep synchronization scoped** — constrain to function scope, factor logic
+   into synchronous functions
 
 ```go
-// Good: Goroutine lifetimes are clear
-func (w *Worker) Run(ctx context.Context) error {
-    var wg sync.WaitGroup
-    for item := range w.q {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            process(ctx, item) // Returns when context is cancelled
-        }()
-    }
-    wg.Wait() // Prevent spawned goroutines from outliving this function
-}
-```
-
-```go
-// Bad: Careless about when goroutines finish
-func (w *Worker) Run() {
-    for item := range w.q {
-        go process(item) // When does this finish? What if it never does?
-    }
-}
-```
-
-### Don't Fire-and-Forget Goroutines
-
-Every goroutine must have a predictable stop mechanism:
-- A predictable time at which it will stop running, OR
-- A way to signal that it should stop
-- Code must be able to block and wait for the goroutine to finish
-
-```go
-// Bad: No way to stop or wait for this goroutine
-go func() {
-    for {
-        flush()
-        time.Sleep(delay)
-    }
-}()
-```
-
-```go
-// Good: Stop/done channel pattern for controlled shutdown
-var (
-    stop = make(chan struct{}) // tells the goroutine to stop
-    done = make(chan struct{}) // tells us that the goroutine exited
-)
-go func() {
-    defer close(done)
-    ticker := time.NewTicker(delay)
-    defer ticker.Stop()
-    for {
-        select {
-        case <-ticker.C:
-            flush()
-        case <-stop:
-            return
-        }
-    }
-}()
-
-// To shut down:
-close(stop)  // signal the goroutine to stop
-<-done       // and wait for it to exit
-```
-
-### Waiting for Goroutines
-
-Use `sync.WaitGroup` for multiple goroutines:
-
-```go
+// Good: Clear lifetime with WaitGroup
 var wg sync.WaitGroup
-for i := 0; i < N; i++ {
+for item := range queue {
     wg.Add(1)
-    go func() {
-        defer wg.Done()
-        // work...
-    }()
+    go func() { defer wg.Done(); process(ctx, item) }()
 }
 wg.Wait()
 ```
 
-Use a done channel for a single goroutine:
-
 ```go
-done := make(chan struct{})
-go func() {
-    defer close(done)
-    // work...
-}()
-<-done // wait for goroutine to finish
+// Bad: No way to stop or wait
+go func() { for { flush(); time.Sleep(delay) } }()
 ```
 
-### No Goroutines in init()
-
-`init()` functions should not spawn goroutines. If a package needs a background
-goroutine, expose an object that manages the goroutine's lifetime with a method
-(`Close`, `Stop`, `Shutdown`) to stop and wait for it.
-
-```go
-// Bad: Spawns uncontrollable background goroutine
-func init() {
-    go doWork()
-}
-```
-
-```go
-// Good: Explicit lifecycle management
-type Worker struct {
-    stop chan struct{}
-    done chan struct{}
-}
-
-func NewWorker() *Worker {
-    w := &Worker{
-        stop: make(chan struct{}),
-        done: make(chan struct{}),
-    }
-    go w.doWork()
-    return w
-}
-
-func (w *Worker) Shutdown() {
-    close(w.stop)
-    <-w.done
-}
-```
-
-### Testing for Goroutine Leaks
-
-Use [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak) to test for
-goroutine leaks in packages that spawn goroutines.
+**Test for leaks** with [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak).
 
 > **Principle**: Never start a goroutine without knowing how it will stop.
 
----
-
-## Zero-value Mutexes
-
-The zero-value of `sync.Mutex` and `sync.RWMutex` is valid, so you almost never
-need a pointer to a mutex.
-
-```go
-// Bad: Unnecessary pointer
-mu := new(sync.Mutex)
-mu.Lock()
-```
-
-```go
-// Good: Zero-value is valid
-var mu sync.Mutex
-mu.Lock()
-```
-
-### Don't Embed Mutexes
-
-If you use a struct by pointer, the mutex should be a non-pointer field. Do not
-embed the mutex on the struct, even if the struct is not exported.
-
-```go
-// Bad: Embedded mutex exposes Lock/Unlock as part of API
-type SMap struct {
-    sync.Mutex // Lock() and Unlock() become methods of SMap
-    data map[string]string
-}
-
-func (m *SMap) Get(k string) string {
-    m.Lock()
-    defer m.Unlock()
-    return m.data[k]
-}
-```
-
-```go
-// Good: Named field keeps mutex as implementation detail
-type SMap struct {
-    mu   sync.Mutex
-    data map[string]string
-}
-
-func (m *SMap) Get(k string) string {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    return m.data[k]
-}
-```
-
-With the bad example, `Lock` and `Unlock` methods are unintentionally part of
-the exported API. With the good example, the mutex is an implementation detail
-hidden from callers.
+> Read [references/GOROUTINE-PATTERNS.md](references/GOROUTINE-PATTERNS.md) when
+> implementing stop/done channel patterns, goroutine waiting strategies, or
+> lifecycle-managed workers.
 
 ---
 
 ## Synchronous Functions
 
-> **Normative**: Prefer synchronous functions over asynchronous functions.
+> **Normative**: Prefer synchronous functions over asynchronous ones.
 
-### Why Prefer Synchronous Functions?
-
-1. **Localized goroutines**: Keeps goroutines within a call, making lifetimes
-   easier to reason about
-2. **Avoids leaks and races**: Easier to prevent resource leaks and data races
-3. **Easier to test**: Caller can pass input and check output without polling
-4. **Caller flexibility**: Caller can add concurrency by calling in a separate
-   goroutine
-
-```go
-// Good: Synchronous function - caller controls concurrency
-func ProcessItems(items []Item) ([]Result, error) {
-    var results []Result
-    for _, item := range items {
-        result, err := processItem(item)
-        if err != nil {
-            return nil, err
-        }
-        results = append(results, result)
-    }
-    return results, nil
-}
-
-// Caller can add concurrency if needed:
-go func() {
-    results, err := ProcessItems(items)
-    // handle results
-}()
-```
+| Benefit | Why |
+|---|---|
+| Localized goroutines | Lifetimes easier to reason about |
+| Avoids leaks and races | Easier to prevent resource leaks and data races |
+| Easier to test | Check input/output without polling |
+| Caller flexibility | Caller adds concurrency when needed |
 
 > **Advisory**: It is quite difficult (sometimes impossible) to remove
 > unnecessary concurrency at the caller side. Let the caller add concurrency
 > when needed.
+
+> Read [references/GOROUTINE-PATTERNS.md](references/GOROUTINE-PATTERNS.md) when
+> writing synchronous-first APIs that callers may wrap in goroutines.
+
+---
+
+## Zero-value Mutexes
+
+The zero-value of `sync.Mutex` and `sync.RWMutex` is valid — almost never need
+a pointer to a mutex.
+
+```go
+// Good: Zero-value is valid    // Bad: Unnecessary pointer
+var mu sync.Mutex                mu := new(sync.Mutex)
+```
+
+**Don't embed mutexes** — use a named `mu` field to keep `Lock`/`Unlock` as
+implementation details, not exported API.
+
+> Read [references/SYNC-PRIMITIVES.md](references/SYNC-PRIMITIVES.md) when
+> implementing mutex-protected structs or deciding how to structure mutex fields.
 
 ---
 
@@ -277,108 +96,52 @@ go func() {
 
 > **Normative**: Specify channel direction where possible.
 
-### Why Specify Direction?
-
-1. **Prevents errors**: Compiler catches mistakes like closing a receive-only
-   channel
-2. **Conveys ownership**: Makes clear who sends and who receives
-3. **Self-documenting**: Function signature tells the story
-
-```go
-// Good: Direction specified - clear ownership
-func sum(values <-chan int) int {
-    total := 0
-    for v := range values {
-        total += v
-    }
-    return total
-}
-```
-
-```go
-// Bad: No direction - allows accidental misuse
-func sum(values chan int) (out int) {
-    for v := range values {
-        out += v
-    }
-    close(values) // Bug! This compiles but shouldn't happen.
-}
-```
-
-### Channel Size: One or None
-
-Channels should usually have a size of one or be unbuffered. Any other size must
-be subject to scrutiny. Consider:
-- How is the size determined?
-- What prevents the channel from filling up under load?
-- What happens when writers block?
-
-```go
-// Bad: Arbitrary buffer size
-c := make(chan int, 64) // "Ought to be enough for anybody!"
-```
-
-```go
-// Good: Deliberate sizing
-c := make(chan int, 1) // Size of one
-c := make(chan int)    // Unbuffered, size of zero
-```
-
-### Common Patterns
+Direction prevents errors (compiler catches closing a receive-only channel),
+conveys ownership, and is self-documenting.
 
 ```go
 func produce(out chan<- int) { /* send-only */ }
 func consume(in <-chan int)  { /* receive-only */ }
-func transform(in <-chan int, out chan<- int) { /* both directions */ }
+func transform(in <-chan int, out chan<- int) { /* both */ }
 ```
+
+### Channel Size: One or None
+
+Channels should have size **zero** (unbuffered) or **one**. Any other size
+requires justification for:
+
+- How the size was determined
+- What prevents the channel from filling under load
+- What happens when writers block
+
+```go
+c := make(chan int)    // unbuffered — Good
+c := make(chan int, 1) // size one — Good
+c := make(chan int, 64) // arbitrary — needs justification
+```
+
+> Read [references/SYNC-PRIMITIVES.md](references/SYNC-PRIMITIVES.md) when
+> reviewing detailed channel direction examples with error-prone patterns.
 
 ---
 
 ## Atomic Operations
 
-Use [go.uber.org/atomic](https://pkg.go.dev/go.uber.org/atomic) for type-safe
-atomic operations. The standard `sync/atomic` package operates on raw types
-(`int32`, `int64`, etc.), making it easy to forget to use atomic operations
-consistently.
+Use `atomic.Bool`, `atomic.Int64`, etc. (stdlib `sync/atomic` since Go 1.19, or
+[go.uber.org/atomic](https://pkg.go.dev/go.uber.org/atomic)) for type-safe
+atomic operations. Raw `int32`/`int64` fields make it easy to forget atomic
+access on some code paths.
 
 ```go
-// Bad: Easy to forget atomic operation
-type foo struct {
-    running int32 // atomic
-}
-
-func (f *foo) start() {
-    if atomic.SwapInt32(&f.running, 1) == 1 {
-        return // already running
-    }
-    // start the Foo
-}
-
-func (f *foo) isRunning() bool {
-    return f.running == 1 // race! forgot atomic.LoadInt32
-}
+// Good: Type-safe              // Bad: Easy to forget
+var running atomic.Bool          var running int32 // atomic
+running.Store(true)              atomic.StoreInt32(&running, 1)
+running.Load()                   running == 1 // race!
 ```
 
-```go
-// Good: Type-safe atomic operations
-type foo struct {
-    running atomic.Bool
-}
-
-func (f *foo) start() {
-    if f.running.Swap(true) {
-        return // already running
-    }
-    // start the Foo
-}
-
-func (f *foo) isRunning() bool {
-    return f.running.Load() // can't accidentally read non-atomically
-}
-```
-
-The `go.uber.org/atomic` package adds type safety by hiding the underlying type
-and includes convenient types like `atomic.Bool`, `atomic.Int64`, etc.
+> Read [references/SYNC-PRIMITIVES.md](references/SYNC-PRIMITIVES.md) when
+> choosing between sync/atomic and go.uber.org/atomic, or implementing atomic
+> state flags in structs.
 
 ---
 
@@ -390,15 +153,17 @@ and includes convenient types like `atomic.Bool`, `atomic.Int64`, etc.
 Go users assume read-only operations are safe for concurrent use, and mutating
 operations are not. Document concurrency when:
 
-1. **Read vs mutating is unclear** - e.g., a `Lookup` that mutates LRU state
-2. **API provides synchronization** - e.g., thread-safe clients
-3. **Interface has concurrency requirements** - document in type definition
+1. **Read vs mutating is unclear** — e.g., a `Lookup` that mutates LRU state
+2. **API provides synchronization** — e.g., thread-safe clients
+3. **Interface has concurrency requirements** — document in type definition
 
 ---
 
 ## Context Usage
 
-> For context.Context guidance (parameter placement, struct storage, custom types, derivation patterns), see the dedicated [go-context](../go-context/SKILL.md) skill.
+> For context.Context guidance (parameter placement, struct storage, custom
+> types, derivation patterns), see the dedicated
+> [go-context](../go-context/SKILL.md) skill.
 
 ---
 
@@ -407,49 +172,37 @@ operations are not. Document concurrency when:
 Use a buffered channel as a free list to reuse allocated buffers. This "leaky
 buffer" pattern uses `select` with `default` for non-blocking operations.
 
-See [references/BUFFER-POOLING.md](references/BUFFER-POOLING.md) for the full
-pattern with examples and production alternatives using `sync.Pool`.
-
-> Read [references/BUFFER-POOLING.md](references/BUFFER-POOLING.md) when implementing a worker pool with reusable buffers.
-
----
-
-## Channels of Channels
-
-Embed a reply channel inside a request struct to build multiplexed, non-blocking
-RPC systems. See [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md)
-when implementing request/response multiplexing with channels.
+> Read [references/BUFFER-POOLING.md](references/BUFFER-POOLING.md) when
+> implementing a worker pool with reusable buffers or choosing between
+> channel-based pools and `sync.Pool`.
 
 ---
 
-## CPU-Bound Parallelization
+## Advanced Patterns
 
-Split independent computations across CPU cores using goroutines and a
-completion channel. See [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md)
-when parallelizing CPU-bound computations across cores.
-
-> Read [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md) when implementing request-response multiplexing or CPU-bound parallel computation.
+> Read [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md) when
+> implementing request-response multiplexing with channels of channels, or
+> CPU-bound parallel computation across cores.
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Foundational style principles (clarity, simplicity)
-- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns in concurrent code
-- [go-defensive](../go-defensive/SKILL.md): Defensive programming including validation and safety
-- [go-documentation](../go-documentation/SKILL.md): General documentation conventions
-- [go-functions](../go-functions/SKILL.md): Function design and multiple return values
+- **Context propagation**: See [go-context](../go-context/SKILL.md) when passing cancellation, deadlines, or request-scoped values through goroutines
+- **Error handling**: See [go-error-handling](../go-error-handling/SKILL.md) when propagating errors from goroutines or using errgroup
+- **Defensive hardening**: See [go-defensive](../go-defensive/SKILL.md) when protecting shared state at API boundaries or using defer for cleanup
+- **Interface design**: See [go-interfaces](../go-interfaces/SKILL.md) when choosing receiver types for types with sync primitives
 
 ### External Resources
 
 - [Never start a goroutine without knowing how it will
   stop](https://dave.cheney.net/2016/12/22/never-start-a-goroutine-without-knowing-how-it-will-stop)
-  - Dave Cheney
+  — Dave Cheney
 - [Rethinking Classical Concurrency
-  Patterns](https://www.youtube.com/watch?v=5zXAHh5tJqQ) - Bryan Mills
+  Patterns](https://www.youtube.com/watch?v=5zXAHh5tJqQ) — Bryan Mills
   (GopherCon 2018)
-- [When Go programs end](https://changelog.com/gotime/165) - Go Time podcast
-- [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak) - Goroutine leak
+- [When Go programs end](https://changelog.com/gotime/165) — Go Time podcast
+- [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak) — Goroutine leak
   detector for testing
-- [go.uber.org/atomic](https://pkg.go.dev/go.uber.org/atomic) - Type-safe atomic
-  operations
+- [go.uber.org/atomic](https://pkg.go.dev/go.uber.org/atomic) — Type-safe
+  atomic operations
