@@ -90,7 +90,7 @@ check_screaming_constants() {
         # Match const declarations with ALL_CAPS_SNAKE names (2+ uppercase segments with underscore)
         if [[ "$line" =~ ^[[:space:]]*(const[[:space:]]+)[A-Z][A-Z0-9]*_[A-Z0-9_]+[[:space:]] ]]; then
             local name
-            name=$(echo "$line" | sed -n 's/^[[:space:]]*const[[:space:]]\+\([A-Z][A-Z0-9]*_[A-Z0-9_]*\).*/\1/p')
+            name=$(echo "$line" | sed -E -n 's/^[[:space:]]*const[[:space:]]+([A-Z][A-Z0-9]*_[A-Z0-9_]*).*/\1/p')
             if [[ -n "$name" ]]; then
                 add_violation "$file" "$line_num" "screaming-const" "constant '$name' uses SCREAMING_SNAKE_CASE; use MixedCaps instead"
             fi
@@ -105,7 +105,8 @@ check_get_prefix() {
     while IFS= read -r line; do
         line_num=$((line_num + 1))
         # Match: func (r Type) GetFoo(...) — exported getter with Get prefix
-        if [[ "$line" =~ ^[[:space:]]*func[[:space:]]+\([^)]+\)[[:space:]]+Get([A-Z][a-zA-Z0-9]*)\( ]]; then
+        local re_get='^[[:space:]]*func[[:space:]]+\([^)]+\)[[:space:]]+Get([A-Z][a-zA-Z0-9]*)\('
+        if [[ "$line" =~ $re_get ]]; then
             local method_name="Get${BASH_REMATCH[1]}"
             # Skip GetX where X could be legitimate (e.g., GetByID is not a simple getter)
             # Only flag simple GetField patterns (no preposition after Get)

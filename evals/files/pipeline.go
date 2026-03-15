@@ -1,8 +1,11 @@
+//go:build ignore
+
 package pipeline
 
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"os"
 )
 

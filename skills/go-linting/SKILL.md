@@ -170,6 +170,10 @@ bash scripts/setup-lint.sh --json                                  # structured 
 
 > **Validation**: After generating `.golangci.yml`, run `golangci-lint run ./...` to verify the configuration is valid and produces expected output. If it fails with a config error, fix and retry.
 
+> `scripts/setup-lint.sh` generates a **minimum** config (5 core linters).
+> For established projects, use `assets/golangci.yml` as a starting point —
+> it adds gosec, ineffassign, misspell, gocyclo, and bodyclose.
+
 ---
 
 ## Quick Reference

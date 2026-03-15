@@ -64,7 +64,9 @@ fi
 
 GOFMT_STATUS="pass"
 GOFMT_FINDINGS=()
-UNFORMATTED=$(gofmt -l . 2>&1) || true
+GOFMT_DIR="${TARGET%%/...}"
+GOFMT_DIR="${GOFMT_DIR:-.}"
+UNFORMATTED=$(gofmt -l "$GOFMT_DIR" 2>&1) || true
 if [[ -n "$UNFORMATTED" ]]; then
     GOFMT_STATUS="fail"
     while IFS= read -r f; do

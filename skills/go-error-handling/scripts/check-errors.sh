@@ -113,21 +113,13 @@ check_bare_return_err() {
     local file="$1"
     local line_num=0
     local in_error_block=false
-    local error_block_start=0
-    local func_name=""
 
     while IFS= read -r line; do
         line_num=$((line_num + 1))
 
-        # Track function declarations to provide context
-        if [[ "$line" =~ ^func[[:space:]] ]]; then
-            func_name="$line"
-        fi
-
         # Detect if err != nil { block
         if [[ "$line" =~ if[[:space:]]+(.*err[[:space:]]*(!=|==)[[:space:]]*nil|err[[:space:]]*:=) ]]; then
             in_error_block=true
-            error_block_start=$line_num
         fi
 
         # Check for bare "return err" that is not wrapped
@@ -138,7 +130,7 @@ check_bare_return_err() {
             trimmed=$(echo "$line" | sed 's/^[[:space:]]*//')
             if [[ "$trimmed" == "return err" ]]; then
                 add_finding "$file" "$line_num" "bare-return-err" \
-                    "bare 'return err' without wrapping context; consider fmt.Errorf(\"...: %w\", err)"
+                    "bare 'return err' without wrapping context; consider fmt.Errorf('...: %w', err)"
             fi
         fi
 
@@ -170,8 +162,8 @@ check_log_and_return() {
             for ((i=0; i<window_size-1; i++)); do
                 local prev="${prev_lines[$i]}"
                 # Match log.Print/Printf/Println/Error/Errorf/Warn/Warnf with err
-                if [[ "$prev" =~ (log\.|logger\.|slog\.)[a-zA-Z]*(err|Err) ]] || \
-                   [[ "$prev" =~ (log\.|logger\.|slog\.)(Print|Error|Warn|Info|Fatal|Debug) && "$prev" =~ err ]]; then
+                if [[ "$prev" =~ (log\.|logger\.|slog\.)[a-zA-Z]*\(.*[^a-zA-Z]err[^a-zA-Z] ]] || \
+                   [[ "$prev" =~ (log\.|logger\.|slog\.)[a-zA-Z]*\(err[,\)] ]]; then
                     local log_line=$((line_num - window_size + 1 + i))
                     add_finding "$file" "$log_line" "log-and-return" \
                         "error is both logged (line $log_line) and returned (line $line_num); handle errors once"

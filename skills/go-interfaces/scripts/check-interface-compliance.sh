@@ -87,7 +87,8 @@ find_all_go_files() {
 }
 
 # Step 1: Find all exported interface definitions
-declare -A INTERFACES  # key: "InterfaceName" value: "file:line"
+IFACE_NAMES=()
+IFACE_LOCATIONS=()
 
 while IFS= read -r file; do
     [[ -n "$file" ]] || continue
@@ -97,12 +98,13 @@ while IFS= read -r file; do
         # Match: type ExportedName interface {
         if [[ "$line" =~ ^[[:space:]]*type[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]]+interface[[:space:]]*\{ ]]; then
             iface_name="${BASH_REMATCH[1]}"
-            INTERFACES["$iface_name"]="$file:$line_num"
+            IFACE_NAMES+=("$iface_name")
+            IFACE_LOCATIONS+=("$file:$line_num")
         fi
     done < "$file"
 done < <(find_go_files "$TARGET")
 
-if [[ ${#INTERFACES[@]} -eq 0 ]]; then
+if [[ ${#IFACE_NAMES[@]} -eq 0 ]]; then
     if $JSON_OUTPUT; then
         echo '{"interfaces":[],"missing":[],"count_interfaces":0,"count_missing":0}'
     else
@@ -113,18 +115,19 @@ fi
 
 # Step 2: Scan all Go files (including tests) for compliance checks
 # Pattern: var _ InterfaceName = ...
-ALL_CONTENT=""
-while IFS= read -r file; do
-    [[ -n "$file" ]] || continue
-    ALL_CONTENT+="$(cat "$file")"$'\n'
+ALL_GO_FILES=()
+while IFS= read -r f; do
+    [[ -n "$f" ]] && ALL_GO_FILES+=("$f")
 done < <(find_all_go_files "$TARGET")
 
 MISSING=()
 
-for iface_name in "${!INTERFACES[@]}"; do
-    location="${INTERFACES[$iface_name]}"
+for ((i=0; i<${#IFACE_NAMES[@]}; i++)); do
+    iface_name="${IFACE_NAMES[$i]}"
+    location="${IFACE_LOCATIONS[$i]}"
     # Look for: var _ InterfaceName = (various patterns)
-    if ! echo "$ALL_CONTENT" | grep -qE "var[[:space:]]+_[[:space:]]+${iface_name}[[:space:]]*="; then
+    if ! grep -qlE "var[[:space:]]+_[[:space:]]+${iface_name}[[:space:]]*=" \
+         "${ALL_GO_FILES[@]}" 2>/dev/null; then
         MISSING+=("${iface_name}|${location}")
     fi
 done
@@ -145,8 +148,16 @@ if $JSON_OUTPUT; then
     echo "{"
     echo '  "interfaces": ['
     first=true
-    for iface_name in $(echo "${!INTERFACES[@]}" | tr ' ' '\n' | sort); do
-        location="${INTERFACES[$iface_name]}"
+    SORTED_INDICES=()
+    for ((i=0; i<${#IFACE_NAMES[@]}; i++)); do
+        SORTED_INDICES+=("$i|${IFACE_NAMES[$i]}")
+    done
+    IFS=$'\n' SORTED_INDICES=($(sort -t'|' -k2 <<<"${SORTED_INDICES[*]}")); unset IFS
+
+    for entry in "${SORTED_INDICES[@]}"; do
+        i="${entry%%|*}"
+        iface_name="${IFACE_NAMES[$i]}"
+        location="${IFACE_LOCATIONS[$i]}"
         file="${location%%:*}"
         line="${location#*:}"
         $first || echo ","
@@ -167,12 +178,12 @@ if $JSON_OUTPUT; then
     done
     echo ""
     echo "  ],"
-    printf '  "count_interfaces": %d,\n' "${#INTERFACES[@]}"
+    printf '  "count_interfaces": %d,\n' "${#IFACE_NAMES[@]}"
     printf '  "count_missing": %d,\n' "$TOTAL"
     printf '  "truncated": %s\n' "$TRUNCATED"
     echo "}"
 else
-    echo "Exported interfaces found: ${#INTERFACES[@]}"
+    echo "Exported interfaces found: ${#IFACE_NAMES[@]}"
     echo ""
 
     if [[ $TOTAL -eq 0 ]]; then
