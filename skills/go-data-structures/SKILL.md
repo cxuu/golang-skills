@@ -1,6 +1,6 @@
 ---
 name: go-data-structures
-description: Use when working with Go slices, maps, or arrays — including choosing between new and make, using append and 2D slices, declaring empty slices (nil vs literal for JSON), implementing sets with maps, and copying data at boundaries. Also use when building or manipulating collections, even without asking about allocation idioms.
+description: Use when working with Go slices, maps, or arrays — choosing between new and make, using append, declaring empty slices (nil vs literal for JSON), implementing sets with maps, and copying data at boundaries. Also use when building or manipulating collections, even if the user doesn't ask about allocation idioms. Does not cover concurrent data structure safety (see go-concurrency).
 license: Apache-2.0
 metadata:
   sources: "Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
@@ -26,58 +26,6 @@ What do you need?
 └─ Need to pass to a function?
    └─ Copy at the boundary if the caller might mutate it
 ```
-
----
-
-## Allocation: new vs make
-
-- `new(T)` returns `*T`, zeroed. Useful when the zero value is ready to use
-  (e.g., `bytes.Buffer`, `sync.Mutex`).
-- `make(T, args)` creates slices, maps, and channels only. Returns an
-  initialized (not zeroed) value of type `T` (not `*T`).
-
-Design data structures so the zero value is useful without further
-initialization.
-
----
-
-## Composite Literals
-
-Create and initialize structs, arrays, slices, and maps in one expression.
-Always use **field names** for types defined outside the current package:
-
-```go
-// Good: named fields — order-independent, resilient to struct changes
-f := &File{fd: fd, name: name}
-
-// Bad: positional fields for external types — fragile
-r := csv.Reader{',', '#', 4, false, false, false, false}
-```
-
-Closing braces must match indentation of the opening line:
-
-```go
-// Good: cuddled braces
-good := []*Type{{
-    Field: "value",
-}, {
-    Field: "value",
-}}
-
-// Good: non-cuddled
-good := []*Type{
-    {Field: "multi"},
-    {Field: "line"},
-}
-
-// Bad: closing brace on same line as value
-bad := []*Type{
-    {Key: "multi"},
-    {Key: "line"}}
-```
-
-It's safe to return the address of a local variable — the storage survives
-after the function returns.
 
 ---
 
@@ -183,16 +131,13 @@ func increment(sc *SafeCounter) {
 
 | Topic | Key Point |
 |-------|-----------|
-| `new(T)` | Returns `*T`, zeroed |
-| `make(T)` | Slices, maps, channels only; returns `T`, initialized |
-| Composite literals | Use field names for external types; match brace indentation |
 | Slices | Always assign `append` result; `nil` slice preferred over `[]T{}` |
 | Sets | `map[T]bool` is idiomatic |
 | Copying | Don't copy `T` if methods are on `*T`; beware aliasing |
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
-- [go-control-flow](../go-control-flow/SKILL.md): Control structures including range
-- [go-interfaces](../go-interfaces/SKILL.md): Interface patterns and embedding
-- [go-concurrency](../go-concurrency/SKILL.md): Channels and goroutines
+- **Defensive copying**: See [go-defensive](../go-defensive/SKILL.md) when copying slices or maps at API boundaries to prevent mutation
+- **Capacity hints**: See [go-performance](../go-performance/SKILL.md) when pre-sizing slices or maps for known workloads
+- **Iteration patterns**: See [go-control-flow](../go-control-flow/SKILL.md) when using range loops over slices, maps, or channels
+- **Declaration style**: See [go-declarations](../go-declarations/SKILL.md) when choosing between `new`, `make`, `var`, and composite literals

@@ -1,12 +1,16 @@
 ---
 name: go-control-flow
-description: Use when writing conditionals, loops, or switch statements in Go — including if with initialization, early returns to omit else, for loop forms, range, switch without fallthrough, type switches, and blank identifier patterns. Also use when writing even a simple if/else or for loop in Go, to ensure idiomatic structure like guard clauses and proper variable scoping.
+description: Use when writing conditionals, loops, or switch statements in Go — including if with initialization, early returns, for loop forms, range, switch, type switches, and blank identifier patterns. Also use when writing a simple if/else or for loop, even if the user doesn't mention guard clauses or variable scoping. Does not cover error flow patterns (see go-error-handling).
 license: Apache-2.0
 metadata:
   sources: "Effective Go, Google Style Guide"
 ---
 
 # Go Control Flow
+
+> Read references/SWITCH-PATTERNS.md when using switch statements, type switches, or break with labels
+
+> Read references/BLANK-IDENTIFIER.md when using `_`, blank identifier imports, or compile-time interface checks
 
 ---
 
@@ -22,8 +26,8 @@ if err := file.Chmod(0664); err != nil {
 }
 ```
 
-**Tip**: If you use the variable for more than a few lines after the `if`, move
-the declaration out and use a standard `if` statement instead:
+If you need the variable beyond a few lines after the `if`, declare it
+separately and use a standard `if` instead:
 
 ```go
 x, err := f()
@@ -39,7 +43,6 @@ When an `if` body ends with `break`, `continue`, `goto`, or `return`, omit the
 unnecessary `else`. Keep the success path unindented:
 
 ```go
-// Good: no else, success path at left margin
 f, err := os.Open(name)
 if err != nil {
     return err
@@ -52,15 +55,7 @@ if err != nil {
 codeUsing(f, d)
 ```
 
-```go
-// Bad: else clause buries normal flow
-f, err := os.Open(name)
-if err != nil {
-    return err
-} else {
-    codeUsing(f)  // unnecessarily indented
-}
-```
+Never bury normal flow inside an `else` when the `if` already returns.
 
 ---
 
@@ -70,7 +65,7 @@ The `:=` short declaration allows redeclaring variables in the same scope:
 
 ```go
 f, err := os.Open(name)  // declares f and err
-d, err := f.Stat()       // declares d, reassigns err (not a new err)
+d, err := f.Stat()       // declares d, reassigns err
 ```
 
 A variable `v` may appear in a `:=` declaration even if already declared,
@@ -83,37 +78,24 @@ provided:
 ### Variable Shadowing
 
 **Warning**: If `v` is declared in an outer scope, `:=` creates a **new**
-variable that shadows it. This is a common source of bugs:
+variable that shadows it — a common source of bugs:
 
 ```go
 // Bug: ctx inside the if block shadows the outer ctx
-func (s *Server) innerHandler(ctx context.Context, req *pb.MyRequest) *pb.MyResponse {
-    if *shortenDeadlines {
-        ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-        defer cancel()
-    }
-    // BUG: ctx here is still the original — the shadowed ctx didn't escape the if block
+if *shortenDeadlines {
+    ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+    defer cancel()
 }
+// ctx here is still the original — the shadowed ctx didn't escape
 
 // Fix: use = instead of :=
-func (s *Server) innerHandler(ctx context.Context, req *pb.MyRequest) *pb.MyResponse {
-    if *shortenDeadlines {
-        var cancel func()
-        ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
-        defer cancel()
-    }
-    // ctx here is correctly the deadline-capped context
-}
+var cancel func()
+ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
 ```
 
 ---
 
-## For Loops
-
-Go unifies `for` and `while` into a single construct. Use `range` to iterate
-over arrays, slices, strings, maps, and channels.
-
-### Parallel Assignment in For
+## For Loops: Parallel Assignment
 
 Go has no comma operator. Use parallel assignment for multiple loop variables:
 
@@ -123,64 +105,22 @@ for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
 }
 ```
 
-`++` and `--` are statements, not expressions — they cannot be used in parallel
+`++` and `--` are statements, not expressions — they cannot appear in parallel
 assignment.
 
 ---
 
-## Switch
+## Switch: Labeled Break
 
-Go's `switch` has **no automatic fall through** — no need for `break` in each
-case. Use explicit `fallthrough` if needed (rare).
-
-### Expression-less Switch
-
-A `switch` with no expression switches on `true`. Use it for clean if-else-if
-chains:
-
-```go
-func unhex(c byte) byte {
-    switch {
-    case '0' <= c && c <= '9':
-        return c - '0'
-    case 'a' <= c && c <= 'f':
-        return c - 'a' + 10
-    case 'A' <= c && c <= 'F':
-        return c - 'A' + 10
-    }
-    return 0
-}
-```
-
-### Comma-Separated Cases
-
-Multiple cases can be combined with commas:
-
-```go
-func shouldEscape(c byte) bool {
-    switch c {
-    case ' ', '?', '&', '=', '#', '+', '%':
-        return true
-    }
-    return false
-}
-```
-
-### Break with Labels
-
-`break` inside a `switch` terminates only the switch, not an enclosing `for`
-loop. Use a label to break out of the loop:
+`break` inside a `switch` within a `for` loop only breaks the switch.
+Use a labeled `break` to exit the enclosing loop:
 
 ```go
 Loop:
-    for n := 0; n < len(src); n += size {
-        switch {
-        case src[n] < sizeOne:
-            break        // breaks switch only
-        case src[n] < sizeTwo:
-            if n+1 >= len(src) {
-                break Loop   // breaks out of for loop
-            }
+    for _, v := range items {
+        switch v.Type {
+        case "done":
+            break Loop  // breaks the for loop
         }
     }
 ```
@@ -191,74 +131,10 @@ For type switches, see **go-interfaces**: Type Switch.
 
 ## The Blank Identifier
 
-### Multiple Assignment
+**Never discard errors carelessly** — a nil dereference panic may follow.
 
-Discard unwanted values from multi-value expressions:
-
-```go
-if _, err := os.Stat(path); os.IsNotExist(err) {
-    fmt.Printf("%s does not exist\n", path)
-}
-```
-
-**Never discard errors carelessly** — a nil dereference panic will follow:
-
-```go
-// Bad: ignoring error will crash if path doesn't exist
-fi, _ := os.Stat(path)
-if fi.IsDir() { ... }  // nil pointer dereference
-```
-
-### Import for Side Effect
-
-Import a package only for its `init()` side effects:
-
-```go
-import _ "net/http/pprof"  // registers HTTP handlers
-import _ "image/png"       // registers PNG decoder
-```
-
-### Interface Compliance Check
-
-Verify at compile time that a type implements an interface:
-
-```go
-var _ io.Writer = (*MyType)(nil)
-```
-
-See **go-interfaces**: Interface Satisfaction Checks for when to use this pattern.
-
----
-
-## Switch and Break
-
-Go `switch` cases do **not** fall through by default (unlike C/Java). Each case
-body implicitly breaks. Use `fallthrough` only when explicitly needed.
-
-```go
-switch n {
-case 1:
-    fmt.Println("one")
-    // no fallthrough — next case is NOT executed
-case 2:
-    fmt.Println("two")
-}
-```
-
-A `break` inside a `switch` that is inside a `for` loop breaks out of the
-**switch**, not the loop. Use a labeled break to exit the loop:
-
-```go
-Loop:
-    for _, v := range items {
-        switch v.Type {
-        case "done":
-            break Loop  // breaks the for loop
-        case "skip":
-            break  // breaks only the switch
-        }
-    }
-```
+Verify interface compliance at compile time: `var _ io.Writer = (*MyType)(nil)`.
+See **go-interfaces** for the interface satisfaction check pattern.
 
 ---
 
@@ -278,14 +154,12 @@ Loop:
 | Discard value | `_, err := f()` |
 | Side-effect import | `import _ "pkg"` |
 | Interface check | `var _ Interface = (*Type)(nil)` |
-| switch/break | No fallthrough by default; labeled `break` to exit enclosing loop |
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Core Go style principles and formatting
-- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns including guard clauses
-- [go-naming](../go-naming/SKILL.md): Naming conventions for loop variables and labels
-- [go-concurrency](../go-concurrency/SKILL.md): Goroutines, channels, and select statements
-- [go-interfaces](../go-interfaces/SKILL.md): Type switches and interface satisfaction checks
+- **Error flow**: See [go-error-handling](../go-error-handling/SKILL.md) when structuring guard clauses, early returns, or error-first patterns
+- **Type switches**: See [go-interfaces](../go-interfaces/SKILL.md) when using type switches, the comma-ok idiom, or interface satisfaction checks
+- **Nesting reduction**: See [go-style-core](../go-style-core/SKILL.md) when reducing nesting depth or resolving formatting questions
+- **Variable scoping**: See [go-declarations](../go-declarations/SKILL.md) when using if-init, `:=` redeclaration, or reducing variable scope

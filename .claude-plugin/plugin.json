@@ -1,7 +1,7 @@
 {
   "name": "golang-skills",
-  "description": "19 modular skills that teach AI coding assistants idiomatic Go — covering error handling, naming, testing, concurrency, interfaces, style, documentation, and more. Each skill activates automatically based on context and provides procedural guidance with progressive disclosure.",
-  "version": "1.4.0",
+  "description": "19 modular skills for idiomatic Go — each under 210 lines, backed by 46 reference files, 8 automation scripts, and 4 asset templates. Covers error handling, naming, testing, concurrency, interfaces, generics, documentation, performance, and more. Activates automatically with progressive disclosure and conditional cross-references.",
+  "version": "1.5.0",
   "author": {
     "name": "cxuu"
   },
@@ -16,6 +16,8 @@
     "google-style-guide",
     "uber-style-guide",
     "code-review-comments",
-    "idiomatic-go"
+    "idiomatic-go",
+    "progressive-disclosure",
+    "agent-skills"
   ]
 }

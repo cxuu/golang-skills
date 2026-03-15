@@ -1,12 +1,16 @@
 ---
 name: go-interfaces
-description: Use when defining or implementing Go interfaces, designing abstractions, creating mockable boundaries for testing, or composing types through embedding. Also use when deciding whether to accept an interface or return a concrete type, using type assertions or type switches, or structuring code with the "accept interfaces, return structs" principle — even if the user doesn't explicitly mention interfaces. Helps with implicit satisfaction checks, the comma-ok idiom, embedding patterns, and choosing pointer vs value receivers.
+description: Use when defining or implementing Go interfaces, designing abstractions, creating mockable boundaries for testing, or composing types through embedding. Also use when deciding whether to accept an interface or return a concrete type, or using type assertions or type switches, even if the user doesn't explicitly mention interfaces. Does not cover generics-based polymorphism (see go-generics).
 license: Apache-2.0
 metadata:
   sources: "Effective Go, Google Style Guide, Uber Style Guide"
 ---
 
 # Go Interfaces and Composition
+
+## Available Scripts
+
+- **`scripts/check-interface-compliance.sh`** — Finds exported interfaces missing compile-time compliance checks (`var _ I = (*T)(nil)`). Run `bash scripts/check-interface-compliance.sh --help` for options.
 
 ---
 
@@ -88,100 +92,18 @@ if _, ok := val.(json.Marshaler); ok {
 
 ## Type Switch
 
-A type switch discovers the dynamic type of an interface value:
-
-```go
-switch t := t.(type) {
-case bool:
-    fmt.Printf("boolean %t\n", t)             // t has type bool
-case int:
-    fmt.Printf("integer %d\n", t)             // t has type int
-case *bool:
-    fmt.Printf("pointer to boolean %t\n", *t) // t has type *bool
-default:
-    fmt.Printf("unexpected type %T\n", t)
-}
-```
-
 It's idiomatic to reuse the variable name (`t := t.(type)`) — the variable has
 the correct type in each case branch. When a case lists multiple types
 (`case int, int64:`), the variable has the interface type.
 
-Type switches can match both concrete types and interface types:
-
-```go
-switch str := value.(type) {
-case string:
-    return str
-case Stringer:
-    return str.String()
-}
-```
-
 ---
 
-## Interface Embedding
+## Embedding
 
-Combine interfaces by embedding them:
+Avoid embedding types in public structs — the inner type's full method set
+becomes part of your public API. Use unexported fields instead.
 
-```go
-type ReadWriter interface {
-    Reader
-    Writer
-}
-```
-
-A `ReadWriter` can do what a `Reader` does *and* what a `Writer` does. Only
-interfaces can be embedded within interfaces.
-
----
-
-## Struct Embedding
-
-Go uses embedding for composition instead of inheritance. Embedding promotes
-methods from the inner type to the outer type.
-
-```go
-type ReadWriter struct {
-    *Reader  // *bufio.Reader
-    *Writer  // *bufio.Writer
-}
-```
-
-With embedding, methods are promoted automatically. `bufio.ReadWriter` satisfies
-`io.Reader`, `io.Writer`, and `io.ReadWriter` without explicit forwarding.
-
-Mix embedded and named fields:
-
-```go
-type Job struct {
-    Command string
-    *log.Logger
-}
-
-job.Println("starting now...")
-job.Logger.SetPrefix("Job: ")
-```
-
-### Method Overriding
-
-Define a method on the outer type to override the embedded method:
-
-```go
-func (job *Job) Printf(format string, args ...any) {
-    job.Logger.Printf("%q: %s", job.Command, fmt.Sprintf(format, args...))
-}
-```
-
-### Embedding vs Subclassing
-
-When an embedded method is invoked, the receiver is the *inner* type, not the
-outer one. The embedded type doesn't know it's embedded.
-
-### Name Conflict Resolution
-
-1. Outer fields/methods hide inner ones at the same name
-2. Same-level conflicts are errors (unless never accessed)
+> Read [references/EMBEDDING.md](references/EMBEDDING.md) when using struct embedding for composition, overriding embedded methods, resolving name conflicts, applying the HandlerFunc adapter pattern, or deciding whether to embed in public API types.
 
 ---
 
@@ -204,27 +126,6 @@ Use this pattern when:
 
 **Don't** add these checks for every interface — only when no other static
 conversion would catch the error.
-
----
-
-## Methods on Any Named Type
-
-Methods are not limited to structs. The `http.HandlerFunc` adapter pattern
-converts an ordinary function into an `http.Handler`:
-
-```go
-type HandlerFunc func(ResponseWriter, *Request)
-
-func (f HandlerFunc) ServeHTTP(w ResponseWriter, req *Request) {
-    f(w, req)
-}
-```
-
-Any function with the right signature becomes an HTTP handler:
-
-```go
-http.Handle("/args", http.HandlerFunc(ArgServer))
-```
 
 ---
 
@@ -252,11 +153,10 @@ receivers only for small, immutable types (`Point`, `time.Time`) or basic types.
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-style-core](../go-style-core/SKILL.md): Core Go style principles and formatting
-- [go-naming](../go-naming/SKILL.md): Interface naming conventions (Reader, Writer, etc.)
-- [go-error-handling](../go-error-handling/SKILL.md): Error interface and custom error types
-- [go-functional-options](../go-functional-options/SKILL.md): Using interfaces for flexible APIs
-- [go-defensive](../go-defensive/SKILL.md): Defensive programming patterns
-- [go-generics](../go-generics/SKILL.md): When generics suffice vs interfaces
+- **Interface naming**: See [go-naming](../go-naming/SKILL.md) when naming interfaces (the `-er` suffix convention) or choosing receiver names
+- **Error types**: See [go-error-handling](../go-error-handling/SKILL.md) when implementing the `error` interface, custom error types, or `errors.As` matching
+- **Generics vs interfaces**: See [go-generics](../go-generics/SKILL.md) when deciding whether generics are needed or an interface already suffices
+- **Functional options**: See [go-functional-options](../go-functional-options/SKILL.md) when using an interface-based Option pattern for flexible constructors
+- **Compile-time checks**: See [go-defensive](../go-defensive/SKILL.md) when adding `var _ I = (*T)(nil)` satisfaction checks at API boundaries

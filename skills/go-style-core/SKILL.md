@@ -1,6 +1,6 @@
 ---
 name: go-style-core
-description: Use for questions about general Go formatting, line length, nesting reduction, naked returns, semicolon rules, or foundational style principles like clarity vs simplicity vs concision. Also use as a fallback when a Go style question isn't covered by a more specific skill (naming, error handling, testing, etc.). Helps resolve formatting debates and teaches the priority order of Go style principles (clarity > simplicity > concision > maintainability > consistency).
+description: Use for Go formatting, line length, nesting, naked returns, semicolons, or core style principles. Also use when a style question isn't covered by a more specific skill, even if the user doesn't reference a specific style rule. Does not cover domain-specific patterns like error handling, naming, or testing (see specialized skills). Acts as fallback when no more specific style skill applies.
 license: Apache-2.0
 metadata:
   sources: "Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
@@ -20,96 +20,15 @@ When writing readable Go code, apply these principles in order of importance:
 4. **Maintainability** — Will this be easy to modify later?
 5. **Consistency** — Does it match surrounding code and project conventions?
 
-> For detailed explanations and examples of each principle, see [references/PRINCIPLES.md](references/PRINCIPLES.md).
+> Read [references/PRINCIPLES.md](references/PRINCIPLES.md) when resolving conflicts between clarity, simplicity, and concision, or when you need concrete examples of how each principle applies in real Go code.
 
 ---
 
 ## Formatting
 
-### gofmt is Required
+Run `gofmt` — no exceptions. There is **no rigid line length limit**, but Uber suggests a soft limit of 99 characters. Break by semantics, not length — refactor rather than just wrap.
 
-All Go source files **must** conform to `gofmt` output. No exceptions.
-
-```bash
-# Format a file
-gofmt -w myfile.go
-
-# Format all files in directory
-gofmt -w .
-```
-
-### Parentheses
-
-Go needs fewer parentheses than C and Java. Control structures (`if`, `for`, `switch`) don't have parentheses in their syntax. The operator precedence hierarchy is shorter and clearer, so `x<<8 + y<<16` means what the spacing suggests—unlike in other languages.
-
-### MixedCaps (Camel Case)
-
-Go uses `MixedCaps` or `mixedCaps`, never underscores:
-
-```go
-// Good
-MaxLength    // exported constant
-maxLength    // unexported constant
-userID       // variable
-
-// Bad
-MAX_LENGTH   // no snake_case
-max_length   // no underscores
-```
-
-Exceptions:
-- Test function names may use underscores: `TestFoo_Bar`
-- Generated code interoperating with OS/cgo
-
-### Line Length
-
-There is **no rigid line length limit** in Go, but avoid uncomfortably long
-lines. Uber suggests a soft limit of 99 characters.
-
-Guidelines:
-- If a line feels too long, **refactor** rather than just wrap
-- Don't split before indentation changes (function declarations, conditionals)
-- Don't split long strings (URLs) into multiple lines
-- When splitting, put all arguments on their own lines
-- If it's already as short as practical, let it remain long
-
-**Break by semantics, not length**:
-
-Don't add line breaks just to keep lines short when they are more readable long
-(e.g., repetitive lines). Break lines because of what you're writing, not
-because of line length.
-
-Long lines often correlate with long names. If you find lines are too long,
-consider whether the names could be shorter. Getting rid of long names often
-helps more than wrapping lines.
-
-This advice applies equally to function length—there's no rule "never have a
-function more than N lines", but there is such a thing as too long. The solution
-is to change where function boundaries are, not to count lines.
-
-```go
-// Bad: Arbitrary mid-line break
-func (s *Store) GetUser(ctx context.Context,
-    id string) (*User, error) {
-
-// Good: All arguments on own lines
-func (s *Store) GetUser(
-    ctx context.Context,
-    id string,
-) (*User, error) {
-```
-
-### Local Consistency
-
-When the style guide is silent, be consistent with nearby code:
-
-**Valid** local choices:
-- `%s` vs `%v` for error formatting
-- Buffered channels vs mutexes
-
-**Invalid** local overrides:
-- Line length restrictions
-- Assertion-based testing libraries
+> Read [references/FORMATTING.md](references/FORMATTING.md) when configuring gofmt, deciding on line breaks, applying MixedCaps rules, or resolving local consistency questions.
 
 ---
 
@@ -178,7 +97,7 @@ known as a "naked" return.
 func split(sum int) (x, y int) {
     x = sum * 4 / 9
     y = sum - x
-    return  // returns x, y
+    return // returns x, y
 }
 ```
 
@@ -189,8 +108,7 @@ func split(sum int) (x, y int) {
 - **Be explicit in medium+ functions**: Once a function grows to medium size, be
   explicit with return values for clarity
 - **Don't name results just for naked returns**: Clarity of documentation is
-  always more important than saving a line or two. Don't name result parameters
-  just because it enables naked returns
+  always more important than saving a line or two
 
 ```go
 // Good: Small function, naked return is clear
@@ -214,7 +132,7 @@ func processData(data []byte) (result []byte, err error) {
         result = append(result, transform(b))
     }
 
-    return result, nil  // explicit: clearer in longer functions
+    return result, nil // explicit: clearer in longer functions
 }
 ```
 
@@ -257,12 +175,10 @@ multiple statements on a single line.
 | Maintainability | Can this be safely modified later? |
 | Consistency | Does this match surrounding code? |
 
-## See Also
+## Related Skills
 
-- [go-naming](../go-naming/SKILL.md): Naming conventions
-- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns
-- [go-documentation](../go-documentation/SKILL.md): Documentation guidelines
-- [go-testing](../go-testing/SKILL.md): Testing best practices
-- [go-defensive](../go-defensive/SKILL.md): Defensive programming
-- [go-performance](../go-performance/SKILL.md): Performance optimization
-- [go-linting](../go-linting/SKILL.md): Linting and static analysis
+- **Naming conventions**: See [go-naming](../go-naming/SKILL.md) when applying MixedCaps, choosing identifier names, or resolving naming debates
+- **Error flow**: See [go-error-handling](../go-error-handling/SKILL.md) when structuring error-first guard clauses or reducing nesting via early returns
+- **Documentation**: See [go-documentation](../go-documentation/SKILL.md) when writing doc comments, named return parameters, or package-level docs
+- **Linting enforcement**: See [go-linting](../go-linting/SKILL.md) when automating style checks with golangci-lint or configuring CI
+- **Code review**: See [go-code-review](../go-code-review/SKILL.md) when applying style principles during a systematic code review

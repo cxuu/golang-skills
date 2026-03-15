@@ -1,6 +1,6 @@
 ---
 name: go-generics
-description: Use when deciding whether to use Go generics, writing generic functions or types, choosing constraints, or picking between type aliases and type definitions. Also use when a user is writing a utility function that could work with multiple types, or is unsure whether generics are appropriate for their use case — even if they don't mention generics explicitly. Helps decide when to prefer generics vs interfaces, how to name type parameters, and how to document generic APIs.
+description: Use when deciding whether to use Go generics, writing generic functions or types, choosing constraints, or picking between type aliases and type definitions. Also use when a user is writing a utility function that could work with multiple types, even if they don't mention generics explicitly. Does not cover interface design without generics (see go-interfaces).
 license: Apache-2.0
 compatibility: Requires Go 1.18+ (generics were introduced in Go 1.18)
 metadata:
@@ -83,39 +83,10 @@ func Marshal[Opts encoding.MarshalOptions](v any, opts Opts) ([]byte, error)
 
 ---
 
-## Documenting Generic APIs
-
-Document exported generic APIs thoroughly with motivating runnable examples:
-
-```go
-// Filter returns a new slice containing only elements for which keep returns
-// true. It does not modify the original slice.
-//
-// Example:
-//
-//	evens := Filter([]int{1, 2, 3, 4}, func(n int) bool { return n%2 == 0 })
-//	// evens == []int{2, 4}
-func Filter[T any](slice []T, keep func(T) bool) []T { ... }
-```
-
----
-
 ## Type Aliases vs Type Definitions
 
-A **type definition** creates a new distinct type with its own method set:
-
-```go
-type Celsius float64  // new type — can have methods
-```
-
-A **type alias** creates an alternate name for an existing type:
-
-```go
-type OldName = newpkg.Name  // alias — same type, same method set
-```
-
-Type aliases are rare. Use them only for package migration or gradual API
-refactoring. Don't use aliasing when it is not needed.
+Type aliases (`type Old = new.Name`) are rare — use only for package migration
+or gradual API refactoring.
 
 ---
 
@@ -140,6 +111,8 @@ func Sum[T Numeric](vals []T) T {
 
 Use the `constraints` package or `cmp` package (Go 1.21+) for standard constraints
 like `cmp.Ordered` instead of writing your own.
+
+> Read references/CONSTRAINTS.md when writing custom type constraints, composing constraints with ~ and |, or debugging type inference issues.
 
 ---
 
@@ -189,17 +162,15 @@ func Contains[T comparable](slice []T, target T) bool { ... }
 | When to use generics | Only when multiple types share identical logic and interfaces don't suffice |
 | Starting point | Write concrete code first; generalize later |
 | Naming | Single uppercase letter (`T`, `K`, `V`, `E`) |
-| Documentation | Thorough docs + runnable examples for exported generic APIs |
-| Type definitions | New distinct type with own method set |
 | Type aliases | Same type, alternate name; use only for migration |
 | Constraint composition | Use `~` for underlying types, `|` for unions; prefer `cmp.Ordered` over custom |
 | Common pitfall | Don't genericize single-use code or when interfaces suffice |
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-interfaces](../go-interfaces/SKILL.md): Interface design and when interfaces suffice
-- [go-declarations](../go-declarations/SKILL.md): Variable and type declaration patterns
-- [go-documentation](../go-documentation/SKILL.md): Documenting APIs and writing examples
-- [go-naming](../go-naming/SKILL.md): Naming conventions for types and functions
+- **Interfaces vs generics**: See [go-interfaces](../go-interfaces/SKILL.md) when deciding whether an interface already models the shared behavior without generics
+- **Type declarations**: See [go-declarations](../go-declarations/SKILL.md) when defining new types, type aliases, or choosing between type definitions and aliases
+- **Documenting generic APIs**: See [go-documentation](../go-documentation/SKILL.md) when writing doc comments and runnable examples for generic functions
+- **Naming type parameters**: See [go-naming](../go-naming/SKILL.md) when choosing names for type parameters or constraint interfaces

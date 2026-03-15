@@ -1,7 +1,8 @@
 ---
 name: go-code-review
-description: Use when reviewing Go code or checking code against community style standards. Use proactively before submitting a Go PR or when reviewing any Go code changes, even if the user doesn't explicitly request a style review. Provides a systematic checklist covering formatting, documentation, error handling, naming, concurrency, interfaces, security, and testing, with cross-references to detailed skills for each area.
+description: Use when reviewing Go code or checking code against community style standards. Also use proactively before submitting a Go PR or when reviewing any Go code changes, even if the user doesn't explicitly request a style review. Does not cover language-specific syntax — delegates to specialized skills.
 license: Apache-2.0
+compatibility: Web server example in references uses slog (Go 1.21+)
 metadata:
   sources: "Go Wiki CodeReviewComments, Uber Style Guide"
 ---
@@ -9,6 +10,8 @@ metadata:
 # Go Code Review Checklist
 
 ## Review Procedure
+
+> Use `assets/review-template.md` when formatting the output of a code review to ensure consistent structure with Must Fix / Should Fix / Nits severity grouping.
 
 1. Run `gofmt -d .` and `go vet ./...` to catch mechanical issues first
 2. Read the diff file-by-file; for each file, check the categories below in order
@@ -152,27 +155,15 @@ Fix any issues before proceeding to the checklist above. For linter setup and co
 
 ## Integrative Example
 
-> For a complete web server example showing how all skills apply together, see [references/WEB-SERVER.md](references/WEB-SERVER.md).
+> See [references/WEB-SERVER.md](references/WEB-SERVER.md) when building a production HTTP server and want to verify your code applies concurrency, error handling, context, documentation, and naming conventions together.
 
 ---
 
-## See Also
+## Related Skills
 
-- [go-linting](../go-linting/SKILL.md): Automated tooling for style enforcement
-- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
-- [go-documentation](../go-documentation/SKILL.md): Documentation and comment standards
-- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns
-- [go-naming](../go-naming/SKILL.md): Naming conventions
-- [go-packages](../go-packages/SKILL.md): Package design and imports
-- [go-interfaces](../go-interfaces/SKILL.md): Interface design patterns
-- [go-concurrency](../go-concurrency/SKILL.md): Concurrency patterns
-- [go-context](../go-context/SKILL.md): Context usage patterns
-- [go-data-structures](../go-data-structures/SKILL.md): Data structure idioms
-- [go-defensive](../go-defensive/SKILL.md): Defensive programming
-- [go-testing](../go-testing/SKILL.md): Testing patterns
-- [go-performance](../go-performance/SKILL.md): Performance considerations
-- [go-control-flow](../go-control-flow/SKILL.md): Control flow idioms and blank identifier
-- [go-functional-options](../go-functional-options/SKILL.md): Functional options pattern
-- [go-declarations](../go-declarations/SKILL.md): Declaration and initialization patterns
-- [go-functions](../go-functions/SKILL.md): Function design and file organization
-- [go-generics](../go-generics/SKILL.md): Generics and type parameters
+- **Style foundations**: See [go-style-core](../go-style-core/SKILL.md) when resolving formatting debates or applying the clarity > simplicity > concision priority
+- **Linting setup**: See [go-linting](../go-linting/SKILL.md) when configuring golangci-lint or adding automated checks to CI
+- **Error strategy**: See [go-error-handling](../go-error-handling/SKILL.md) when reviewing error wrapping, sentinel errors, or the handle-once pattern
+- **Naming conventions**: See [go-naming](../go-naming/SKILL.md) when evaluating identifier names, receiver names, or package-symbol stuttering
+- **Testing patterns**: See [go-testing](../go-testing/SKILL.md) when reviewing test code for table-driven structure, failure messages, or helper usage
+- **Concurrency safety**: See [go-concurrency](../go-concurrency/SKILL.md) when reviewing goroutine lifetimes, channel usage, or mutex placement
