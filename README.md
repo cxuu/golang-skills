@@ -1,7 +1,7 @@
 # Agent Skills For Go
 
 AI [Agent Skills](https://agentskills.io/) for writing idiomatic,
-production-quality Go code. 19 modular skills teach AI coding assistants Go
+production-quality Go code. 20 modular skills teach AI coding assistants Go
 best practices derived from:
 
 - [Google Go Style Guide](https://google.github.io/styleguide/go/)
@@ -12,7 +12,7 @@ best practices derived from:
 Skills are tuned following
 [agentskills.io best practices](https://agentskills.io/skill-creation/best-practices):
 content the agent already knows is omitted, procedural decision trees guide
-multi-step tasks, 46 reference files load on demand via progressive disclosure,
+multi-step tasks, 48 reference files load on demand via progressive disclosure,
 8 bundled scripts automate common checks, and 4 asset templates ensure
 consistent output.
 
@@ -34,6 +34,7 @@ consistent output.
 | **go-generics** | When to use generics, constraints, common pitfalls, type aliases |
 | **go-interfaces** | Interface design, abstractions, embedding, "accept interfaces return structs" |
 | **go-linting** | Linters, golangci-lint setup, nolint directives, CI/CD integration |
+| **go-logging** | Structured logging with slog, log levels, request-scoped context, migration |
 | **go-naming** | Naming decision flow for packages, types, functions, variables, receivers |
 | **go-packages** | Package organization, imports, package size, CLI/flag patterns |
 | **go-performance** | String optimization, capacity hints, benchmarking, strconv over fmt |
@@ -93,7 +94,7 @@ which works across multiple AI coding tools. When you're writing Go code:
    (e.g., `go-naming` when you're writing a new function)
 2. **Procedural guidance**: Decision trees and step-by-step procedures for
    multi-step tasks like code review and error strategy selection
-3. **Progressive disclosure**: Core rules load immediately; 46 reference files
+3. **Progressive disclosure**: Core rules load immediately; 48 reference files
    load on demand when specific situations arise
 4. **Automation**: 8 bundled scripts handle repetitive checks so the agent
    focuses on higher-level guidance
@@ -110,7 +111,8 @@ skills/
 │   ├── scripts/          # Automation scripts (8 skills)
 │   └── assets/           # Output templates (4 skills)
 ├── evals/
-│   └── evals.json        # 45 trigger evals + 12 quality evals
+│   ├── evals.json        # 51 trigger evals + 15 quality evals
+│   └── files/            # Sample Go files for quality evals
 └── source/               # Original style guide sources
 ```
 

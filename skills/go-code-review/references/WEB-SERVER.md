@@ -62,7 +62,7 @@ func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
             http.Error(w, "user not found", http.StatusNotFound)
             return  // go-control-flow: early return
         }
-        // go-error-handling: log OR return, not both
+        // HTTP handlers are an exception to "log OR return": log detail server-side, return sanitized error to client.
         slog.Error("GetUser failed", "id", id, "err", err)
         http.Error(w, "internal error", http.StatusInternalServerError)
         return

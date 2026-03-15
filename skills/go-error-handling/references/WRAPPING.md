@@ -140,26 +140,29 @@ return err
 
 > **Advisory**: Recommended best practice.
 
-When you do log errors, follow these guidelines:
+When you do log errors, use `log/slog` (Go 1.21+) with structured key-value
+pairs and the appropriate level:
 
-- **`log.Error`**: Use sparingly - causes a flush and is expensive. Reserve for
-  actionable issues.
-- **`log.Warning`**: For issues that may need attention but aren't immediately
+- **`slog.Error`**: Reserve for actionable issues that need investigation.
+- **`slog.Warn`**: For issues that may need attention but aren't immediately
   actionable.
-- **Verbose logging (`log.V`)**: Use for development and tracing.
+- **`slog.Debug`**: For development tracing — only emitted when the handler's
+  level is set to `LevelDebug`.
 
 ```go
-// Good: Verbose logging with appropriate levels
-for _, sql := range queries {
-    log.V(1).Infof("Handling %v", sql)
-    if log.V(2) {
-        log.Infof("Handling %v", sql.Explain())
-    }
-    sql.Run()
+// Good: Structured logging with appropriate levels
+for _, q := range queries {
+    slog.Debug("handling query", "query", q)
+    q.Run()
 }
 
-// Bad: Expensive call even when log is disabled
-log.V(2).Infof("Handling %v", sql.Explain())
+// Good: Guard expensive formatting behind a level check
+if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+    slog.Debug("query plan", "explain", q.Explain())
+}
+
+// Bad: Expensive call evaluated even when debug logging is disabled
+slog.Debug("query plan", "explain", q.Explain())
 ```
 
 ### Protect Sensitive Information

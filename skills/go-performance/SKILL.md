@@ -4,6 +4,7 @@ description: Use when optimizing Go code, investigating slow performance, or wri
 license: Apache-2.0
 metadata:
   sources: "Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Performance Patterns
@@ -124,6 +125,8 @@ go test -bench=. -benchmem -count=10 ./...
 ```
 
 > Read [references/BENCHMARKS.md](references/BENCHMARKS.md) when writing benchmarks, comparing results with benchstat, profiling with pprof, or interpreting benchmark output.
+
+> **Validation**: After applying optimizations, run `bash scripts/bench-compare.sh` to measure the actual impact. Only keep optimizations with measurable improvement.
 
 ---
 

@@ -4,6 +4,7 @@ description: Use when writing, reviewing, or improving Go test code — includin
 license: Apache-2.0
 metadata:
   sources: "Google Style Guide, Uber Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Testing
@@ -100,6 +101,8 @@ or multiple branches — write separate test functions instead.
 > Read [references/TABLE-DRIVEN-TESTS.md](references/TABLE-DRIVEN-TESTS.md)
 > when writing table-driven tests, subtests, or parallel tests.
 
+> **Validation**: After generating or modifying tests, run `go test -run TestXxx -v` to verify the tests compile and pass. Fix any compilation errors before proceeding.
+
 ---
 
 ## Test Helpers
@@ -170,6 +173,8 @@ if gotErr := err != nil; gotErr != tt.wantErr {
 
 ```bash
 bash scripts/gen-table-test.sh ParseConfig config > config/parse_config_test.go
+bash scripts/gen-table-test.sh --parallel ParseConfig config      # with t.Parallel()
+bash scripts/gen-table-test.sh --output config/parse_config_test.go ParseConfig config
 ```
 
 ---

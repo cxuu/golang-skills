@@ -7,32 +7,10 @@ has a clear start/stop mechanism and preventing resource leaks.
 
 ## Making Lifetimes Obvious
 
-Keep synchronization-related code constrained within function scope and factor
-logic into synchronous functions.
-
-```go
-// Good: Goroutine lifetimes are clear
-func (w *Worker) Run(ctx context.Context) error {
-    var wg sync.WaitGroup
-    for item := range w.q {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            process(ctx, item) // Returns when context is cancelled
-        }()
-    }
-    wg.Wait() // Prevent spawned goroutines from outliving this function
-}
-```
-
-```go
-// Bad: Careless about when goroutines finish
-func (w *Worker) Run() {
-    for item := range w.q {
-        go process(item) // When does this finish? What if it never does?
-    }
-}
-```
+> The WaitGroup example and scoping rules are in the parent skill (SKILL.md §
+> Goroutine Lifetimes, Core Rules). This reference covers: stop/done channel
+> patterns, waiting strategies, init() lifecycle examples, and synchronous API
+> design.
 
 ---
 
@@ -77,19 +55,9 @@ ch <- 13 // panic: send on closed channel
 
 ## Waiting for Goroutines
 
-Use `sync.WaitGroup` for multiple goroutines:
-
-```go
-var wg sync.WaitGroup
-for i := 0; i < N; i++ {
-    wg.Add(1)
-    go func() {
-        defer wg.Done()
-        // work...
-    }()
-}
-wg.Wait()
-```
+> The `sync.WaitGroup` pattern for multiple goroutines is in the parent skill
+> (SKILL.md § Goroutine Lifetimes). Below is the done-channel alternative for a
+> single goroutine.
 
 Use a done channel for a single goroutine:
 
@@ -106,8 +74,8 @@ go func() {
 
 ## No Goroutines in init()
 
-`init()` functions should not spawn goroutines. Expose an object that manages
-the goroutine's lifetime with a method (`Close`, `Stop`, `Shutdown`):
+> The core rule is in the parent skill (SKILL.md § Core Rules, rule 3). Below
+> are expanded examples showing lifecycle management.
 
 ```go
 // Bad: Spawns uncontrollable background goroutine
@@ -142,7 +110,8 @@ func (w *Worker) Shutdown() {
 
 ## Prefer Synchronous Functions
 
-Synchronous functions let the caller control concurrency:
+> The rationale and benefit table are in the parent skill (SKILL.md §
+> Synchronous Functions). Below is a concrete code example.
 
 ```go
 // Good: Synchronous function - caller controls concurrency
@@ -164,6 +133,3 @@ go func() {
     // handle results
 }()
 ```
-
-It is quite difficult (sometimes impossible) to remove unnecessary concurrency
-at the caller side. Let the caller add concurrency when needed.

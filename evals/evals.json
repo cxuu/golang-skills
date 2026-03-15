@@ -182,6 +182,42 @@
       "set": "validation"
     },
     {
+      "query": "Set up structured logging with slog in our Go microservice",
+      "should_trigger": ["go-logging"],
+      "notes": "Direct slog setup request",
+      "set": "train"
+    },
+    {
+      "query": "Should I use log.Printf or slog in this new Go project?",
+      "should_trigger": ["go-logging"],
+      "notes": "Logger choice question",
+      "set": "train"
+    },
+    {
+      "query": "Add request ID logging to our Go HTTP middleware so we can trace requests",
+      "should_trigger": ["go-logging", "go-context"],
+      "notes": "Request-scoped logging with context propagation",
+      "set": "validation"
+    },
+    {
+      "query": "My Go service logs the same error three times — once in the repository, once in the service layer, and once in the handler",
+      "should_trigger": ["go-logging", "go-error-handling"],
+      "notes": "Log-and-return anti-pattern — logging + error handling overlap",
+      "set": "train"
+    },
+    {
+      "query": "What log level should I use for retry attempts that eventually succeed in Go?",
+      "should_trigger": ["go-logging"],
+      "notes": "Log level decision — Warn vs Info",
+      "set": "validation"
+    },
+    {
+      "query": "Migrate our Go codebase from log.Printf to structured logging",
+      "should_trigger": ["go-logging"],
+      "notes": "Migration from log to slog",
+      "set": "train"
+    },
+    {
       "query": "I need to preallocate a large Go map — should I use make with a size hint, and how do I estimate capacity?",
       "should_trigger": ["go-data-structures", "go-performance"],
       "notes": "Map preallocation is both data structure idiom and performance",
@@ -284,7 +320,8 @@
         "Errors are wrapped with context using fmt.Errorf and %w",
         "No goroutine leaks — all goroutines are waited on or cancellable",
         "Results are collected safely (mutex-protected map or channel)"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 2,
@@ -298,7 +335,8 @@
         "Failure messages include function inputs and got/want values",
         "Includes at least one error case",
         "Uses t.Errorf or t.Fatalf with descriptive format"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 3,
@@ -311,7 +349,8 @@
         "Constructors return concrete types, not the interface",
         "File-based logger has cleanup (Close method or defer pattern)",
         "Interface and method names follow Go conventions (no I prefix, -er suffix if single method)"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 4,
@@ -324,7 +363,8 @@
         "Each option is a With* function returning Option",
         "Constructor applies defaults then options",
         "Exported types and functions have doc comments"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 5,
@@ -338,7 +378,8 @@
         "Exported type names don't stutter with package name (e.g., user.User not user.UserModel)",
         "Handler/service/store functions follow Go naming conventions (no Get prefix on getters)",
         "Import paths form a clear dependency hierarchy (handlers → service → store)"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 6,
@@ -352,7 +393,8 @@
         "Struct fields use idiomatic Go names (no underscores, proper MixedCaps)",
         "Default values are documented or applied via a constructor function",
         "Error messages from Validate include the field name and reason"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 7,
@@ -366,7 +408,8 @@
         "ParseMoney documents what formats are accepted and what errors are returned",
         "At least one testable Example function (func ExampleMoney_Add or similar)",
         "Concurrency safety (or lack thereof) is documented on the Money type"
-      ]
+      ],
+      "set": "train"
     },
     {
       "id": 8,
@@ -379,7 +422,8 @@
         "Replaces fmt.Sprintf with strconv.AppendInt/strconv.FormatFloat or Builder.WriteString where feasible",
         "Builds the string in order (header first) instead of prepending after the loop",
         "Does not allocate intermediate strings inside the loop (no += on strings)"
-      ]
+      ],
+      "set": "validation"
     },
     {
       "id": 9,
@@ -393,7 +437,8 @@
         "Happy path (calculate total, update DB) is at the outermost nesting level",
         "Error messages are preserved with the same information as the original",
         "Function reads top-to-bottom without needing to track else branches"
-      ]
+      ],
+      "set": "validation"
     },
     {
       "id": 10,
@@ -407,7 +452,8 @@
         "Union and Intersection return new Set instances (don't mutate receiver)",
         "Values() returns a slice — ideally preallocated with make([]T, 0, len(s.items))",
         "Doc comment explicitly states the type is NOT safe for concurrent use"
-      ]
+      ],
+      "set": "validation"
     },
     {
       "id": 11,
@@ -421,7 +467,8 @@
         "Get promotes the accessed entry to the front of the list (marks as recently used)",
         "Put evicts the least-recently-used entry (back of list) when at capacity",
         "Constructor validates capacity > 0 or documents behavior for invalid input"
-      ]
+      ],
+      "set": "validation"
     },
     {
       "id": 12,
@@ -435,7 +482,55 @@
         "Excludes or adjusts rules for test files (e.g., don't require error checks on t.Fatal)",
         "Does NOT enable every available linter — makes intentional, justified choices",
         "Includes goimports or gci for import ordering"
-      ]
+      ],
+      "set": "validation"
+    },
+    {
+      "id": 13,
+      "prompt": "Review the Go code in evals/files/counter_server.go for style and correctness issues. Focus on error handling, naming, and concurrency safety.",
+      "files": ["evals/files/counter_server.go"],
+      "expected_output": "A structured code review identifying: GetCount should drop Get prefix (go-naming), Increment should use defer for mutex unlock (go-concurrency), should use slog instead of log (go-style-core), main should use run() pattern for testability (go-packages), missing error handling on w.Write (go-error-handling).",
+      "target_skills": ["go-code-review", "go-naming", "go-concurrency", "go-error-handling", "go-packages"],
+      "assertions": [
+        "Review identifies the Get prefix on GetCount as a naming violation",
+        "Review flags the non-deferred mutex unlock in Increment as a concurrency risk",
+        "Review mentions missing error handling on w.Write",
+        "Review follows a structured format with severity levels",
+        "Review references specific Go style guide conventions"
+      ],
+      "set": "validation"
+    },
+    {
+      "id": 14,
+      "prompt": "Review evals/files/pipeline.go. Implement proper error handling for this data processing pipeline that reads a config file, connects to a database, and processes records. Each step can fail independently.",
+      "files": ["evals/files/pipeline.go"],
+      "expected_output": "Implementation using fmt.Errorf with %w for wrapping, custom error types for different failure modes, and errgroup for concurrent record processing with proper error propagation.",
+      "target_skills": ["go-error-handling", "go-concurrency", "go-context"],
+      "assertions": [
+        "Uses fmt.Errorf with %w for error wrapping",
+        "Defines or recommends sentinel or custom error types for different failure categories",
+        "Suggests errgroup or similar for concurrent processing",
+        "Includes context propagation for cancellation",
+        "Follows the 'handle once' principle - errors are logged OR returned, not both"
+      ],
+      "set": "train"
+    },
+    {
+      "id": 15,
+      "prompt": "Set up structured logging for a Go HTTP API service. Configure slog for production (JSON output, Info level default), add request-scoped logging middleware that includes request ID and method, and show how handlers should log errors versus return them. The service runs on Go 1.22+.",
+      "expected_output": "A production slog setup with JSON handler, middleware that injects request_id into the logger via context, and handler examples demonstrating the log-or-return pattern.",
+      "target_skills": ["go-logging", "go-error-handling", "go-context"],
+      "assertions": [
+        "Uses slog.NewJSONHandler for production output",
+        "Sets slog.SetDefault with the configured logger",
+        "Middleware adds request_id and method to logger via slog.With",
+        "Logger is stored in or retrieved from context",
+        "Handler logs error server-side AND returns sanitized HTTP error to client (top-of-stack exception)",
+        "Lower-level functions wrap and return errors, not log-and-return",
+        "Log messages are static strings with dynamic data in key-value attributes",
+        "Keys use snake_case convention"
+      ],
+      "set": "validation"
     }
   ]
 }

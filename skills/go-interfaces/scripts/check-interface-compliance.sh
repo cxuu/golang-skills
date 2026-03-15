@@ -28,6 +28,7 @@ OPTIONS
     -v, --version    Show version
     --json           Output results as JSON
     --include-test   Also scan _test.go files for compliance checks
+    --limit N        Show at most N results (default: all)
 
 ARGUMENTS
     path             Directory to scan (default: current directory)
@@ -42,6 +43,7 @@ EOF
 
 JSON_OUTPUT=false
 INCLUDE_TEST=false
+LIMIT=0
 TARGET=""
 
 while [[ $# -gt 0 ]]; do
@@ -50,6 +52,7 @@ while [[ $# -gt 0 ]]; do
         -v|--version)    echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --json)          JSON_OUTPUT=true; shift ;;
         --include-test)  INCLUDE_TEST=true; shift ;;
+        --limit)         LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
         -*)              echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)               TARGET="$1"; shift ;;
     esac
@@ -129,6 +132,14 @@ done
 # Sort for stable output
 IFS=$'\n' MISSING=($(sort <<<"${MISSING[*]}")); unset IFS
 
+# Truncation
+TOTAL=${#MISSING[@]}
+TRUNCATED=false
+if [[ $LIMIT -gt 0 && $TOTAL -gt $LIMIT ]]; then
+    MISSING=("${MISSING[@]:0:$LIMIT}")
+    TRUNCATED=true
+fi
+
 # Output results
 if $JSON_OUTPUT; then
     echo "{"
@@ -157,13 +168,14 @@ if $JSON_OUTPUT; then
     echo ""
     echo "  ],"
     printf '  "count_interfaces": %d,\n' "${#INTERFACES[@]}"
-    printf '  "count_missing": %d\n' "${#MISSING[@]}"
+    printf '  "count_missing": %d,\n' "$TOTAL"
+    printf '  "truncated": %s\n' "$TRUNCATED"
     echo "}"
 else
     echo "Exported interfaces found: ${#INTERFACES[@]}"
     echo ""
 
-    if [[ ${#MISSING[@]} -eq 0 ]]; then
+    if [[ $TOTAL -eq 0 ]]; then
         echo "All interfaces have compile-time compliance checks."
         exit 0
     fi
@@ -174,14 +186,17 @@ else
         IFS='|' read -r name location <<< "$entry"
         printf "  %s  interface '%s' has no 'var _ %s = ...' assertion\n" "$location" "$name" "$name"
     done
+    if $TRUNCATED; then
+        echo "  ... and $((TOTAL - LIMIT)) more (use --limit to adjust)"
+    fi
     echo ""
     echo "Add compile-time checks like:"
     echo "  var _ MyInterface = (*MyImpl)(nil)"
     echo ""
-    echo "Total: ${#MISSING[@]} interface(s) missing verification"
+    echo "Total: $TOTAL interface(s) missing verification"
 fi
 
-if [[ ${#MISSING[@]} -gt 0 ]]; then
+if [[ $TOTAL -gt 0 ]]; then
     exit 1
 fi
 exit 0

@@ -124,3 +124,4 @@ concurrent calls that share the same deadline and cancellation signal.
 - **Goroutine coordination**: See [go-concurrency](../go-concurrency/SKILL.md) when using context for goroutine cancellation, select-based timeouts, or errgroup
 - **Error handling**: See [go-error-handling](../go-error-handling/SKILL.md) when deciding how to wrap or return `ctx.Err()` cancellation errors
 - **Interface design**: See [go-interfaces](../go-interfaces/SKILL.md) when designing APIs that accept context alongside interfaces
+- **Request-scoped logging**: See [go-logging](../go-logging/SKILL.md) when injecting loggers into context or adding request IDs to structured log output

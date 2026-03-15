@@ -7,23 +7,9 @@ the right error type for your use case.
 
 ## Error Structure
 
-> **Advisory**: Recommended best practice.
-
-If callers need to distinguish different error conditions programmatically, give
-errors structure rather than relying on string matching.
-
-### Choosing Error Types
-
-> **Source**: Uber Go Style Guide
-
-Use this decision table to choose the right error type:
-
-| Caller needs to match? | Message type | Use |
-|------------------------|--------------|-----|
-| No | static | `errors.New("message")` |
-| No | dynamic | `fmt.Errorf("msg: %v", val)` |
-| Yes | static | `var ErrFoo = errors.New("...")` |
-| Yes | dynamic | custom `error` type |
+> The error-type decision table is in the parent skill (SKILL.md § Error Types).
+> This reference covers: expanded code examples, sentinel errors, error checking
+> with `errors.Is`/`errors.As`, and structured error types.
 
 **Key considerations**:
 

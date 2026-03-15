@@ -24,6 +24,7 @@ OPTIONS
     -h, --help       Show this help message
     -v, --version    Show version
     --json           Output results as JSON
+    --limit N        Show at most N results (default: all)
 
 ARGUMENTS
     path             Directory or Go file to check (default: current directory)
@@ -37,6 +38,7 @@ EOF
 }
 
 JSON_OUTPUT=false
+LIMIT=0
 TARGET=""
 
 while [[ $# -gt 0 ]]; do
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)    usage; exit 0 ;;
         -v|--version) echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --json)       JSON_OUTPUT=true; shift ;;
+        --limit)      LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            TARGET="$1"; shift ;;
     esac
@@ -166,9 +169,18 @@ for file in "${FILES[@]}"; do
     check_bad_receivers "$file"
 done
 
+# Truncation
+TOTAL=${#VIOLATIONS[@]}
+TRUNCATED=false
+if [[ $LIMIT -gt 0 && $TOTAL -gt $LIMIT ]]; then
+    VIOLATIONS=("${VIOLATIONS[@]:0:$LIMIT}")
+    TRUNCATED=true
+fi
+
 # Output results
 if $JSON_OUTPUT; then
-    echo "["
+    echo "{"
+    echo '  "violations": ['
     first=true
     for v in "${VIOLATIONS[@]+"${VIOLATIONS[@]}"}"; do
         IFS='|' read -r location rule message <<< "$v"
@@ -176,13 +188,16 @@ if $JSON_OUTPUT; then
         line="${location#*:}"
         $first || echo ","
         first=false
-        printf '  {"file":"%s","line":%s,"rule":"%s","message":"%s"}' \
+        printf '    {"file":"%s","line":%s,"rule":"%s","message":"%s"}' \
             "$file" "$line" "$rule" "$message"
     done
     echo ""
-    echo "]"
+    echo "  ],"
+    printf '  "total": %d,\n' "$TOTAL"
+    printf '  "truncated": %s\n' "$TRUNCATED"
+    echo "}"
 else
-    if [[ ${#VIOLATIONS[@]} -eq 0 ]]; then
+    if [[ $TOTAL -eq 0 ]]; then
         echo "No naming violations found."
         exit 0
     fi
@@ -193,11 +208,14 @@ else
         IFS='|' read -r location rule message <<< "$v"
         printf "  %s  [%s] %s\n" "$location" "$rule" "$message"
     done
+    if $TRUNCATED; then
+        echo "  ... and $((TOTAL - LIMIT)) more (use --limit to adjust)"
+    fi
     echo ""
-    echo "Total: ${#VIOLATIONS[@]} violation(s)"
+    echo "Total: $TOTAL violation(s)"
 fi
 
-if [[ ${#VIOLATIONS[@]} -gt 0 ]]; then
+if [[ $TOTAL -gt 0 ]]; then
     exit 1
 fi
 exit 0

@@ -4,6 +4,7 @@ description: Use when naming any Go identifier — packages, types, functions, m
 license: Apache-2.0
 metadata:
   sources: "Google Style Guide, Uber Style Guide"
+allowed-tools: Bash(bash:*)
 ---
 
 # Go Naming Conventions
@@ -188,6 +189,8 @@ section.
 | Initialism | consistent case | `userID`, `XMLAPI` |
 | Variable | length ~ scope size | `i` (small), `userCount` (large) |
 | Built-in names | Never shadow predeclared identifiers | See `go-declarations` |
+
+> **Validation**: After renaming identifiers, run `bash scripts/check-naming.sh` to verify no naming anti-patterns remain. Then run `go build ./...` to confirm the rename didn't break anything.
 
 ## Related Skills
 

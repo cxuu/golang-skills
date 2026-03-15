@@ -4,7 +4,7 @@ description: Use when writing concurrent Go code — goroutines, channels, mutex
 license: Apache-2.0
 compatibility: Requires go.uber.org/atomic for atomic operation wrappers
 metadata:
-  sources: "Google Style Guide, Uber Style Guide"
+  sources: "Effective Go, Google Style Guide, Uber Style Guide"
 ---
 
 # Go Concurrency
