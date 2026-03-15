@@ -1,6 +1,6 @@
 ---
 name: go-defensive
-description: Defensive programming patterns in Go including interface verification, slice/map copying at boundaries, time handling, avoiding globals, and defer for cleanup. Use when writing robust, production-quality Go code.
+description: Use when hardening Go code at API boundaries — copying slices and maps to prevent mutation, verifying interface compliance at compile time, using defer for cleanup, handling time correctly with time.Time and time.Duration, avoiding mutable globals, or designing enums that start at one. Also use when reviewing Go code for robustness concerns like missing cleanup, shared mutable state, or unsafe crypto usage — even if the user doesn't mention "defensive programming" or "hardening" explicitly.
 sources: [Effective Go, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 

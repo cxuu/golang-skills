@@ -20,25 +20,25 @@ progressive disclosure.
 
 | Skill | Description |
 |-------|-------------|
-| **go-code-review** | Review procedure, checklist, automated pre-check with golangci-lint |
-| **go-concurrency** | Goroutine lifecycle, channels, mutex handling, sync primitives |
-| **go-context** | Context usage patterns, parameter placement, proper propagation |
-| **go-control-flow** | Guard clauses, variable shadowing, expression-less switch, break-with-labels |
-| **go-data-structures** | Composite literals, slice gotchas, nil vs empty slice, iota enums, copying |
-| **go-declarations** | Variable/const/type declarations, initialization, scope reduction |
-| **go-defensive** | Slice/map copying at boundaries, time handling, defer, panic/recover |
-| **go-documentation** | Doc comments, package docs, godoc formatting, examples |
-| **go-error-handling** | Error strategy decision tree, wrapping (%v vs %w), sentinels, error flow |
+| **go-code-review** | Systematic checklist for reviewing Go code and PR submissions |
+| **go-concurrency** | Goroutine lifecycle, channels, mutexes, parallelization, thread-safety |
+| **go-context** | Context.Context placement, cancellation, deadlines, request-scoped data |
+| **go-control-flow** | Idiomatic conditionals, loops, switch statements, guard clauses |
+| **go-data-structures** | Slices, maps, arrays — allocation with new vs make, append, copying |
+| **go-declarations** | Variable/const/type declarations, var vs :=, iota enums, scope reduction |
+| **go-defensive** | API boundary hardening, defer cleanup, time handling, mutable state |
+| **go-documentation** | Doc comments, package docs, godoc formatting, runnable examples |
+| **go-error-handling** | Error strategy decisions, wrapping (%v vs %w), sentinels, error flow |
 | **go-functional-options** | Functional options pattern for constructors with optional config |
-| **go-functions** | File ordering, signature formatting, naked parameters, Printf conventions |
-| **go-generics** | When to use generics (decision flow), type aliases vs definitions |
-| **go-interfaces** | Accept interfaces/return concrete, embedding, satisfaction checks, type switch |
-| **go-linting** | Recommended linters and golangci-lint configuration |
-| **go-naming** | Naming conventions for packages, functions, methods, variables, constants |
-| **go-packages** | Package organization, imports, avoiding util packages |
-| **go-performance** | String handling, type conversions, container capacity hints |
-| **go-style-core** | Clarity, simplicity, least mechanism, consistency, formatting rules |
-| **go-testing** | Table-driven tests, test helpers, test double naming, subtests, TestMain |
+| **go-functions** | Function ordering, signature formatting, naked parameters, Printf conventions |
+| **go-generics** | When to use generics, constraints, type aliases vs definitions |
+| **go-interfaces** | Interface design, abstractions, embedding, "accept interfaces return structs" |
+| **go-linting** | Recommended linters, golangci-lint setup, CI/CD integration |
+| **go-naming** | Naming conventions for packages, types, functions, variables, receivers |
+| **go-packages** | Package organization, imports, avoiding util packages, init() guidance |
+| **go-performance** | String optimization, capacity hints, benchmarking, strconv over fmt |
+| **go-style-core** | Formatting, nesting reduction, style principles, fallback style guide |
+| **go-testing** | Table-driven tests, subtests, test helpers, assertions, test organization |
 
 ## Quick Install
 

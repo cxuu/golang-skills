@@ -1,6 +1,6 @@
 ---
 name: go-control-flow
-description: Go control flow idioms from Effective Go. Covers if with initialization, omitting else for early returns, for loop forms, range, switch without fallthrough, type switch, and blank identifier patterns. Use when writing conditionals, loops, or switch statements in Go.
+description: Use when writing conditionals, loops, or switch statements in Go — including if with initialization, early returns to omit else, for loop forms, range, switch without fallthrough, type switches, and blank identifier patterns. Also use when writing even a simple if/else or for loop in Go, to ensure idiomatic structure like guard clauses and proper variable scoping.
 sources: [Effective Go, Google Style Guide]
 ---
 

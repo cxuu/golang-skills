@@ -1,6 +1,6 @@
 ---
 name: go-declarations
-description: Go variable, constant, and type declaration patterns including initialization, scope reduction, literal formatting, and modern idioms. Use when declaring variables, initializing structs or maps, or choosing between var and :=.
+description: Use when declaring or initializing Go variables, constants, structs, or maps — including choosing between var and :=, reducing variable scope with if-init, formatting composite literals, designing iota enums, and using modern idioms like any instead of interface{}. Also use when a user is writing a new struct or const block, even if they don't ask about declaration style. For allocation (new vs make) and slice/map operations, see go-data-structures.
 sources: [Google Style Guide, Uber Style Guide]
 ---
 
@@ -81,6 +81,51 @@ func (c *client) request() {
     )
     // ...
 }
+```
+
+---
+
+## Constants and iota
+
+`iota` creates enumerated constants. Start enums at one so the zero value
+represents an invalid/unset state:
+
+```go
+type Operation int
+
+const (
+    Add Operation = iota + 1
+    Subtract
+    Multiply
+)
+// Add=1, Subtract=2, Multiply=3
+```
+
+There are cases where the zero value makes sense as a default — use zero when
+the default behavior is desirable:
+
+```go
+type LogOutput int
+
+const (
+    LogToStdout LogOutput = iota  // zero value = default
+    LogToFile
+    LogToRemote
+)
+```
+
+Advanced `iota` patterns (e.g., bit-shifting for `ByteSize`):
+
+```go
+type ByteSize float64
+
+const (
+    _           = iota // ignore first value (0)
+    KB ByteSize = 1 << (10 * iota)
+    MB
+    GB
+    TB
+)
 ```
 
 ---
@@ -416,6 +461,7 @@ Tools such as `go vet` can detect shadowing of predeclared identifiers.
 | Topic | Rule | Source |
 |-------|------|--------|
 | Grouping | Group related `var`/`const`/`type`; separate unrelated | Uber |
+| `iota` enums | Start at one unless zero value is a meaningful default | Uber |
 | Top-level vars | Use `var`; omit type unless it differs | Uber |
 | Local vars | `:=` for explicit values; `var` for intentional zero | Uber |
 | Variable scope | Move close to usage; use if-init | Uber |

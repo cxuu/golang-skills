@@ -1,6 +1,6 @@
 ---
 name: go-concurrency
-description: Go concurrency patterns including goroutine lifecycle management, channel usage, mutex handling, and sync primitives. Use when writing concurrent Go code, spawning goroutines, working with channels, or documenting thread-safety guarantees.
+description: Use when writing concurrent Go code, spawning goroutines, using channels or mutexes, or documenting thread-safety guarantees. Also use when a user wants to parallelize work, fix data races, protect shared state, or make code thread-safe — even if they don't explicitly mention goroutines or channels. Helps with goroutine lifecycle management, channel direction and sizing, sync primitives, atomic operations, and context-based cancellation.
 sources: [Google Style Guide, Uber Style Guide]
 ---
 

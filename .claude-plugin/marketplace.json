@@ -4,15 +4,15 @@
     "name": "cxuu"
   },
   "metadata": {
-    "description": "Comprehensive Go skills for AI coding assistants derived from Effective Go, Google Go Style Guide, Uber Go Style Guide, and Go Wiki CodeReviewComments",
-    "version": "1.2.0"
+    "description": "19 modular skills that teach AI coding assistants idiomatic Go, derived from Effective Go, Google Go Style Guide, Uber Go Style Guide, and Go Wiki CodeReviewComments",
+    "version": "1.3.0"
   },
   "plugins": [
     {
       "name": "golang-skills",
       "source": "./",
-      "description": "19 Go skills covering style, naming, error handling, testing, documentation, concurrency, context, interfaces, data structures, control flow, performance, linting, code review, declarations, functions, generics, and defensive programming. Tuned per agentskills.io best practices.",
-      "version": "1.2.0"
+      "description": "19 Go skills that activate automatically to guide idiomatic style, naming, error handling, testing, concurrency, documentation, and more. Tuned per agentskills.io best practices with procedural guidance and progressive disclosure.",
+      "version": "1.3.0"
     }
   ]
 }

@@ -1,6 +1,6 @@
 ---
 name: go-data-structures
-description: Go data structures including allocation with new vs make, arrays, slices, maps, printing with fmt, and constants with iota. Use when working with Go's built-in data structures, memory allocation, or formatted output.
+description: Use when working with Go slices, maps, or arrays — including choosing between new and make for allocation, using append and 2D slices, declaring empty slices (nil vs literal for JSON), implementing sets with maps, and copying data structures at boundaries. Also use when a user is building or manipulating collections, even if they don't ask about allocation or data structure idioms. For constants, iota, and declaration syntax (var vs :=, struct literals), see go-declarations.
 sources: [Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 
@@ -134,51 +134,6 @@ if attended[person] {  // false if not in map
 
 ---
 
-## Constants and iota
-
-`iota` creates enumerated constants. Start enums at one so the zero value
-represents an invalid/unset state:
-
-```go
-type Operation int
-
-const (
-    Add Operation = iota + 1
-    Subtract
-    Multiply
-)
-// Add=1, Subtract=2, Multiply=3
-```
-
-There are cases where the zero value makes sense as a default — use zero when
-the default behavior is desirable:
-
-```go
-type LogOutput int
-
-const (
-    LogToStdout LogOutput = iota  // zero value = default
-    LogToFile
-    LogToRemote
-)
-```
-
-Advanced `iota` patterns (e.g., bit-shifting for `ByteSize`):
-
-```go
-type ByteSize float64
-
-const (
-    _           = iota // ignore first value (0)
-    KB ByteSize = 1 << (10 * iota)
-    MB
-    GB
-    TB
-)
-```
-
----
-
 ## Copying
 
 Be careful when copying a struct from another package. If the type has methods
@@ -213,7 +168,6 @@ func increment(sc *SafeCounter) {
 | Slices | Always assign `append` result; `nil` slice preferred over `[]T{}` |
 | Sets | `map[T]bool` is idiomatic |
 | Copying | Don't copy `T` if methods are on `*T`; beware aliasing |
-| `iota` enums | Start at one unless zero value is a meaningful default |
 
 ## See Also
 

@@ -1,6 +1,6 @@
 ---
 name: go-linting
-description: Recommended Go linters and golangci-lint configuration. Use when setting up linting for a Go project or configuring CI/CD.
+description: Use when setting up linting for a Go project, configuring golangci-lint, or adding Go checks to a CI/CD pipeline. Also use when starting a new Go project and deciding which linters to enable, even if the user only asks about "code quality" or "static analysis" without mentioning specific linter names. Recommends minimum linters (errcheck, goimports, revive, govet, staticcheck) and provides an example .golangci.yml configuration.
 sources: [Uber Style Guide]
 ---
 
