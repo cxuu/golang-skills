@@ -13,8 +13,8 @@ best practices derived from:
 Skills are tuned following
 [agentskills.io best practices](https://agentskills.io/skill-creation/best-practices):
 content the agent already knows is omitted, procedural decision trees guide
-multi-step tasks, and detailed reference material loads on demand via
-progressive disclosure.
+multi-step tasks, detailed reference material loads on demand via progressive
+disclosure, and bundled scripts automate common workflows.
 
 ## Skills Included
 
@@ -23,19 +23,19 @@ progressive disclosure.
 | **go-code-review** | Systematic checklist for reviewing Go code and PR submissions |
 | **go-concurrency** | Goroutine lifecycle, channels, mutexes, parallelization, thread-safety |
 | **go-context** | Context.Context placement, cancellation, deadlines, request-scoped data |
-| **go-control-flow** | Idiomatic conditionals, loops, switch statements, guard clauses |
+| **go-control-flow** | Idiomatic conditionals, loops, switch/break behavior, guard clauses |
 | **go-data-structures** | Slices, maps, arrays — allocation with new vs make, append, copying |
-| **go-declarations** | Variable/const/type declarations, var vs :=, iota enums, scope reduction |
-| **go-defensive** | API boundary hardening, defer cleanup, time handling, mutable state |
+| **go-declarations** | Variable/const/type declarations, var vs :=, iota enums, shadowing |
+| **go-defensive** | API boundary hardening, defer cleanup, Must functions, time handling |
 | **go-documentation** | Doc comments, package docs, godoc formatting, runnable examples |
-| **go-error-handling** | Error strategy decisions, wrapping (%v vs %w), sentinels, error flow |
+| **go-error-handling** | Error strategy decisions, wrapping (%v vs %w), sentinels, logging patterns |
 | **go-functional-options** | Functional options pattern for constructors with optional config |
-| **go-functions** | Function ordering, signature formatting, naked parameters, Printf conventions |
-| **go-generics** | When to use generics, constraints, type aliases vs definitions |
+| **go-functions** | Function ordering, signature formatting, Printf verbs, Stringer interface |
+| **go-generics** | When to use generics, constraints, common pitfalls, type aliases |
 | **go-interfaces** | Interface design, abstractions, embedding, "accept interfaces return structs" |
-| **go-linting** | Recommended linters, golangci-lint setup, CI/CD integration |
-| **go-naming** | Naming conventions for packages, types, functions, variables, receivers |
-| **go-packages** | Package organization, imports, avoiding util packages, init() guidance |
+| **go-linting** | Linters, golangci-lint setup, nolint directives, CI/CD integration |
+| **go-naming** | Naming decision flow for packages, types, functions, variables, receivers |
+| **go-packages** | Package organization, imports, package size, CLI/flag patterns |
 | **go-performance** | String optimization, capacity hints, benchmarking, strconv over fmt |
 | **go-style-core** | Formatting, nesting reduction, style principles, fallback style guide |
 | **go-testing** | Table-driven tests, subtests, test helpers, assertions, test organization |

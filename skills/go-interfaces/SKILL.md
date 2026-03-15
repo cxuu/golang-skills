@@ -1,7 +1,9 @@
 ---
 name: go-interfaces
 description: Use when defining or implementing Go interfaces, designing abstractions, creating mockable boundaries for testing, or composing types through embedding. Also use when deciding whether to accept an interface or return a concrete type, using type assertions or type switches, or structuring code with the "accept interfaces, return structs" principle — even if the user doesn't explicitly mention interfaces. Helps with implicit satisfaction checks, the comma-ok idiom, embedding patterns, and choosing pointer vs value receivers.
-sources: [Effective Go, Google Style Guide, Uber Style Guide]
+license: Apache-2.0
+metadata:
+  sources: "Effective Go, Google Style Guide, Uber Style Guide"
 ---
 
 # Go Interfaces and Composition
@@ -252,9 +254,9 @@ receivers only for small, immutable types (`Point`, `time.Time`) or basic types.
 
 ## See Also
 
-- **go-style-core**: Core Go style principles and formatting
-- **go-naming**: Interface naming conventions (Reader, Writer, etc.)
-- **go-error-handling**: Error interface and custom error types
-- **go-functional-options**: Using interfaces for flexible APIs
-- **go-defensive**: Defensive programming patterns
-- **go-generics**: When generics suffice vs interfaces
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles and formatting
+- [go-naming](../go-naming/SKILL.md): Interface naming conventions (Reader, Writer, etc.)
+- [go-error-handling](../go-error-handling/SKILL.md): Error interface and custom error types
+- [go-functional-options](../go-functional-options/SKILL.md): Using interfaces for flexible APIs
+- [go-defensive](../go-defensive/SKILL.md): Defensive programming patterns
+- [go-generics](../go-generics/SKILL.md): When generics suffice vs interfaces

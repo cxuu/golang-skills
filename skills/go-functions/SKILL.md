@@ -1,7 +1,9 @@
 ---
 name: go-functions
-description: Use when organizing functions within a Go file, formatting function signatures, designing return values, or following Printf-style naming conventions — even if the user is just adding a new function and isn't explicitly asking about organization. Helps with function grouping and ordering, multi-line signature formatting, avoiding naked parameters, and when to use pointers to interfaces (almost never). For the functional options constructor pattern, see go-functional-options.
-sources: [Effective Go, Google Style Guide, Uber Style Guide]
+description: Use when organizing functions within a Go file, formatting function signatures, designing return values, or following Printf-style naming conventions — even if the user is just adding a new function. Helps with function grouping and ordering, multi-line signature formatting, avoiding naked parameters, Printf verbs and Stringer interface, and when to use pointers to interfaces (almost never).
+license: Apache-2.0
+metadata:
+  sources: "Effective Go, Google Style Guide, Uber Style Guide"
 ---
 
 # Go Function Design
@@ -197,6 +199,56 @@ parameters.
 
 ---
 
+## Printf Verbs and Stringer
+
+### Common Verbs
+
+| Verb | Use |
+|------|-----|
+| `%v` | Default format (struct fields, slice elements) |
+| `%+v` | Struct fields with names: `{Name:alice Age:30}` |
+| `%#v` | Go-syntax representation: `main.User{Name:"alice", Age:30}` |
+| `%T` | Type of the value: `main.User` |
+| `%q` | Quoted string or byte slice: `"hello"` |
+| `%x` | Hex encoding: `68656c6c6f` |
+
+### Custom String Representation
+
+Implement `fmt.Stringer` to control how your type appears in `%v` and `%s`:
+
+```go
+type Point struct{ X, Y int }
+
+func (p Point) String() string {
+    return fmt.Sprintf("(%d, %d)", p.X, p.Y)
+}
+
+// fmt.Println(Point{1, 2}) → "(1, 2)"
+```
+
+### Custom Formatting with fmt.Formatter
+
+For full control over all format verbs, implement `fmt.Formatter`:
+
+```go
+func (p Point) Format(f fmt.State, verb rune) {
+    switch verb {
+    case 'v':
+        if f.Flag('+') {
+            fmt.Fprintf(f, "X:%d Y:%d", p.X, p.Y)
+            return
+        }
+        fmt.Fprintf(f, "(%d, %d)", p.X, p.Y)
+    case 's':
+        fmt.Fprintf(f, "(%d, %d)", p.X, p.Y)
+    }
+}
+```
+
+Only implement `fmt.Formatter` when `String()` isn't sufficient — it's rarely needed.
+
+---
+
 ## Quick Reference
 
 | Topic | Rule |
@@ -208,13 +260,14 @@ parameters.
 | `%q` | Use for human-readable string output |
 | Format string storage | Declare as `const` outside Printf calls |
 | Printf function names | End with `f` for `go vet` support |
+| Printf/Stringer | `%v` default, `%+v` with names, `%#v` Go-syntax; implement `Stringer` for custom output |
 
 ---
 
 ## See Also
 
-- **go-error-handling**: Error return patterns and wrapping
-- **go-style-core**: Line length and formatting principles
-- **go-declarations**: Variable declaration and initialization patterns
-- **go-naming**: Function and method naming conventions
-- **go-interfaces**: Interface design and type assertions
+- [go-error-handling](../go-error-handling/SKILL.md): Error return patterns and wrapping
+- [go-style-core](../go-style-core/SKILL.md): Line length and formatting principles
+- [go-declarations](../go-declarations/SKILL.md): Variable declaration and initialization patterns
+- [go-naming](../go-naming/SKILL.md): Function and method naming conventions
+- [go-interfaces](../go-interfaces/SKILL.md): Interface design and type assertions

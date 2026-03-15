@@ -1,12 +1,12 @@
 ---
 name: go-testing
 description: Use when writing, reviewing, or improving Go test code — including table-driven tests, subtests, parallel tests, test helpers, test doubles, and assertions with cmp.Diff. Also use when a user asks to write a test for a Go function, even if they don't mention specific patterns like table-driven tests or subtests. Helps with writing useful failure messages, choosing t.Error vs t.Fatal, using t.Helper and t.Cleanup, and organizing test packages.
-sources: [Google Style Guide, Uber Style Guide]
+license: Apache-2.0
+metadata:
+  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Testing
-
-Guidelines for writing clear, maintainable Go tests following Google's style.
 
 ## Useful Test Failures
 
@@ -333,44 +333,9 @@ func setupTestDB(t *testing.T) *sql.DB {
 
 ---
 
-## Test Doubles
+## Test Organization
 
-> **Advisory**: Follow consistent naming for test doubles (stubs, fakes, mocks,
-> spies).
-
-**Package naming**: Append `test` to the production package (e.g.,
-`creditcardtest`).
-
-```go
-// Good: In package creditcardtest
-
-// Single double - use simple name
-type Stub struct{}
-func (Stub) Charge(*creditcard.Card, money.Money) error { return nil }
-
-// Multiple behaviors - name by behavior
-type AlwaysCharges struct{}
-type AlwaysDeclines struct{}
-
-// Multiple types - include type name
-type StubService struct{}
-type StubStoredValue struct{}
-```
-
-**Local variables**: Prefix test double variables for clarity (`spyCC` not
-`cc`).
-
----
-
-## Test Packages
-
-| Package Declaration | Use Case |
-|---------------------|----------|
-| `package foo` | Same-package tests, can access unexported identifiers |
-| `package foo_test` | Black-box tests, avoids circular dependencies |
-
-Both go in `foo_test.go` files. Use `_test` suffix when testing only public API
-or to break import cycles.
+> For test doubles (fakes, stubs, spies), test package placement (same vs different package), and setup scoping patterns, see [references/TEST-ORGANIZATION.md](references/TEST-ORGANIZATION.md).
 
 ---
 
@@ -392,31 +357,6 @@ if !errors.Is(err, ErrInvalidInput) {
 // Good: Simple presence check when semantics don't matter
 if gotErr := err != nil; gotErr != tt.wantErr {
     t.Errorf("f(%v) error = %v, want error presence = %t", tt.input, err, tt.wantErr)
-}
-```
-
----
-
-## Setup Scoping
-
-> **Advisory**: Keep setup scoped to tests that need it.
-
-```go
-// Good: Explicit setup in tests that need it
-func TestParseData(t *testing.T) {
-    data := mustLoadDataset(t)
-    // ...
-}
-
-func TestUnrelated(t *testing.T) {
-    // Doesn't pay for dataset loading
-}
-
-// Bad: Global init loads data for all tests
-var dataset []byte
-
-func init() {
-    dataset = mustLoadDataset()  // Runs even for unrelated tests
 }
 ```
 
@@ -448,25 +388,20 @@ See `references/INTEGRATION.md` when testing HTTP or RPC integrations.
 
 ---
 
-## Quick Reference
+## Available Scripts
 
-| Situation | Approach |
-|-----------|----------|
-| Compare structs/slices | `cmp.Diff(want, got)` |
-| Simple value mismatch | `t.Errorf("F(%v) = %v, want %v", in, got, want)` |
-| Setup failure | `t.Fatalf("Setup: %v", err)` |
-| Multiple comparisons | `t.Error` for each, continue testing |
-| Goroutine failures | `t.Error` only, never `t.Fatal` |
-| Test helper | Call `t.Helper()` first |
-| Large test data | Table-driven with subtests |
-| Package-wide setup | `TestMain` with helper function |
-| Interface validation | Acceptance test in `*test` package |
-| HTTP integration | `httptest.NewServer` + real client |
+- **`scripts/gen-table-test.sh`** — Generates a table-driven test scaffold
+
+```bash
+bash scripts/gen-table-test.sh ParseConfig config > config/parse_config_test.go
+```
+
+---
 
 ## See Also
 
-- For core style principles: `go-style-core`
-- For naming conventions: `go-naming`
-- For error handling patterns: `go-error-handling`
-- For linter configuration: `go-linting`
-- For function design: `go-functions`
+- [go-style-core](../go-style-core/SKILL.md): Core style principles
+- [go-naming](../go-naming/SKILL.md): Naming conventions
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns
+- [go-linting](../go-linting/SKILL.md): Linter configuration
+- [go-functions](../go-functions/SKILL.md): Function design

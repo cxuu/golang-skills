@@ -1,7 +1,9 @@
 ---
 name: go-functional-options
 description: Use when designing a Go constructor or factory function with optional configuration — especially with 3+ optional parameters or when the API needs to be extensible. Also use when a user is building a New* function that takes many settings, even if they don't mention "functional options" by name. This is the detailed implementation guide for the pattern; for general function design (organization, signatures, Printf), see go-functions instead.
-sources: [Uber Style Guide]
+license: Apache-2.0
+metadata:
+  sources: "Uber Style Guide"
 ---
 
 # Functional Options Pattern
@@ -195,8 +197,8 @@ func New(required string, opts ...Option) (*Thing, error) {
 
 ## See Also
 
-- `go-style-core` - Core Go style principles
-- `go-naming` - Naming conventions for Go
-- `go-defensive` - Defensive programming patterns
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
+- [go-naming](../go-naming/SKILL.md): Naming conventions for Go
+- [go-defensive](../go-defensive/SKILL.md): Defensive programming patterns
 - [Self-referential functions and the design of options](https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html) - Rob Pike
 - [Functional options for friendly APIs](https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis) - Dave Cheney

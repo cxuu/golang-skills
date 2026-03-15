@@ -1,15 +1,12 @@
 ---
 name: go-packages
 description: Use when creating Go packages, organizing imports, managing dependencies, or deciding how to structure Go code into packages. Also use when starting a new Go project or splitting a growing codebase into packages, even if the user doesn't explicitly ask about package organization. Helps avoid util packages, organize import groups, and teaches why to avoid init() and the pattern of exiting only from main().
-sources: [Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
+license: Apache-2.0
+metadata:
+  sources: "Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Packages and Imports
-
-This skill covers package organization and import management following Google's
-and Uber's Go style guides.
-
----
 
 ## Package Organization
 
@@ -326,26 +323,82 @@ func run() error {
 
 ---
 
-## Quick Reference
+## Package Size
 
-| Topic | Rule | Type |
-|-------|------|------|
-| Import organization | std first, groups separated by blank lines | Normative |
-| Import grouping | std → other (→ proto → side-effect) | Combined |
-| Import renaming | Only when necessary; prefer renaming local/project import | Normative |
-| Blank imports | Only in main packages or tests | Normative |
-| Dot imports | Only for circular test dependencies | Normative |
-| Util packages | Avoid; use descriptive names | Advisory |
-| Package size | Balance cohesion vs. distinct concepts | Advisory |
-| init() | Avoid; must be deterministic if used | Advisory |
-| Exit in main | Only exit from main(); return errors | Advisory |
+### When to Split a Package
+
+```
+Is the package getting too large?
+├─ Can you describe its purpose in one sentence? 
+│  ├─ No → Split by responsibility
+│  └─ Yes → Keep it, but check below
+├─ Do files in the package never import each other's unexported symbols?
+│  └─ Yes → Those files could be separate packages
+├─ Does the package have distinct user groups using different parts?
+│  └─ Yes → Split along user boundaries
+└─ Is the godoc page overwhelming?
+   └─ Yes → Split to improve discoverability
+```
+
+### When NOT to Split
+
+- Don't split just because a file is long — large files in a focused package are fine
+- Don't create packages with only one type or function
+- Don't split if it would create circular dependencies
+- Avoid splitting internal helpers into a `util` or `internal/helpers` package
+
+---
+
+## Command-Line Interfaces
+
+### Flag Naming
+
+Use lowercase, hyphen-separated flag names:
+
+```go
+// Good
+flag.String("output-dir", ".", "directory for output files")
+flag.Bool("dry-run", false, "print actions without executing")
+
+// Bad
+flag.String("outputDir", ".", "")    // camelCase
+flag.String("output_dir", ".", "")   // underscores
+```
+
+### Subcommands
+
+For complex CLIs with subcommands, use `flag.NewFlagSet` per subcommand:
+
+```go
+func main() {
+    serveCmd := flag.NewFlagSet("serve", flag.ExitOnError)
+    port := serveCmd.Int("port", 8080, "listen port")
+
+    migrateCmd := flag.NewFlagSet("migrate", flag.ExitOnError)
+    dryRun := migrateCmd.Bool("dry-run", false, "preview changes")
+
+    switch os.Args[1] {
+    case "serve":
+        serveCmd.Parse(os.Args[2:])
+        runServe(*port)
+    case "migrate":
+        migrateCmd.Parse(os.Args[2:])
+        runMigrate(*dryRun)
+    default:
+        fmt.Fprintf(os.Stderr, "unknown command: %s\n", os.Args[1])
+        os.Exit(1)
+    }
+}
+```
+
+For larger CLIs, consider libraries like `cobra` or `urfave/cli`. Exit only from `main()`.
 
 ---
 
 ## See Also
 
-- For core style principles: `go-style-core`
-- For naming conventions: `go-naming`
-- For error handling patterns: `go-error-handling`
-- For defensive coding: `go-defensive`
-- For linting tools: `go-linting`
+- [go-style-core](../go-style-core/SKILL.md): Core style principles
+- [go-naming](../go-naming/SKILL.md): Naming conventions
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns
+- [go-defensive](../go-defensive/SKILL.md): Defensive coding
+- [go-linting](../go-linting/SKILL.md): Linting tools

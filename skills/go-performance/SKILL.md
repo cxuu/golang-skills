@@ -1,7 +1,9 @@
 ---
 name: go-performance
 description: Use when optimizing Go code, investigating slow performance, or writing performance-critical sections. Also use when a user mentions slow Go code, string concatenation in loops, or asks about benchmarking — even without explicitly requesting "performance patterns." Helps choose strconv over fmt, avoid repeated string-to-byte conversions, specify map and slice capacity hints, pick the right string concatenation strategy, and decide when to pass values vs pointers.
-sources: [Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments]
+license: Apache-2.0
+metadata:
+  sources: "Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Performance Patterns
@@ -260,6 +262,6 @@ usage := "" +
 
 ## See Also
 
-- For core style principles: `go-style-core`
-- For naming conventions: `go-naming`
-- For declaration patterns: `go-declarations`
+- [go-style-core](../go-style-core/SKILL.md): Core style principles
+- [go-naming](../go-naming/SKILL.md): Naming conventions
+- [go-declarations](../go-declarations/SKILL.md): Declaration patterns

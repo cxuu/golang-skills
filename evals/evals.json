@@ -1,0 +1,160 @@
+{
+  "description": "Evaluation queries for golang-skills. Includes trigger tests and output quality tests with assertions.",
+  "trigger_evals": [
+    {
+      "query": "Write a Go function that processes items concurrently using goroutines and channels",
+      "should_trigger": ["go-concurrency"],
+      "notes": "Direct mention of goroutines and channels"
+    },
+    {
+      "query": "I have a race condition in my Go service, can you help fix it?",
+      "should_trigger": ["go-concurrency"],
+      "notes": "Indirect - mentions race condition without naming primitives"
+    },
+    {
+      "query": "Review this Go PR for me before I submit it",
+      "should_trigger": ["go-code-review"],
+      "notes": "Direct trigger for code review"
+    },
+    {
+      "query": "How should I name this Go package that handles user authentication?",
+      "should_trigger": ["go-naming", "go-packages"],
+      "notes": "Package naming touches both skills"
+    },
+    {
+      "query": "Write a test for this Go function that calculates shipping costs",
+      "should_trigger": ["go-testing"],
+      "notes": "Direct test writing request"
+    },
+    {
+      "query": "This Go error handling feels messy, should I wrap errors or use sentinel values?",
+      "should_trigger": ["go-error-handling"],
+      "notes": "Error strategy decision"
+    },
+    {
+      "query": "Set up linting for our new Go project",
+      "should_trigger": ["go-linting"],
+      "notes": "Direct linting setup request"
+    },
+    {
+      "query": "My Go constructor has 8 optional parameters, what's the cleanest API?",
+      "should_trigger": ["go-functional-options"],
+      "notes": "Classic functional options trigger without naming the pattern"
+    },
+    {
+      "query": "Add proper doc comments to these exported Go types",
+      "should_trigger": ["go-documentation"],
+      "notes": "Direct documentation request"
+    },
+    {
+      "query": "This Go function is slow when concatenating strings in a loop",
+      "should_trigger": ["go-performance"],
+      "notes": "Performance issue with string concatenation"
+    },
+    {
+      "query": "Should I use context.Background() or context.TODO() here?",
+      "should_trigger": ["go-context"],
+      "notes": "Direct context question"
+    },
+    {
+      "query": "Refactor this Go code to use interfaces instead of concrete types for testability",
+      "should_trigger": ["go-interfaces"],
+      "notes": "Interface design for testing"
+    },
+    {
+      "query": "Write a Python script to parse CSV files",
+      "should_trigger": [],
+      "notes": "Python task - no Go skills should trigger"
+    },
+    {
+      "query": "Help me set up a React frontend with TypeScript",
+      "should_trigger": [],
+      "notes": "Frontend task - completely unrelated"
+    },
+    {
+      "query": "What's the best database for my project?",
+      "should_trigger": [],
+      "notes": "Generic architecture question - not Go-specific"
+    },
+    {
+      "query": "Deploy my service to Kubernetes",
+      "should_trigger": [],
+      "notes": "Infrastructure task - not Go coding"
+    },
+    {
+      "query": "Fix the CSS layout on our login page",
+      "should_trigger": [],
+      "notes": "Frontend styling - completely unrelated"
+    },
+    {
+      "query": "Write a Go function that reads config from environment variables and validates it at startup",
+      "should_trigger": ["go-error-handling", "go-defensive"],
+      "notes": "Near-miss: involves Go but primarily about config/startup patterns"
+    },
+    {
+      "query": "Optimize our Go microservice that handles 10k requests per second",
+      "should_trigger": ["go-performance", "go-concurrency"],
+      "notes": "Performance + concurrency overlap"
+    },
+    {
+      "query": "Write a Rust program to process JSON data",
+      "should_trigger": [],
+      "notes": "Rust task - wrong language"
+    }
+  ],
+  "quality_evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Go function `FetchAll` that takes a slice of URLs and fetches them concurrently, returning a map of URL to response body. Use proper error handling and context cancellation.",
+      "expected_output": "A Go function using errgroup or WaitGroup with proper goroutine lifecycle, context propagation, mutex or channel for collecting results, and error wrapping.",
+      "target_skills": ["go-concurrency", "go-error-handling", "go-context"],
+      "assertions": [
+        "Function accepts context.Context as first parameter",
+        "Goroutine lifetimes are bounded (WaitGroup, errgroup, or done channel)",
+        "Errors are wrapped with context using fmt.Errorf and %w",
+        "No goroutine leaks — all goroutines are waited on or cancellable",
+        "Results are collected safely (mutex-protected map or channel)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a table-driven test for a Go function `ParseDuration(s string) (time.Duration, error)` that parses human-readable durations like '5m', '2h30m', '1d'.",
+      "expected_output": "A table-driven test with named struct fields, multiple test cases including edge cases, subtests via t.Run, and descriptive failure messages using got/want format.",
+      "target_skills": ["go-testing"],
+      "assertions": [
+        "Uses table-driven test pattern with []struct",
+        "Struct fields have names (not positional)",
+        "Uses t.Run for subtests with tt.name",
+        "Failure messages include function inputs and got/want values",
+        "Includes at least one error case",
+        "Uses t.Errorf or t.Fatalf with descriptive format"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Define a Go `Logger` interface and implement it for both stdout and file-based logging. Follow idiomatic interface design.",
+      "expected_output": "A small interface defined at the consumer, concrete implementations returned from constructors, proper resource cleanup for file logger.",
+      "target_skills": ["go-interfaces", "go-naming", "go-defensive"],
+      "assertions": [
+        "Interface is small (1-3 methods)",
+        "Interface is defined in the consumer package, not with implementations",
+        "Constructors return concrete types, not the interface",
+        "File-based logger has cleanup (Close method or defer pattern)",
+        "Interface and method names follow Go conventions (no I prefix, -er suffix if single method)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Create a Go config package with a `Config` struct that has 6 optional fields. Provide a clean constructor API.",
+      "expected_output": "Functional options pattern with Option type, With* functions, and a New constructor that applies options.",
+      "target_skills": ["go-functional-options", "go-declarations", "go-documentation"],
+      "assertions": [
+        "Uses functional options pattern (not config struct with exported fields)",
+        "Option type is opaque (unexported struct or function type)",
+        "Each option is a With* function returning Option",
+        "Constructor applies defaults then options",
+        "Exported types and functions have doc comments"
+      ]
+    }
+  ]
+}

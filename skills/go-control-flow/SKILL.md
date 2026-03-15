@@ -1,7 +1,9 @@
 ---
 name: go-control-flow
 description: Use when writing conditionals, loops, or switch statements in Go — including if with initialization, early returns to omit else, for loop forms, range, switch without fallthrough, type switches, and blank identifier patterns. Also use when writing even a simple if/else or for loop in Go, to ensure idiomatic structure like guard clauses and proper variable scoping.
-sources: [Effective Go, Google Style Guide]
+license: Apache-2.0
+metadata:
+  sources: "Effective Go, Google Style Guide"
 ---
 
 # Go Control Flow
@@ -228,6 +230,38 @@ See **go-interfaces**: Interface Satisfaction Checks for when to use this patter
 
 ---
 
+## Switch and Break
+
+Go `switch` cases do **not** fall through by default (unlike C/Java). Each case
+body implicitly breaks. Use `fallthrough` only when explicitly needed.
+
+```go
+switch n {
+case 1:
+    fmt.Println("one")
+    // no fallthrough — next case is NOT executed
+case 2:
+    fmt.Println("two")
+}
+```
+
+A `break` inside a `switch` that is inside a `for` loop breaks out of the
+**switch**, not the loop. Use a labeled break to exit the loop:
+
+```go
+Loop:
+    for _, v := range items {
+        switch v.Type {
+        case "done":
+            break Loop  // breaks the for loop
+        case "skip":
+            break  // breaks only the switch
+        }
+    }
+```
+
+---
+
 ## Quick Reference
 
 | Pattern | Go Idiom |
@@ -244,13 +278,14 @@ See **go-interfaces**: Interface Satisfaction Checks for when to use this patter
 | Discard value | `_, err := f()` |
 | Side-effect import | `import _ "pkg"` |
 | Interface check | `var _ Interface = (*Type)(nil)` |
+| switch/break | No fallthrough by default; labeled `break` to exit enclosing loop |
 
 ---
 
 ## See Also
 
-- **go-style-core**: Core Go style principles and formatting
-- **go-error-handling**: Error handling patterns including guard clauses
-- **go-naming**: Naming conventions for loop variables and labels
-- **go-concurrency**: Goroutines, channels, and select statements
-- **go-interfaces**: Type switches and interface satisfaction checks
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles and formatting
+- [go-error-handling](../go-error-handling/SKILL.md): Error handling patterns including guard clauses
+- [go-naming](../go-naming/SKILL.md): Naming conventions for loop variables and labels
+- [go-concurrency](../go-concurrency/SKILL.md): Goroutines, channels, and select statements
+- [go-interfaces](../go-interfaces/SKILL.md): Type switches and interface satisfaction checks

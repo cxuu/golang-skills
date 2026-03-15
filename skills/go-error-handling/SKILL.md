@@ -1,14 +1,16 @@
 ---
 name: go-error-handling
 description: Use when writing Go code that returns, wraps, or handles errors — including choosing between sentinel errors, custom error types, and fmt.Errorf wrapping (%w vs %v), structuring error flow with early returns, and deciding whether to log, return, or match an error. Also use when propagating errors across package boundaries, choosing errors.Is/As vs type assertions, or handling errors from library calls, even if the user doesn't explicitly ask about error strategy.
-sources: [Google Style Guide, Uber Style Guide]
+license: Apache-2.0
+compatibility: Requires Go 1.13+ for errors.Is/errors.As and fmt.Errorf %w wrapping
+metadata:
+  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Error Handling
 
-In Go, [errors are values](https://go.dev/blog/errors-are-values) - they are
-created by code and consumed by code. This skill covers how to return,
-structure, wrap, and handle errors effectively.
+In Go, [errors are values](https://go.dev/blog/errors-are-values) — they are
+created by code and consumed by code.
 
 ## Choosing an Error Strategy
 
@@ -319,31 +321,72 @@ if err != nil {
 
 ---
 
-## Quick Reference
+## Logging vs Returning Errors
 
-| Pattern | Guidance |
-|---------|----------|
-| Return type | Always use `error` interface, not concrete types |
-| Error strings | Lowercase, no punctuation |
-| Ignoring errors | Comment explaining why it's safe |
-| In-band errors | Avoid; use multiple returns |
-| Error flow | Handle errors first, no else clauses |
-| Error type choice | Match needed + dynamic → custom type; static → sentinel |
-| Sentinel errors | Use `errors.Is` for checking |
-| %v vs %w | `%v` for boundaries, `%w` for chain preservation |
-| %w placement | Always at the end: `"context: %w"` |
-| Handle once | Choose ONE: return, log+degrade, or match+handle |
-| Logging | Don't log and return; let caller decide |
+> **Normative**: Handle an error exactly once — either log it or return it, never both.
+
+### Decision Flow
+
+```
+Error encountered?
+├─ Can the caller act on it? → Return the error (with context via %w)
+├─ Is this the top of the call chain? → Log and handle (return HTTP status, exit, etc.)
+└─ Neither? → Log at appropriate level and continue
+```
+
+### Don't Log and Return
+
+```go
+// Bad: error is logged AND returned — appears twice in logs
+func process(ctx context.Context, id string) error {
+    result, err := fetch(ctx, id)
+    if err != nil {
+        log.Printf("failed to fetch %s: %v", id, err)
+        return fmt.Errorf("fetching %s: %w", id, err)
+    }
+    return handle(result)
+}
+
+// Good: return with context — let the caller decide whether to log
+func process(ctx context.Context, id string) error {
+    result, err := fetch(ctx, id)
+    if err != nil {
+        return fmt.Errorf("fetching %s: %w", id, err)
+    }
+    return handle(result)
+}
+```
+
+### Structured Logging
+
+Prefer structured logging (`slog` in Go 1.21+, or `log/slog`-compatible libraries) over `log.Printf` for production code:
+
+```go
+// Good: structured fields are machine-parseable
+slog.Error("fetch failed", "id", id, "err", err)
+
+// Avoid: unstructured string interpolation
+log.Printf("fetch failed for %s: %v", id, err)
+```
+
+### Verbosity Levels
+
+| Level | Use for |
+|-------|---------|
+| Error | Actionable failures that need attention |
+| Warn  | Degraded behavior that doesn't require immediate action |
+| Info  | Key lifecycle events (startup, shutdown, config loaded) |
+| Debug | Diagnostic detail useful during development |
 
 ---
 
 ## See Also
 
-- **go-style-core**: Core Go style principles and formatting
-- **go-naming**: Naming conventions including error naming (ErrFoo)
-- **go-testing**: Testing patterns including error testing
-- **go-defensive**: Defensive programming including panic handling
-- **go-linting**: Linting tools that catch error handling issues
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles and formatting
+- [go-naming](../go-naming/SKILL.md): Naming conventions including error naming (ErrFoo)
+- [go-testing](../go-testing/SKILL.md): Testing patterns including error testing
+- [go-defensive](../go-defensive/SKILL.md): Defensive programming including panic handling
+- [go-linting](../go-linting/SKILL.md): Linting tools that catch error handling issues
 
 ### Reference Files
 

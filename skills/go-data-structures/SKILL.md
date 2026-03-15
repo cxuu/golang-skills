@@ -1,10 +1,31 @@
 ---
 name: go-data-structures
-description: Use when working with Go slices, maps, or arrays — including choosing between new and make for allocation, using append and 2D slices, declaring empty slices (nil vs literal for JSON), implementing sets with maps, and copying data structures at boundaries. Also use when a user is building or manipulating collections, even if they don't ask about allocation or data structure idioms. For constants, iota, and declaration syntax (var vs :=, struct literals), see go-declarations.
-sources: [Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
+description: Use when working with Go slices, maps, or arrays — including choosing between new and make, using append and 2D slices, declaring empty slices (nil vs literal for JSON), implementing sets with maps, and copying data at boundaries. Also use when building or manipulating collections, even without asking about allocation idioms.
+license: Apache-2.0
+metadata:
+  sources: "Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Data Structures
+
+---
+
+## Choosing a Data Structure
+
+```
+What do you need?
+├─ Ordered collection of items
+│  ├─ Fixed size known at compile time → Array [N]T
+│  └─ Dynamic size → Slice []T
+│     ├─ Know approximate size? → make([]T, 0, capacity)
+│     └─ Unknown size or nil-safe for JSON? → var s []T (nil)
+├─ Key-value lookup
+│  └─ Map map[K]V
+│     ├─ Know approximate size? → make(map[K]V, capacity)
+│     └─ Need a set? → map[T]struct{} (zero-size values)
+└─ Need to pass to a function?
+   └─ Copy at the boundary if the caller might mutate it
+```
 
 ---
 
@@ -171,7 +192,7 @@ func increment(sc *SafeCounter) {
 
 ## See Also
 
-- **go-style-core** - Core Go style principles
-- **go-control-flow** - Control structures including range
-- **go-interfaces** - Interface patterns and embedding
-- **go-concurrency** - Channels and goroutines
+- [go-style-core](../go-style-core/SKILL.md): Core Go style principles
+- [go-control-flow](../go-control-flow/SKILL.md): Control structures including range
+- [go-interfaces](../go-interfaces/SKILL.md): Interface patterns and embedding
+- [go-concurrency](../go-concurrency/SKILL.md): Channels and goroutines

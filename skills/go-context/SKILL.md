@@ -1,7 +1,10 @@
 ---
 name: go-context
 description: Use when working with context.Context in Go — including where to place it in function signatures, how to propagate cancellation and deadlines, and when to store values in context vs function parameters. Also use when a user needs to cancel long-running operations, set timeouts on requests, or pass request-scoped data through a call chain, even if they don't mention context.Context directly.
-sources: [Go Wiki CodeReviewComments]
+license: Apache-2.0
+compatibility: Requires Go 1.7+ (context moved to standard library in Go 1.7)
+metadata:
+  sources: "Go Wiki CodeReviewComments"
 ---
 
 # Go Context Usage
@@ -263,6 +266,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 ## See Also
 
-- **go-concurrency**: Goroutine patterns, cancellation, and coordination
-- **go-error-handling**: Handling context cancellation errors
-- **go-interfaces**: Interface design patterns for context-accepting APIs
+- [go-concurrency](../go-concurrency/SKILL.md): Goroutine patterns, cancellation, and coordination
+- [go-error-handling](../go-error-handling/SKILL.md): Handling context cancellation errors
+- [go-interfaces](../go-interfaces/SKILL.md): Interface design patterns for context-accepting APIs
