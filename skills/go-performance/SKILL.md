@@ -1,6 +1,6 @@
 ---
 name: go-performance
-description: Go performance patterns including efficient string handling, type conversions, and container capacity hints. Use when optimizing Go code or writing performance-critical sections.
+description: Use when optimizing Go code, investigating slow performance, or writing performance-critical sections. Also use when a user mentions slow Go code, string concatenation in loops, or asks about benchmarking — even without explicitly requesting "performance patterns." Helps choose strconv over fmt, avoid repeated string-to-byte conversions, specify map and slice capacity hints, pick the right string concatenation strategy, and decide when to pass values vs pointers.
 sources: [Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments]
 ---
 

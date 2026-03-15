@@ -1,6 +1,6 @@
 ---
 name: go-code-review
-description: Quick-reference checklist for Go code review based on the Go Wiki CodeReviewComments. Maps to detailed skills for comprehensive guidance. Use when reviewing Go code or checking code against community style standards.
+description: Use when reviewing Go code or checking code against community style standards. Use proactively before submitting a Go PR or when reviewing any Go code changes, even if the user doesn't explicitly request a style review. Provides a systematic checklist covering formatting, documentation, error handling, naming, concurrency, interfaces, security, and testing, with cross-references to detailed skills for each area.
 sources: [Go Wiki CodeReviewComments, Uber Style Guide]
 ---
 

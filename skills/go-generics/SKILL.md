@@ -1,6 +1,6 @@
 ---
 name: go-generics
-description: Go generics guidance including when to use type parameters, constraints, and type aliases vs type definitions. Use when deciding whether to use generics, writing generic functions or types, or choosing between type aliases and definitions.
+description: Use when deciding whether to use Go generics, writing generic functions or types, choosing constraints, or picking between type aliases and type definitions. Also use when a user is writing a utility function that could work with multiple types, or is unsure whether generics are appropriate for their use case — even if they don't mention generics explicitly. Helps decide when to prefer generics vs interfaces, how to name type parameters, and how to document generic APIs.
 sources: [Google Style Guide]
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: go-functional-options
-description: The functional options pattern for Go constructors and public APIs. Use when designing APIs with optional configuration, especially with 3+ parameters.
+description: Use when designing a Go constructor or factory function with optional configuration — especially with 3+ optional parameters or when the API needs to be extensible. Also use when a user is building a New* function that takes many settings, even if they don't mention "functional options" by name. This is the detailed implementation guide for the pattern; for general function design (organization, signatures, Printf), see go-functions instead.
 sources: [Uber Style Guide]
 ---
 

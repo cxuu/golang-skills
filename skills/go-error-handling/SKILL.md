@@ -1,6 +1,6 @@
 ---
 name: go-error-handling
-description: Comprehensive Go error handling patterns from Google and Uber style guides. Covers returning errors, wrapping with %w, sentinel errors, choosing error types, handling errors once, error flow structure, and logging. Use when writing Go code that creates, returns, wraps, or handles errors.
+description: Use when writing Go code that returns, wraps, or handles errors — including choosing between sentinel errors, custom error types, and fmt.Errorf wrapping (%w vs %v), structuring error flow with early returns, and deciding whether to log, return, or match an error. Also use when propagating errors across package boundaries, choosing errors.Is/As vs type assertions, or handling errors from library calls, even if the user doesn't explicitly ask about error strategy.
 sources: [Google Style Guide, Uber Style Guide]
 ---
 

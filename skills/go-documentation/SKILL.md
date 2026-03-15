@@ -1,6 +1,6 @@
 ---
 name: go-documentation
-description: Guidelines for Go documentation including doc comments, package docs, godoc formatting, runnable examples, and signal boosting. Use when writing or reviewing documentation for Go packages, types, functions, or methods.
+description: Use when writing or reviewing documentation for Go packages, types, functions, or methods. Use proactively when creating new exported types, functions, or packages to ensure proper doc comments from the start — even if the user doesn't explicitly ask about documentation. Helps with doc comment format, package-level docs, godoc rendering, writing runnable examples, and documenting concurrency guarantees and cleanup requirements.
 sources: [Google Style Guide]
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: go-functions
-description: Go function design patterns including multiple return values, file organization, signature formatting, and Printf conventions. Use when writing functions, organizing Go source files, or formatting function signatures.
+description: Use when organizing functions within a Go file, formatting function signatures, designing return values, or following Printf-style naming conventions — even if the user is just adding a new function and isn't explicitly asking about organization. Helps with function grouping and ordering, multi-line signature formatting, avoiding naked parameters, and when to use pointers to interfaces (almost never). For the functional options constructor pattern, see go-functional-options.
 sources: [Effective Go, Google Style Guide, Uber Style Guide]
 ---
 
@@ -192,8 +192,8 @@ If using a non-standard name:
 go vet -printfuncs=wrapf,statusf
 ```
 
-Read `go-functions/references/FUNCTIONAL-OPTIONS.md` when designing a
-constructor with 3+ optional parameters.
+See **go-functional-options** when designing a constructor with 3+ optional
+parameters.
 
 ---
 

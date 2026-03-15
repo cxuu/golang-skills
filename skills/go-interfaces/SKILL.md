@@ -1,6 +1,6 @@
 ---
 name: go-interfaces
-description: Go interfaces, type assertions, type switches, and embedding from Effective Go. Covers implicit interface satisfaction, comma-ok idiom, generality through interface returns, interface and struct embedding for composition. Use when defining or implementing interfaces, using type assertions/switches, or composing types through embedding.
+description: Use when defining or implementing Go interfaces, designing abstractions, creating mockable boundaries for testing, or composing types through embedding. Also use when deciding whether to accept an interface or return a concrete type, using type assertions or type switches, or structuring code with the "accept interfaces, return structs" principle — even if the user doesn't explicitly mention interfaces. Helps with implicit satisfaction checks, the comma-ok idiom, embedding patterns, and choosing pointer vs value receivers.
 sources: [Effective Go, Google Style Guide, Uber Style Guide]
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: go-style-core
-description: Core Go style principles and formatting guidelines from Google and Uber style guides. Use when writing any Go code to ensure clarity, simplicity, and consistency. This is the foundational skill - other Go style skills build on these principles.
+description: Use for questions about general Go formatting, line length, nesting reduction, naked returns, semicolon rules, or foundational style principles like clarity vs simplicity vs concision. Also use as a fallback when a Go style question isn't covered by a more specific skill (naming, error handling, testing, etc.). Helps resolve formatting debates and teaches the priority order of Go style principles (clarity > simplicity > concision > maintainability > consistency).
 sources: [Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 

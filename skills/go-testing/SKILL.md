@@ -1,6 +1,6 @@
 ---
 name: go-testing
-description: Go testing patterns from Google and Uber style guides including test naming, table-driven tests, subtests, parallel tests, test helpers, test doubles, and assertions. Use when writing or reviewing Go test code, creating test helpers, or setting up table-driven tests.
+description: Use when writing, reviewing, or improving Go test code — including table-driven tests, subtests, parallel tests, test helpers, test doubles, and assertions with cmp.Diff. Also use when a user asks to write a test for a Go function, even if they don't mention specific patterns like table-driven tests or subtests. Helps with writing useful failure messages, choosing t.Error vs t.Fatal, using t.Helper and t.Cleanup, and organizing test packages.
 sources: [Google Style Guide, Uber Style Guide]
 ---
 

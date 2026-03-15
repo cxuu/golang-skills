@@ -1,6 +1,6 @@
 ---
 name: go-packages
-description: Go package organization, imports, and dependency management from Google and Uber style guides. Use when creating packages, organizing imports, managing dependencies, using init(), or deciding how to structure Go code into packages.
+description: Use when creating Go packages, organizing imports, managing dependencies, or deciding how to structure Go code into packages. Also use when starting a new Go project or splitting a growing codebase into packages, even if the user doesn't explicitly ask about package organization. Helps avoid util packages, organize import groups, and teaches why to avoid init() and the pattern of exiting only from main().
 sources: [Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments]
 ---
 
