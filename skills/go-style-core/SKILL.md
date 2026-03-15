@@ -1,6 +1,6 @@
 ---
 name: go-style-core
-description: Use for Go formatting, line length, nesting, naked returns, semicolons, or core style principles. Also use when a style question isn't covered by a more specific skill, even if the user doesn't reference a specific style rule. Does not cover domain-specific patterns like error handling, naming, or testing (see specialized skills). Acts as fallback when no more specific style skill applies.
+description: Use when working with Go formatting, line length, nesting, naked returns, semicolons, or core style principles. Also use when a style question isn't covered by a more specific skill, even if the user doesn't reference a specific style rule. Does not cover domain-specific patterns like error handling, naming, or testing (see specialized skills). Acts as fallback when no more specific style skill applies.
 license: Apache-2.0
 metadata:
   sources: "Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"

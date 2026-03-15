@@ -196,9 +196,3 @@ handle-once pattern and error wrapping guidance.
 - **Performance**: See [go-performance](../go-performance/SKILL.md) when optimizing hot-path logging or reducing allocations in log calls
 - **Code review**: See [go-code-review](../go-code-review/SKILL.md) when reviewing logging practices in Go PRs
 
-### Reference Files
-
-- [references/LOGGING-PATTERNS.md](references/LOGGING-PATTERNS.md) — slog
-  setup, handler configuration, HTTP middleware, migration from log
-- [references/LEVELS-AND-CONTEXT.md](references/LEVELS-AND-CONTEXT.md) — Level
-  semantics, context-based logging, performance, what not to log

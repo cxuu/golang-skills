@@ -23,6 +23,7 @@ OPTIONS
     -v, --version    Show version
     --json           Output results as JSON
     --force          Run even if golangci-lint is not installed (skip it)
+    --limit N        Max items reported per section (0 = unlimited, default: 0)
 
 ARGUMENTS
     path             Package pattern to check (default: ./...)
@@ -32,11 +33,23 @@ EXAMPLES
     bash $SCRIPT_NAME ./pkg/...
     bash $SCRIPT_NAME --json ./cmd/server/...
     bash $SCRIPT_NAME --force ./...
+    bash $SCRIPT_NAME --json --limit 10 ./...
 EOF
+}
+
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
 }
 
 JSON_OUTPUT=false
 FORCE=false
+LIMIT=0
 TARGET=""
 
 while [[ $# -gt 0 ]]; do
@@ -45,6 +58,7 @@ while [[ $# -gt 0 ]]; do
         -v|--version) echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --json)       JSON_OUTPUT=true; shift ;;
         --force)      FORCE=true; shift ;;
+        --limit)      LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            TARGET="$1"; shift ;;
     esac
@@ -98,28 +112,79 @@ FAILED=0
 [[ "$LINT_STATUS" == "fail" ]] && FAILED=1
 
 if $JSON_OUTPUT; then
+    GOFMT_TRUNCATED=false
+    GOFMT_DISPLAY=("${GOFMT_FINDINGS[@]+"${GOFMT_FINDINGS[@]}"}")
+    if [[ $LIMIT -gt 0 && ${#GOFMT_DISPLAY[@]} -gt $LIMIT ]]; then
+        GOFMT_DISPLAY=("${GOFMT_FINDINGS[@]:0:$LIMIT}")
+        GOFMT_TRUNCATED=true
+    fi
+
     GOFMT_JSON="["
     first=true
-    for f in "${GOFMT_FINDINGS[@]+"${GOFMT_FINDINGS[@]}"}"; do
+    for f in "${GOFMT_DISPLAY[@]+"${GOFMT_DISPLAY[@]}"}"; do
         $first || GOFMT_JSON+=","
         first=false
-        GOFMT_JSON+="\"$f\""
+        GOFMT_JSON+="\"$(json_escape "$f")\""
     done
     GOFMT_JSON+="]"
 
-    GOVET_ESC="${GOVET_OUTPUT//\"/\\\"}"
-    GOVET_ESC="${GOVET_ESC//$'\n'/\\n}"
-    LINT_ESC="${LINT_OUTPUT//\"/\\\"}"
-    LINT_ESC="${LINT_ESC//$'\n'/\\n}"
+    GOVET_TRUNCATED=false
+    GOVET_DISPLAY="$GOVET_OUTPUT"
+    if [[ $LIMIT -gt 0 && -n "$GOVET_OUTPUT" ]]; then
+        GOVET_ARR=()
+        while IFS= read -r line; do
+            GOVET_ARR+=("$line")
+        done <<< "$GOVET_OUTPUT"
+        if [[ ${#GOVET_ARR[@]} -gt $LIMIT ]]; then
+            GOVET_DISPLAY=""
+            for (( i=0; i<LIMIT; i++ )); do
+                [[ -n "$GOVET_DISPLAY" ]] && GOVET_DISPLAY+=$'\n'
+                GOVET_DISPLAY+="${GOVET_ARR[$i]}"
+            done
+            GOVET_TRUNCATED=true
+        fi
+    fi
+    GOVET_ESC="$(json_escape "$GOVET_DISPLAY")"
+
+    LINT_TRUNCATED=false
+    LINT_DISPLAY="$LINT_OUTPUT"
+    if [[ $LIMIT -gt 0 && -n "$LINT_OUTPUT" ]]; then
+        LINT_ARR=()
+        while IFS= read -r line; do
+            LINT_ARR+=("$line")
+        done <<< "$LINT_OUTPUT"
+        if [[ ${#LINT_ARR[@]} -gt $LIMIT ]]; then
+            LINT_DISPLAY=""
+            for (( i=0; i<LIMIT; i++ )); do
+                [[ -n "$LINT_DISPLAY" ]] && LINT_DISPLAY+=$'\n'
+                LINT_DISPLAY+="${LINT_ARR[$i]}"
+            done
+            LINT_TRUNCATED=true
+        fi
+    fi
+    LINT_ESC="$(json_escape "$LINT_DISPLAY")"
+
+    GOFMT_TRUNC=""
+    $GOFMT_TRUNCATED && GOFMT_TRUNC=',"truncated":true'
+    GOVET_TRUNC=""
+    $GOVET_TRUNCATED && GOVET_TRUNC=',"truncated":true'
+    LINT_TRUNC=""
+    $LINT_TRUNCATED && LINT_TRUNC=',"truncated":true'
 
     cat <<EOF
-{"gofmt":{"status":"$GOFMT_STATUS","files":$GOFMT_JSON},"govet":{"status":"$GOVET_STATUS","output":"$GOVET_ESC"},"golangci_lint":{"status":"$LINT_STATUS","output":"$LINT_ESC"},"passed":$( [[ $FAILED -eq 0 ]] && echo true || echo false )}
+{"gofmt":{"status":"$GOFMT_STATUS","files":$GOFMT_JSON$GOFMT_TRUNC},"govet":{"status":"$GOVET_STATUS","output":"$GOVET_ESC"$GOVET_TRUNC},"golangci_lint":{"status":"$LINT_STATUS","output":"$LINT_ESC"$LINT_TRUNC},"passed":$( [[ $FAILED -eq 0 ]] && echo true || echo false )}
 EOF
 else
     echo "=== gofmt ==="
     if [[ "$GOFMT_STATUS" == "fail" ]]; then
         echo "Unformatted files:"
+        GOFMT_COUNT=0
         for f in "${GOFMT_FINDINGS[@]}"; do
+            GOFMT_COUNT=$((GOFMT_COUNT + 1))
+            if [[ $LIMIT -gt 0 && $GOFMT_COUNT -gt $LIMIT ]]; then
+                echo "  ... ($(( ${#GOFMT_FINDINGS[@]} - LIMIT )) more items truncated)"
+                break
+            fi
             echo "  $f"
         done
     else
@@ -129,7 +194,20 @@ else
     echo ""
     echo "=== go vet ==="
     if [[ "$GOVET_STATUS" == "fail" ]]; then
-        echo "$GOVET_OUTPUT"
+        if [[ $LIMIT -gt 0 ]]; then
+            GOVET_ARR=()
+            while IFS= read -r line; do
+                GOVET_ARR+=("$line")
+            done <<< "$GOVET_OUTPUT"
+            for (( i=0; i<${#GOVET_ARR[@]} && i<LIMIT; i++ )); do
+                echo "${GOVET_ARR[$i]}"
+            done
+            if [[ ${#GOVET_ARR[@]} -gt $LIMIT ]]; then
+                echo "... ($(( ${#GOVET_ARR[@]} - LIMIT )) more items truncated)"
+            fi
+        else
+            echo "$GOVET_OUTPUT"
+        fi
     else
         echo "OK"
     fi
@@ -139,7 +217,20 @@ else
     if [[ "$LINT_STATUS" == "skip" ]]; then
         echo "Skipped (not installed)"
     elif [[ "$LINT_STATUS" == "fail" ]]; then
-        echo "$LINT_OUTPUT"
+        if [[ $LIMIT -gt 0 ]]; then
+            LINT_ARR=()
+            while IFS= read -r line; do
+                LINT_ARR+=("$line")
+            done <<< "$LINT_OUTPUT"
+            for (( i=0; i<${#LINT_ARR[@]} && i<LIMIT; i++ )); do
+                echo "${LINT_ARR[$i]}"
+            done
+            if [[ ${#LINT_ARR[@]} -gt $LIMIT ]]; then
+                echo "... ($(( ${#LINT_ARR[@]} - LIMIT )) more items truncated)"
+            fi
+        else
+            echo "$LINT_OUTPUT"
+        fi
     else
         echo "OK"
     fi

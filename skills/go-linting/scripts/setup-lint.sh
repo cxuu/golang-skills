@@ -25,6 +25,7 @@ OPTIONS
     --json           Output results as JSON
     --force          Overwrite existing .golangci.yml
     --dry-run        Print generated config to stdout without writing
+    --limit N        Max lint issue lines in JSON output (default: 50, 0 = unlimited)
 
 ARGUMENTS
     local-prefix     Module path prefix for goimports grouping
@@ -36,12 +37,24 @@ EXAMPLES
     bash $SCRIPT_NAME --force github.com/myorg/myrepo
     bash $SCRIPT_NAME --dry-run github.com/myorg/myrepo
     bash $SCRIPT_NAME --json
+    bash $SCRIPT_NAME --json --limit 20
 EOF
+}
+
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
 }
 
 JSON_OUTPUT=false
 FORCE=false
 DRY_RUN=false
+LIMIT=50
 LOCAL_PREFIX=""
 
 while [[ $# -gt 0 ]]; do
@@ -51,6 +64,7 @@ while [[ $# -gt 0 ]]; do
         --json)       JSON_OUTPUT=true; shift ;;
         --force)      FORCE=true; shift ;;
         --dry-run)    DRY_RUN=true; shift ;;
+        --limit)      LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            LOCAL_PREFIX="$1"; shift ;;
     esac
@@ -114,12 +128,31 @@ fi
 LINT_OUTPUT=$(golangci-lint run ./... 2>&1) || LINT_EXIT=$?
 
 if $JSON_OUTPUT; then
-    LINT_ESC="${LINT_OUTPUT//\"/\\\"}"
-    LINT_ESC="${LINT_ESC//$'\n'/\\n}"
+    LINT_TRUNCATED=false
+    LINT_DISPLAY="$LINT_OUTPUT"
+    if [[ $LIMIT -gt 0 && -n "$LINT_OUTPUT" ]]; then
+        LINT_ARR=()
+        while IFS= read -r line; do
+            LINT_ARR+=("$line")
+        done <<< "$LINT_OUTPUT"
+        if [[ ${#LINT_ARR[@]} -gt $LIMIT ]]; then
+            LINT_DISPLAY=""
+            for (( i=0; i<LIMIT; i++ )); do
+                [[ -n "$LINT_DISPLAY" ]] && LINT_DISPLAY+=$'\n'
+                LINT_DISPLAY+="${LINT_ARR[$i]}"
+            done
+            LINT_TRUNCATED=true
+        fi
+    fi
+    LINT_ESC="$(json_escape "$LINT_DISPLAY")"
+    CONFIG_ESC="$(json_escape "$CONFIG_PATH")"
+    PREFIX_ESC="$(json_escape "$LOCAL_PREFIX")"
     CREATED=true
     HAS_ISSUES=$( [[ $LINT_EXIT -ne 0 ]] && echo true || echo false )
+    TRUNC_FIELD=""
+    $LINT_TRUNCATED && TRUNC_FIELD=',"truncated":true'
     cat <<EOF
-{"config_path":"$CONFIG_PATH","local_prefix":"$LOCAL_PREFIX","created":$CREATED,"lint_issues":$HAS_ISSUES,"lint_output":"$LINT_ESC"}
+{"config_path":"$CONFIG_ESC","local_prefix":"$PREFIX_ESC","created":$CREATED,"lint_issues":$HAS_ISSUES,"lint_output":"$LINT_ESC"$TRUNC_FIELD}
 EOF
 else
     echo "Created $CONFIG_PATH"

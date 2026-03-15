@@ -38,7 +38,7 @@ func calcCost(n []int) int { ... }
 
 ## Function Signatures
 
-> Read references/SIGNATURES.md when formatting multi-line signatures, wrapping return values, shortening call sites, or replacing naked bool parameters with custom types.
+> Read [references/SIGNATURES.md](references/SIGNATURES.md) when formatting multi-line signatures, wrapping return values, shortening call sites, or replacing naked bool parameters with custom types.
 
 Keep the signature on a single line when possible. When it must wrap, put **all
 arguments on their own lines** with a trailing comma:
@@ -74,12 +74,19 @@ func process(r io.Reader) { ... }
 
 ## Printf and Stringer
 
-> Read references/PRINTF-STRINGER.md when using Printf verbs beyond %v/%s/%d, implementing fmt.Stringer or fmt.GoStringer, writing custom Format() methods, or debugging infinite recursion in String() methods.
+> Read [references/PRINTF-STRINGER.md](references/PRINTF-STRINGER.md) when using Printf verbs beyond %v/%s/%d, implementing fmt.Stringer or fmt.GoStringer, writing custom Format() methods, or debugging infinite recursion in String() methods.
 
 ### Printf-style Function Names
 
 Functions that accept a format string should end in `f` for `go vet` support.
 Declare format strings as `const` when used outside `Printf` calls.
+
+Prefer `%q` over `%s` with manual quoting when formatting strings for logging
+or error messages — it safely escapes special characters and wraps in quotes:
+
+```go
+return fmt.Errorf("unknown key %q", key) // produces: unknown key "foo\nbar"
+```
 
 See **go-functional-options** when designing a constructor with 3+ optional
 parameters.

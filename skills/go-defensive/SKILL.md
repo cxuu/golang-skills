@@ -2,6 +2,7 @@
 name: go-defensive
 description: Use when hardening Go code at API boundaries — copying slices/maps, verifying interface compliance, using defer for cleanup, time.Time/time.Duration, or avoiding mutable globals. Also use when reviewing for robustness concerns like missing cleanup or unsafe crypto usage, even if the user doesn't mention "defensive programming." Does not cover error handling strategy (see go-error-handling).
 license: Apache-2.0
+compatibility: Uses crypto/rand.Text (Go 1.24+) in examples
 metadata:
   sources: "Effective Go, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
@@ -85,6 +86,21 @@ Defer overhead is negligible. Place `defer f.Close()` immediately after
 `os.Open` for clarity. Arguments to deferred functions are evaluated when
 `defer` executes, not when the function runs. Multiple defers execute in
 LIFO order.
+
+## Struct Field Tags
+
+> **Advisory**: Always add explicit field tags to structs that are marshaled or unmarshaled.
+
+```go
+type User struct {
+    Name  string `json:"name"  yaml:"name"`
+    Email string `json:"email" yaml:"email"`
+}
+```
+
+Field tags are a **serialization contract** — renaming a struct field without
+updating the tag silently breaks wire compatibility. Treat tags as part of
+the public API for any type that crosses a serialization boundary.
 
 ## Start Enums at One
 

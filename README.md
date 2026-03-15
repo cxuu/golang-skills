@@ -43,8 +43,10 @@ consistent output.
 
 ## Bundled Scripts
 
-8 scripts automate common Go checks. Each supports `--help` and uses meaningful
-exit codes (0 = clean, 1 = issues found).
+8 scripts automate common Go checks. All support `--help`, `--json` for
+structured output, and meaningful exit codes (0 = clean, 1 = issues found,
+2 = error). Analysis scripts support `--limit` to cap output size, and
+destructive scripts require `--force` to overwrite existing files.
 
 | Script | Skill | Purpose |
 |--------|-------|---------|
@@ -106,7 +108,7 @@ which works across multiple AI coding tools. When you're writing Go code:
 ```
 skills/
 ├── go-*/
-│   ├── SKILL.md          # Core rules (< 210 lines each)
+│   ├── SKILL.md          # Core rules (< 225 lines each)
 │   ├── references/       # Detailed guidance, loaded on demand
 │   ├── scripts/          # Automation scripts (8 skills)
 │   └── assets/           # Output templates (4 skills)
