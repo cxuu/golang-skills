@@ -71,6 +71,16 @@ if [[ ! -d "$TARGET" && ! -f "$TARGET" ]]; then
     TARGET="$dir"
 fi
 
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
 # Collect all Go source files
 find_go_files() {
     local t="$1"
@@ -96,7 +106,8 @@ while IFS= read -r file; do
     while IFS= read -r line; do
         line_num=$((line_num + 1))
         # Match: type ExportedName interface {
-        if [[ "$line" =~ ^[[:space:]]*type[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]]+interface[[:space:]]*\{ ]]; then
+        pat='^[[:space:]]*type[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]]+interface[[:space:]]*\{'
+        if [[ "$line" =~ $pat ]]; then
             iface_name="${BASH_REMATCH[1]}"
             IFACE_NAMES+=("$iface_name")
             IFACE_LOCATIONS+=("$file:$line_num")
@@ -162,7 +173,7 @@ if $JSON_OUTPUT; then
         line="${location#*:}"
         $first || echo ","
         first=false
-        printf '    {"name":"%s","file":"%s","line":%s}' "$iface_name" "$file" "$line"
+        printf '    {"name":"%s","file":"%s","line":%s}' "$(json_escape "$iface_name")" "$(json_escape "$file")" "$line"
     done
     echo ""
     echo "  ],"
@@ -174,7 +185,7 @@ if $JSON_OUTPUT; then
         line="${location#*:}"
         $first || echo ","
         first=false
-        printf '    {"name":"%s","file":"%s","line":%s}' "$name" "$file" "$line"
+        printf '    {"name":"%s","file":"%s","line":%s}' "$(json_escape "$name")" "$(json_escape "$file")" "$line"
     done
     echo ""
     echo "  ],"

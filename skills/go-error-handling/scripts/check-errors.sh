@@ -56,6 +56,16 @@ done
 
 TARGET="${TARGET:-.}"
 
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
 find_go_files() {
     local t="$1"
     if [[ -f "$t" ]]; then
@@ -89,19 +99,22 @@ check_string_error_comparison() {
         line_num=$((line_num + 1))
 
         # Pattern: err.Error() == "..." or err.Error() != "..."
-        if [[ "$line" =~ \.Error\(\)[[:space:]]*(==|!=)[[:space:]]*\" ]]; then
+        pat='\.Error\(\)[[:space:]]*(==|!=)[[:space:]]*\"'
+        if [[ "$line" =~ $pat ]]; then
             add_finding "$file" "$line_num" "string-error-compare" \
                 "comparing err.Error() to string; use errors.Is() or errors.As() instead"
         fi
 
         # Pattern: strings.Contains(err.Error(), "...")
-        if [[ "$line" =~ strings\.Contains\(.*\.Error\(\) ]]; then
+        pat_contains='strings\.Contains\(.*\.Error\(\)'
+        if [[ "$line" =~ $pat_contains ]]; then
             add_finding "$file" "$line_num" "string-error-compare" \
                 "using strings.Contains on err.Error(); use errors.Is() or errors.As() instead"
         fi
 
         # Pattern: "..." == err.Error()
-        if [[ "$line" =~ \"[^\"]*\"[[:space:]]*(==|!=)[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*\.Error\(\) ]]; then
+        pat='\"[^\"]*\"[[:space:]]*(==|!=)[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*\.Error\(\)'
+        if [[ "$line" =~ $pat ]]; then
             add_finding "$file" "$line_num" "string-error-compare" \
                 "comparing string to err.Error(); use errors.Is() or errors.As() instead"
         fi
@@ -118,12 +131,14 @@ check_bare_return_err() {
         line_num=$((line_num + 1))
 
         # Detect if err != nil { block
-        if [[ "$line" =~ if[[:space:]]+(.*err[[:space:]]*(!=|==)[[:space:]]*nil|err[[:space:]]*:=) ]]; then
+        pat='if[[:space:]]+(.*err[[:space:]]*(!=|==)[[:space:]]*nil|err[[:space:]]*:=)'
+        if [[ "$line" =~ $pat ]]; then
             in_error_block=true
         fi
 
         # Check for bare "return err" that is not wrapped
-        if $in_error_block && [[ "$line" =~ ^[[:space:]]*return[[:space:]]+(.*,)?[[:space:]]*err[[:space:]]*$ ]]; then
+        pat='^[[:space:]]*return[[:space:]]+(.*,)?[[:space:]]*err[[:space:]]*$'
+        if $in_error_block && [[ "$line" =~ $pat ]]; then
             # Exclude single-line functions and main error handlers
             # Only flag if the return is just "err" (not fmt.Errorf wrapped)
             local trimmed
@@ -135,7 +150,8 @@ check_bare_return_err() {
         fi
 
         # Reset error block tracking on closing brace at same indentation
-        if $in_error_block && [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]]; then
+        pat_close='^[[:space:]]*\}[[:space:]]*$'
+        if $in_error_block && [[ "$line" =~ $pat_close ]]; then
             in_error_block=false
         fi
     done < "$file"
@@ -157,13 +173,16 @@ check_log_and_return() {
         fi
 
         # Check if current line is 'return ... err' and a recent line logged the error
-        if [[ "$line" =~ ^[[:space:]]*return[[:space:]]+(.*,)?[[:space:]]*err ]]; then
+        pat='^[[:space:]]*return[[:space:]]+(.*,)?[[:space:]]*err'
+        if [[ "$line" =~ $pat ]]; then
             local window_size=${#prev_lines[@]}
             for ((i=0; i<window_size-1; i++)); do
                 local prev="${prev_lines[$i]}"
                 # Match log.Print/Printf/Println/Error/Errorf/Warn/Warnf with err
-                if [[ "$prev" =~ (log\.|logger\.|slog\.)[a-zA-Z]*\(.*[^a-zA-Z]err[^a-zA-Z] ]] || \
-                   [[ "$prev" =~ (log\.|logger\.|slog\.)[a-zA-Z]*\(err[,\)] ]]; then
+                pat_log1='(log\.|logger\.|slog\.)[a-zA-Z]*\(.*[^a-zA-Z]err[^a-zA-Z]'
+                pat_log2='(log\.|logger\.|slog\.)[a-zA-Z]*\(err[,\)]'
+                if [[ "$prev" =~ $pat_log1 ]] || \
+                   [[ "$prev" =~ $pat_log2 ]]; then
                     local log_line=$((line_num - window_size + 1 + i))
                     add_finding "$file" "$log_line" "log-and-return" \
                         "error is both logged (line $log_line) and returned (line $line_num); handle errors once"
@@ -215,7 +234,7 @@ if $JSON_OUTPUT; then
         $first || echo ","
         first=false
         printf '    {"file":"%s","line":%s,"rule":"%s","message":"%s"}' \
-            "$file" "$line" "$rule" "$message"
+            "$(json_escape "$file")" "$line" "$(json_escape "$rule")" "$(json_escape "$message")"
     done
     echo ""
     echo "  ],"

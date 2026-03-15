@@ -8,9 +8,9 @@ metadata:
 
 # Go Control Flow
 
-> Read references/SWITCH-PATTERNS.md when using switch statements, type switches, or break with labels
+> Read [references/SWITCH-PATTERNS.md](references/SWITCH-PATTERNS.md) when using switch statements, type switches, or break with labels
 
-> Read references/BLANK-IDENTIFIER.md when using `_`, blank identifier imports, or compile-time interface checks
+> Read [references/BLANK-IDENTIFIER.md](references/BLANK-IDENTIFIER.md) when using `_`, blank identifier imports, or compile-time interface checks
 
 ---
 
@@ -95,7 +95,43 @@ ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
 
 ---
 
-## For Loops: Parallel Assignment
+## For Loops
+
+Go's `for` is its only looping construct, unifying `while`, `do-while`, and
+C-style `for`:
+
+```go
+// Condition-only (Go's "while")
+for x > 0 {
+    x = process(x)
+}
+
+// Infinite loop
+for {
+    if done() { break }
+}
+
+// C-style three-component
+for i := 0; i < n; i++ { ... }
+```
+
+### Range
+
+`range` iterates over slices, maps, strings, and channels:
+
+```go
+for i, v := range slice { ... }   // index + value
+for k, v := range myMap { ... }   // key + value (non-deterministic order)
+for i, r := range "héllo" { ... } // byte index + rune (not byte)
+for v := range ch { ... }         // receives until channel closed
+```
+
+**Key rules:**
+- Range over strings yields **runes**, not bytes — `i` is the byte offset
+- Range over maps has **non-deterministic order** — don't rely on it
+- Use `_` to discard the index or value: `for _, v := range slice`
+
+### Parallel Assignment
 
 Go has no comma operator. Use parallel assignment for multiple loop variables:
 

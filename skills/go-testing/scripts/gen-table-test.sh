@@ -21,7 +21,9 @@ OPTIONS
     -h, --help           Show this help message
     -v, --version        Show version
     --output FILE        Write to FILE instead of stdout
+    --force              Allow --output to overwrite an existing file
     --parallel           Include t.Parallel() in generated test
+    --json               Output structured JSON metadata to stdout
 
 ARGUMENTS
     FuncName             Name of the function to test (must be exported/uppercase)
@@ -31,12 +33,26 @@ EXAMPLES
     bash $SCRIPT_NAME ParseConfig config
     bash $SCRIPT_NAME --parallel ParseConfig config
     bash $SCRIPT_NAME --output config/parse_config_test.go ParseConfig config
+    bash $SCRIPT_NAME --force --output config/parse_config_test.go ParseConfig config
+    bash $SCRIPT_NAME --json --output config/parse_config_test.go ParseConfig config
     bash $SCRIPT_NAME ParseConfig config > config/parse_config_test.go
 EOF
 }
 
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
 OUTPUT=""
 PARALLEL=false
+JSON_OUTPUT=false
+FORCE=false
 POSITIONAL=()
 
 while [[ $# -gt 0 ]]; do
@@ -44,7 +60,9 @@ while [[ $# -gt 0 ]]; do
         -h|--help)    usage; exit 0 ;;
         -v|--version) echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --output)     OUTPUT="${2:?error: --output requires a file path}"; shift 2 ;;
+        --force)      FORCE=true; shift ;;
         --parallel)   PARALLEL=true; shift ;;
+        --json)       JSON_OUTPUT=true; shift ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            POSITIONAL+=("$1"); shift ;;
     esac
@@ -114,10 +132,32 @@ if [[ -n "$OUTPUT" ]]; then
         echo "error: directory '$OUTPUT_DIR' does not exist" >&2
         exit 2
     fi
+    if [[ -f "$OUTPUT" ]] && ! $FORCE; then
+        echo "error: '$OUTPUT' already exists (use --force to overwrite)" >&2
+        exit 2
+    fi
     generate_test > "$OUTPUT"
-    echo "Wrote test scaffold to $OUTPUT"
+    if $JSON_OUTPUT; then
+        FUNC_ESC="$(json_escape "$FUNC")"
+        PKG_ESC="$(json_escape "$PKG")"
+        OUTPUT_ESC="$(json_escape "$OUTPUT")"
+        cat <<EOF
+{"func":"$FUNC_ESC","package":"$PKG_ESC","output_file":"$OUTPUT_ESC","parallel":$PARALLEL,"written":true}
+EOF
+    else
+        echo "Wrote test scaffold to $OUTPUT"
+    fi
 else
-    generate_test
+    if $JSON_OUTPUT; then
+        generate_test >&2
+        FUNC_ESC="$(json_escape "$FUNC")"
+        PKG_ESC="$(json_escape "$PKG")"
+        cat <<EOF
+{"func":"$FUNC_ESC","package":"$PKG_ESC","output_file":"","parallel":$PARALLEL,"written":false}
+EOF
+    else
+        generate_test
+    fi
 fi
 
 exit 0

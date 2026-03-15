@@ -4,15 +4,15 @@
     "name": "cxuu"
   },
   "metadata": {
-    "description": "20 modular skills for idiomatic Go, derived from Effective Go, Google Go Style Guide, Uber Go Style Guide, and Go Wiki CodeReviewComments. Backed by 48 reference files, 8 automation scripts, and 4 asset templates.",
-    "version": "1.6.0"
+    "description": "20 modular skills for idiomatic Go, derived from Effective Go, Google Go Style Guide, Uber Go Style Guide, and Go Wiki CodeReviewComments. Backed by 48 reference files, 8 automation scripts (all with --json, --limit, --force), and 4 asset templates.",
+    "version": "1.7.0"
   },
   "plugins": [
     {
       "name": "golang-skills",
       "source": "./",
-      "description": "20 Go skills (each under 210 lines) with progressive disclosure, conditional cross-references, and bundled automation. Covers style, naming, error handling, testing, concurrency, generics, logging, documentation, performance, and more.",
-      "version": "1.6.0"
+      "description": "20 Go skills (each under 225 lines) with progressive disclosure, conditional cross-references, and bundled automation. Covers style, naming, error handling, testing, concurrency, generics, logging, documentation, performance, and more.",
+      "version": "1.7.0"
     }
   ]
 }

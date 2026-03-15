@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_NAME="$(basename "$0")"
 
 usage() {
@@ -18,7 +18,10 @@ DESCRIPTION
     Results can be saved to a file for future comparison. If benchstat is
     installed and a baseline is provided, a statistical comparison is shown.
 
-    Always exits 0 (informational tool).
+EXIT CODES
+    0    Benchmarks ran successfully
+    1    go test failed (compilation error, test failure, no benchmarks found)
+    2    Usage error (missing arguments, bad flags, file exists without --force)
 
 OPTIONS
     -h, --help           Show this help message
@@ -27,9 +30,11 @@ OPTIONS
     -b, --baseline FILE  Compare results against this baseline file
     -s, --save FILE      Save benchmark results to this file
     -f, --filter REGEX   Benchmark filter regex (default: ".")
-    --json               Output metadata as JSON
+    --json               Output metadata as JSON (human output goes to stderr)
     --benchmem           Include memory allocation stats (default: on)
     --no-benchmem        Disable memory allocation stats
+    --force              Allow --save to overwrite existing files
+    --limit N            Max benchmark result lines to include (default: 0 = all)
 
 ARGUMENTS
     package              Go package to benchmark (default: ./...)
@@ -40,7 +45,28 @@ EXAMPLES
     bash $SCRIPT_NAME --save baseline.txt ./...
     bash $SCRIPT_NAME --baseline baseline.txt --save current.txt ./...
     bash $SCRIPT_NAME --filter BenchmarkSort -n 3
+    bash $SCRIPT_NAME --json --limit 5 ./...
+    bash $SCRIPT_NAME --save results.txt --force ./...
 EOF
+}
+
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
+# Print human-readable output: stdout in text mode, stderr in JSON mode.
+log() {
+    if $JSON_OUTPUT; then
+        echo "$@" >&2
+    else
+        echo "$@"
+    fi
 }
 
 COUNT=5
@@ -50,6 +76,8 @@ FILTER="."
 PACKAGE=""
 JSON_OUTPUT=false
 BENCHMEM=true
+FORCE=false
+LIMIT=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -62,6 +90,8 @@ while [[ $# -gt 0 ]]; do
         --json)         JSON_OUTPUT=true; shift ;;
         --benchmem)     BENCHMEM=true; shift ;;
         --no-benchmem)  BENCHMEM=false; shift ;;
+        --force)        FORCE=true; shift ;;
+        --limit)        LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
         -*)             echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)              PACKAGE="$1"; shift ;;
     esac
@@ -74,15 +104,23 @@ if ! command -v go &>/dev/null; then
     exit 2
 fi
 
-# Validate count
 if ! [[ "$COUNT" =~ ^[1-9][0-9]*$ ]]; then
     echo "error: --count must be a positive integer, got: $COUNT" >&2
     exit 2
 fi
 
-# Validate baseline exists if specified
+if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
+    echo "error: --limit must be a non-negative integer, got: $LIMIT" >&2
+    exit 2
+fi
+
 if [[ -n "$BASELINE" && ! -f "$BASELINE" ]]; then
     echo "error: baseline file not found: $BASELINE" >&2
+    exit 2
+fi
+
+if [[ -n "$SAVE" && -f "$SAVE" ]] && ! $FORCE; then
+    echo "error: save target already exists: $SAVE (use --force to overwrite)" >&2
     exit 2
 fi
 
@@ -99,46 +137,116 @@ fi
 TMPFILE=$(mktemp "${TMPDIR:-/tmp}/bench-XXXXXX.txt")
 trap 'rm -f "$TMPFILE"' EXIT
 
-echo "Running benchmarks: go test ${BENCH_ARGS[*]} $PACKAGE"
-echo "Iterations: $COUNT"
-echo ""
+log "Running benchmarks: go test ${BENCH_ARGS[*]} $PACKAGE"
+log "Iterations: $COUNT"
+log ""
 
-if ! go test "${BENCH_ARGS[@]}" "$PACKAGE" 2>&1 | tee "$TMPFILE"; then
-    echo ""
-    echo "warning: 'go test' returned non-zero exit code" >&2
+GO_EXIT=0
+if $JSON_OUTPUT; then
+    go test "${BENCH_ARGS[@]}" "$PACKAGE" 2>&1 | tee "$TMPFILE" >&2 || GO_EXIT=$?
+else
+    go test "${BENCH_ARGS[@]}" "$PACKAGE" 2>&1 | tee "$TMPFILE" || GO_EXIT=$?
 fi
 
-# Save results if requested
+BENCH_COUNT=$(grep -cE '^Benchmark' "$TMPFILE" || true)
+
+TRUNCATED=false
+if [[ $LIMIT -gt 0 && $BENCH_COUNT -gt $LIMIT ]]; then
+    TRUNCATED=true
+fi
+
+if ! $JSON_OUTPUT && $TRUNCATED; then
+    log ""
+    log "Note: $BENCH_COUNT benchmark results found, showing first $LIMIT (--limit $LIMIT)"
+fi
+
 if [[ -n "$SAVE" ]]; then
     cp "$TMPFILE" "$SAVE"
-    echo ""
-    echo "Results saved to: $SAVE"
+    log ""
+    log "Results saved to: $SAVE"
 fi
 
-# Compare with baseline if provided
 if [[ -n "$BASELINE" ]]; then
-    echo ""
-    echo "=== Comparison with baseline: $BASELINE ==="
-    echo ""
+    log ""
+    log "=== Comparison with baseline: $BASELINE ==="
+    log ""
     if $HAS_BENCHSTAT; then
-        benchstat "$BASELINE" "$TMPFILE" || true
+        if $JSON_OUTPUT; then
+            benchstat "$BASELINE" "$TMPFILE" >&2 || true
+        else
+            benchstat "$BASELINE" "$TMPFILE" || true
+        fi
     else
-        echo "note: install benchstat for statistical comparison:"
-        echo "  go install golang.org/x/perf/cmd/benchstat@latest"
-        echo ""
-        echo "--- Baseline ---"
-        grep -E '^Benchmark' "$BASELINE" || true
-        echo ""
-        echo "--- Current ---"
-        grep -E '^Benchmark' "$TMPFILE" || true
+        log "note: install benchstat for statistical comparison:"
+        log "  go install golang.org/x/perf/cmd/benchstat@latest"
+        log ""
+        log "--- Baseline ---"
+        if $JSON_OUTPUT; then
+            grep -E '^Benchmark' "$BASELINE" >&2 || true
+        else
+            grep -E '^Benchmark' "$BASELINE" || true
+        fi
+        log ""
+        log "--- Current ---"
+        if $JSON_OUTPUT; then
+            grep -E '^Benchmark' "$TMPFILE" >&2 || true
+        else
+            grep -E '^Benchmark' "$TMPFILE" || true
+        fi
+    fi
+fi
+
+FINAL_EXIT=0
+if [[ $GO_EXIT -ne 0 ]]; then
+    FINAL_EXIT=1
+    if ! $JSON_OUTPUT; then
+        log ""
+        log "error: go test exited with code $GO_EXIT"
+    fi
+elif [[ $BENCH_COUNT -eq 0 ]]; then
+    FINAL_EXIT=1
+    if ! $JSON_OUTPUT; then
+        log ""
+        log "error: no benchmarks found matching filter: $FILTER"
     fi
 fi
 
 if $JSON_OUTPUT; then
-    bench_count=$(grep -cE '^Benchmark' "$TMPFILE" || true)
-    echo ""
-    printf '{"count":%d,"package":"%s","filter":"%s","benchmarks_found":%s,"baseline":"%s","save":"%s"}\n' \
-        "$COUNT" "$PACKAGE" "$FILTER" "$bench_count" "$BASELINE" "$SAVE"
+    BENCH_OUTPUT=$(<"$TMPFILE")
+    if $TRUNCATED; then
+        limited=""
+        bench_seen=0
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^Benchmark ]]; then
+                bench_seen=$((bench_seen + 1))
+                if [[ $bench_seen -le $LIMIT ]]; then
+                    limited+="$line"$'\n'
+                fi
+            else
+                limited+="$line"$'\n'
+            fi
+        done < "$TMPFILE"
+        BENCH_OUTPUT="$limited"
+    fi
+
+    escaped_package=$(json_escape "$PACKAGE")
+    escaped_filter=$(json_escape "$FILTER")
+    escaped_baseline=$(json_escape "$BASELINE")
+    escaped_save=$(json_escape "$SAVE")
+    escaped_output=$(json_escape "$BENCH_OUTPUT")
+
+    printf '{"count":%d,' "$COUNT"
+    printf '"package":"%s",' "$escaped_package"
+    printf '"filter":"%s",' "$escaped_filter"
+    printf '"benchmarks_found":%d,' "$BENCH_COUNT"
+    printf '"baseline":"%s",' "$escaped_baseline"
+    printf '"save":"%s",' "$escaped_save"
+    printf '"exit_code":%d,' "$GO_EXIT"
+    printf '"output":"%s"' "$escaped_output"
+    if $TRUNCATED; then
+        printf ',"truncated":true'
+    fi
+    printf '}\n'
 fi
 
-exit 0
+exit $FINAL_EXIT

@@ -168,7 +168,7 @@ Fix any issues before proceeding to the checklist above. For linter setup and co
 
 ## Integrative Example
 
-> See [references/WEB-SERVER.md](references/WEB-SERVER.md) when building a production HTTP server and want to verify your code applies concurrency, error handling, context, documentation, and naming conventions together.
+> Read [references/WEB-SERVER.md](references/WEB-SERVER.md) when building a production HTTP server and want to verify your code applies concurrency, error handling, context, documentation, and naming conventions together.
 
 ---
 

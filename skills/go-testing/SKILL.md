@@ -2,6 +2,7 @@
 name: go-testing
 description: Use when writing, reviewing, or improving Go test code — including table-driven tests, subtests, parallel tests, test helpers, test doubles, and assertions with cmp.Diff. Also use when a user asks to write a test for a Go function, even if they don't mention specific patterns like table-driven tests or subtests. Does not cover benchmark performance testing (see go-performance).
 license: Apache-2.0
+compatibility: Uses github.com/google/go-cmp for cmp.Diff comparisons
 metadata:
   sources: "Google Style Guide, Uber Style Guide"
 allowed-tools: Bash(bash:*)

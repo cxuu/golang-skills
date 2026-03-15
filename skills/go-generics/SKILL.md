@@ -112,7 +112,7 @@ func Sum[T Numeric](vals []T) T {
 Use the `constraints` package or `cmp` package (Go 1.21+) for standard constraints
 like `cmp.Ordered` instead of writing your own.
 
-> Read references/CONSTRAINTS.md when writing custom type constraints, composing constraints with ~ and |, or debugging type inference issues.
+> Read [references/CONSTRAINTS.md](references/CONSTRAINTS.md) when writing custom type constraints, composing constraints with ~ and |, or debugging type inference issues.
 
 ---
 

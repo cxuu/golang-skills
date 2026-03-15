@@ -54,6 +54,16 @@ done
 
 TARGET="${TARGET:-.}"
 
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
 # Resolve target to a list of .go files (exclude _test.go and vendor)
 find_go_files() {
     local t="$1"
@@ -88,7 +98,8 @@ check_screaming_constants() {
     while IFS= read -r line; do
         line_num=$((line_num + 1))
         # Match const declarations with ALL_CAPS_SNAKE names (2+ uppercase segments with underscore)
-        if [[ "$line" =~ ^[[:space:]]*(const[[:space:]]+)[A-Z][A-Z0-9]*_[A-Z0-9_]+[[:space:]] ]]; then
+        pat='^[[:space:]]*(const[[:space:]]+)[A-Z][A-Z0-9]*_[A-Z0-9_]+[[:space:]]'
+        if [[ "$line" =~ $pat ]]; then
             local name
             name=$(echo "$line" | sed -E -n 's/^[[:space:]]*const[[:space:]]+([A-Z][A-Z0-9]*_[A-Z0-9_]*).*/\1/p')
             if [[ -n "$name" ]]; then
@@ -124,7 +135,8 @@ check_bad_package_names() {
     local line_num=0
     while IFS= read -r line; do
         line_num=$((line_num + 1))
-        if [[ "$line" =~ ^package[[:space:]]+(util|utils|helper|helpers|common|misc|shared|base|lib)$ ]]; then
+        pat='^package[[:space:]]+(util|utils|helper|helpers|common|misc|shared|base|lib)$'
+        if [[ "$line" =~ $pat ]]; then
             local pkg_name="${BASH_REMATCH[1]}"
             add_violation "$file" "$line_num" "bad-package-name" "package '$pkg_name' is too generic; use a specific, descriptive name"
         fi
@@ -142,7 +154,8 @@ check_bad_receivers() {
     while IFS= read -r line; do
         line_num=$((line_num + 1))
         # Match: func (this *Type) or func (self Type)
-        if [[ "$line" =~ ^[[:space:]]*func[[:space:]]+\([[:space:]]*(this|self)[[:space:]] ]]; then
+        pat='^[[:space:]]*func[[:space:]]+\([[:space:]]*(this|self)[[:space:]]'
+        if [[ "$line" =~ $pat ]]; then
             local recv="${BASH_REMATCH[1]}"
             add_violation "$file" "$line_num" "bad-receiver" "receiver named '$recv'; use a short 1-2 letter abbreviation of the type instead"
         fi
@@ -190,7 +203,7 @@ if $JSON_OUTPUT; then
         $first || echo ","
         first=false
         printf '    {"file":"%s","line":%s,"rule":"%s","message":"%s"}' \
-            "$file" "$line" "$rule" "$message"
+            "$(json_escape "$file")" "$line" "$(json_escape "$rule")" "$(json_escape "$message")"
     done
     echo ""
     echo "  ],"

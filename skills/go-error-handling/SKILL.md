@@ -179,11 +179,3 @@ annotation adds nothing, return `err` directly.
 - **Guard clauses**: See [go-control-flow](../go-control-flow/SKILL.md) when structuring early-return error flow or reducing nesting
 - **Logging decisions**: See [go-logging](../go-logging/SKILL.md) when choosing log levels, configuring structured logging, or deciding what context to include in log messages
 
-### Reference Files
-
-- [references/ERROR-TYPES.md](references/ERROR-TYPES.md) — Sentinel errors,
-  structured error types, error checking
-- [references/WRAPPING.md](references/WRAPPING.md) — Error wrapping with %v vs
-  %w, context, logging
-- [references/ERROR-FLOW.md](references/ERROR-FLOW.md) — Error flow patterns,
-  handle-once, logging vs returning

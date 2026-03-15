@@ -90,7 +90,7 @@ Context values are **not** appropriate for:
 
 ## Common Patterns
 
-> Read references/PATTERNS.md when deriving contexts (WithTimeout, WithCancel, WithDeadline), checking cancellation in loops or HTTP handlers, using context values with typed keys, or needing the quick reference table.
+> Read [references/PATTERNS.md](references/PATTERNS.md) when deriving contexts (WithTimeout, WithCancel, WithDeadline), checking cancellation in loops or HTTP handlers, using context values with typed keys, or needing the quick reference table.
 
 ### Deriving Contexts
 

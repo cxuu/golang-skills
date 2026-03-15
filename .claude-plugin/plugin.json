@@ -1,7 +1,7 @@
 {
   "name": "golang-skills",
-  "description": "20 modular skills for idiomatic Go — each under 210 lines, backed by 48 reference files, 8 automation scripts, and 4 asset templates. Covers error handling, naming, testing, concurrency, interfaces, generics, documentation, logging, performance, and more. Activates automatically with progressive disclosure and conditional cross-references.",
-  "version": "1.6.0",
+  "description": "20 modular skills for idiomatic Go — each under 225 lines, backed by 48 reference files, 8 automation scripts (all with --json, --limit, --force), and 4 asset templates. Covers error handling, naming, testing, concurrency, interfaces, generics, documentation, logging, performance, and more. Activates automatically with progressive disclosure and conditional cross-references.",
+  "version": "1.7.0",
   "author": {
     "name": "cxuu"
   },

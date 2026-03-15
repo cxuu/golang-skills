@@ -115,6 +115,29 @@ func main() {
 
 ---
 
+## Command-Line Flags
+
+> **Advisory**: Define flags only in `package main`.
+
+- Flag names use `snake_case`: `--output_dir` not `--outputDir`
+- Libraries should accept configuration as parameters, not read flags directly —
+  this keeps them testable and reusable
+- Prefer the standard `flag` package; use `pflag` only when POSIX conventions
+  (double-dash, single-char shortcuts) are required
+
+```go
+// Good: Flag in main, passed as parameter to library
+func main() {
+    outputDir := flag.String("output_dir", ".", "directory for output files")
+    flag.Parse()
+    if err := mylib.Generate(*outputDir); err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+---
+
 ## Related Skills
 
 - **Package naming**: See [go-naming](../go-naming/SKILL.md) when choosing package names, avoiding stuttering, or naming exported symbols
@@ -122,9 +145,3 @@ func main() {
 - **Import linting**: See [go-linting](../go-linting/SKILL.md) when configuring goimports local-prefixes or enforcing import grouping
 - **Global state**: See [go-defensive](../go-defensive/SKILL.md) when replacing `init()` with explicit initialization or avoiding mutable globals
 
-### Reference Files
-
-- [references/IMPORTS.md](references/IMPORTS.md) — Extended import grouping,
-  renaming, blank/dot imports
-- [references/PACKAGE-SIZE.md](references/PACKAGE-SIZE.md) — Package splitting,
-  init() alternatives, run() pattern, CLI structure

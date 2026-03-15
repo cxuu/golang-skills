@@ -56,6 +56,16 @@ done
 
 TARGET="${TARGET:-./...}"
 
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\r'/}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
 find_go_files() {
     local t="$1"
     if [[ -f "$t" ]]; then
@@ -256,7 +266,7 @@ if $JSON_OUTPUT; then
         $first || echo ","
         first=false
         printf '    {"file":"%s","line":%s,"kind":"%s","name":"%s"}' \
-            "$file" "$line" "$kind" "$name"
+            "$(json_escape "$file")" "$line" "$(json_escape "$kind")" "$(json_escape "$name")"
     done
     echo ""
     echo "  ],"
