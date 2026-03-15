@@ -87,6 +87,20 @@ check_file() {
     local prev_prev_line=""
     local line_num=0
 
+    local in_grouped_block=false
+    local grouped_kind=""
+
+    local re_method='^func[[:space:]]+\([^)]+\)[[:space:]]+([A-Z][a-zA-Z0-9]*)\('
+    local re_func='^func[[:space:]]+([A-Z][a-zA-Z0-9]*)\('
+    local re_unexported_func='^func[[:space:]]+([a-z][a-zA-Z0-9]*)\('
+    local re_grouped_open='^(const|var|type)[[:space:]]*\($'
+    local re_exported_type='^type[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]]'
+    local re_unexported_type='^type[[:space:]]+([a-z][a-zA-Z0-9]*)[[:space:]]'
+    local re_exported_const='^const[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]]'
+    local re_exported_var='^var[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]]'
+    local re_grouped_exported='^[[:space:]]+([A-Z][a-zA-Z0-9]*)'
+    local re_grouped_unexported='^[[:space:]]+([a-z][a-zA-Z0-9]*)'
+
     while IFS= read -r line; do
         line_num=$((line_num + 1))
 
@@ -95,11 +109,11 @@ check_file() {
             local name=""
             local kind=""
             # Method: func (r *Type) Name(
-            if [[ "$line" =~ ^func[[:space:]]+\([^)]+\)[[:space:]]+([A-Z][a-zA-Z0-9]*)\( ]]; then
+            if [[ "$line" =~ $re_method ]]; then
                 name="${BASH_REMATCH[1]}"
                 kind="method"
             # Function: func Name(
-            elif [[ "$line" =~ ^func[[:space:]]+([A-Z][a-zA-Z0-9]*)\( ]]; then
+            elif [[ "$line" =~ $re_func ]]; then
                 name="${BASH_REMATCH[1]}"
                 kind="function"
             fi
@@ -109,10 +123,26 @@ check_file() {
                     add_missing "$file" "$line_num" "$kind" "$name"
                 fi
             fi
+
+            # Strict mode: also check unexported functions
+            if $STRICT && [[ -z "$name" ]] && [[ "$line" =~ $re_unexported_func ]]; then
+                name="${BASH_REMATCH[1]}"
+                if ! is_documented "$prev_line" "$prev_prev_line"; then
+                    add_missing "$file" "$line_num" "function" "$name"
+                fi
+            fi
         fi
 
         # Check exported type declarations
-        if [[ "$line" =~ ^type[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]] ]]; then
+        if [[ "$line" =~ $re_exported_type ]]; then
+            local name="${BASH_REMATCH[1]}"
+            if ! is_documented "$prev_line" "$prev_prev_line"; then
+                add_missing "$file" "$line_num" "type" "$name"
+            fi
+        fi
+
+        # Strict mode: also check unexported type declarations
+        if $STRICT && [[ "$line" =~ $re_unexported_type ]]; then
             local name="${BASH_REMATCH[1]}"
             if ! is_documented "$prev_line" "$prev_prev_line"; then
                 add_missing "$file" "$line_num" "type" "$name"
@@ -120,7 +150,7 @@ check_file() {
         fi
 
         # Check exported const (single-line, not in block)
-        if [[ "$line" =~ ^const[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]] ]]; then
+        if [[ "$line" =~ $re_exported_const ]]; then
             local name="${BASH_REMATCH[1]}"
             if ! is_documented "$prev_line" "$prev_prev_line"; then
                 add_missing "$file" "$line_num" "const" "$name"
@@ -128,7 +158,7 @@ check_file() {
         fi
 
         # Check exported var (single-line, not blank identifier)
-        if [[ "$line" =~ ^var[[:space:]]+([A-Z][a-zA-Z0-9]*)[[:space:]] ]]; then
+        if [[ "$line" =~ $re_exported_var ]]; then
             local name="${BASH_REMATCH[1]}"
             if ! is_documented "$prev_line" "$prev_prev_line"; then
                 add_missing "$file" "$line_num" "var" "$name"
@@ -141,6 +171,32 @@ check_file() {
                 local pkg_name
                 pkg_name=$(echo "$line" | sed 's/^package[[:space:]]*//;s/[[:space:]]*$//')
                 add_missing "$file" "$line_num" "package" "$pkg_name"
+            fi
+        fi
+
+        # Track grouped declaration blocks: const ( ... ), var ( ... ), type ( ... )
+        if [[ "$line" =~ $re_grouped_open ]]; then
+            in_grouped_block=true
+            grouped_kind="${BASH_REMATCH[1]}"
+        fi
+        if $in_grouped_block && [[ "$line" =~ ^\)[[:space:]]*$ ]]; then
+            in_grouped_block=false
+            grouped_kind=""
+        fi
+        if $in_grouped_block && [[ -n "$grouped_kind" ]]; then
+            # Check for exported names inside grouped block
+            if [[ "$line" =~ $re_grouped_exported ]]; then
+                local gname="${BASH_REMATCH[1]}"
+                if ! is_documented "$prev_line" "$prev_prev_line"; then
+                    add_missing "$file" "$line_num" "$grouped_kind" "$gname"
+                fi
+            fi
+            # Strict: also check unexported names in grouped blocks
+            if $STRICT && [[ "$line" =~ $re_grouped_unexported ]]; then
+                local gname="${BASH_REMATCH[1]}"
+                if ! is_documented "$prev_line" "$prev_prev_line"; then
+                    add_missing "$file" "$line_num" "$grouped_kind" "$gname"
+                fi
             fi
         fi
 

@@ -160,7 +160,7 @@ bash scripts/pre-review.sh ./...         # text output
 bash scripts/pre-review.sh --json ./...  # structured JSON output
 ```
 
-Or manually: `gofmt -l . && go vet ./... && golangci-lint run ./...`
+Or manually: `gofmt -l <path> && go vet ./... && golangci-lint run ./...`
 
 Fix any issues before proceeding to the checklist above. For linter setup and configuration, see [go-linting](../go-linting/SKILL.md).
 

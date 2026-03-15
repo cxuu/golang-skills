@@ -55,10 +55,10 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)      usage; exit 0 ;;
         -v|--version)   echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
-        -n|--count)     COUNT="$2"; shift 2 ;;
-        -b|--baseline)  BASELINE="$2"; shift 2 ;;
-        -s|--save)      SAVE="$2"; shift 2 ;;
-        -f|--filter)    FILTER="$2"; shift 2 ;;
+        -n|--count)     COUNT="${2:?error: --count requires a number}"; shift 2 ;;
+        -b|--baseline)  BASELINE="${2:?error: --baseline requires a file path}"; shift 2 ;;
+        -s|--save)      SAVE="${2:?error: --save requires a file path}"; shift 2 ;;
+        -f|--filter)    FILTER="${2:?error: --filter requires a regex}"; shift 2 ;;
         --json)         JSON_OUTPUT=true; shift ;;
         --benchmem)     BENCHMEM=true; shift ;;
         --no-benchmem)  BENCHMEM=false; shift ;;
@@ -137,8 +137,8 @@ fi
 if $JSON_OUTPUT; then
     bench_count=$(grep -cE '^Benchmark' "$TMPFILE" || true)
     echo ""
-    printf '{"count":%d,"package":"%s","filter":"%s","iterations":%s,"benchmarks_found":%s,"baseline":"%s","save":"%s"}\n' \
-        "$COUNT" "$PACKAGE" "$FILTER" "$COUNT" "$bench_count" "$BASELINE" "$SAVE"
+    printf '{"count":%d,"package":"%s","filter":"%s","benchmarks_found":%s,"baseline":"%s","save":"%s"}\n' \
+        "$COUNT" "$PACKAGE" "$FILTER" "$bench_count" "$BASELINE" "$SAVE"
 fi
 
 exit 0
