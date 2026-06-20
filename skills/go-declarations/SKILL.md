@@ -1,15 +1,20 @@
 ---
 name: go-declarations
 description: Use when declaring or initializing Go variables, constants, structs, or maps — including var vs :=, reducing scope with if-init, formatting composite literals, designing iota enums, and using any instead of interface{}. Also use when writing a new struct or const block, even if the user doesn't ask about declaration style. Does not cover naming conventions (see go-naming).
-license: Apache-2.0
-compatibility: Uses any keyword (Go 1.18+)
-metadata:
-  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Declarations and Initialization
 
----
+> Compatibility: Examples may use `any`, which requires Go 1.18+.
+
+## Resource Routing
+
+- `references/SCOPE.md` - Read when deciding between `var`, `:=`, if-init, and narrow variable scope.
+- `references/IOTA.md` - Read when designing constants or enum-like values.
+- `references/INITIALIZATION.md` - Read when initializing structs, maps, zero values, or pointers.
+- `references/LITERALS.md` - Read for composite literal formatting and keyed-field tradeoffs.
+- `references/STRUCTS.md` - Read when designing or initializing structs.
+- `references/SHADOWING.md` - Read when a declaration may shadow a builtin or outer variable.
 
 ## Quick Reference: var vs :=
 
@@ -19,8 +24,6 @@ metadata:
 | Local with value | `:=` | `s := "foo"` |
 | Local zero-value (intentional) | `var` | `var filtered []int` |
 | Type differs from expression | `var` with type | `var _e error = F()` |
-
-> Read [references/SCOPE.md](references/SCOPE.md) when deciding between var and := in complex initialization patterns or multi-return assignments.
 
 ---
 
@@ -67,8 +70,6 @@ const (
 
 Use zero when the default behavior is desirable (e.g., `LogToStdout`).
 
-> Read [references/IOTA.md](references/IOTA.md) when designing iota enums with bitmask patterns, byte-size constants, or String() methods.
-
 ---
 
 ## Variable Scope
@@ -84,8 +85,6 @@ if err := os.WriteFile(name, data, 0644); err != nil {
 Don't reduce scope if it forces deeper nesting or you need the result outside
 the `if`. Move constants into functions when only used there.
 
-> Read [references/SCOPE.md](references/SCOPE.md) when working with top-level declarations or choosing between var and := for local variables.
-
 ---
 
 ## Initializing Structs
@@ -96,8 +95,6 @@ the `if`. Move constants into functions when only used there.
 - **Use `var` for zero-value structs**: `var user User` not `user := User{}`
 - **Use `&T{}` over `new(T)`**: `sptr := &T{Name: "bar"}`
 
-> Read [references/STRUCTS.md](references/STRUCTS.md) when initializing structs with many fields, building slices of struct pointers, or choosing single-line vs multi-line format.
-
 ---
 
 ## Composite Literal Formatting
@@ -105,10 +102,6 @@ the `if`. Move constants into functions when only used there.
 Use field names for external package types. Match closing brace indentation
 with the opening line. Omit repeated type names in slice/map literals
 (`gofmt -s`).
-
-> Read [references/INITIALIZATION.md](references/INITIALIZATION.md) when working with complex composite literals, cuddled braces, or zero-value field decisions.
-
-> Read [references/LITERALS.md](references/LITERALS.md) when formatting complex composite literals.
 
 ---
 
@@ -160,8 +153,6 @@ var error string
 // Good
 var errorMessage string
 ```
-
-> Read [references/SHADOWING.md](references/SHADOWING.md) when debugging issues where := creates new variables that shadow outer scope.
 
 ---
 

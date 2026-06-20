@@ -1,15 +1,15 @@
 ---
 name: go-generics
 description: Use when deciding whether to use Go generics, writing generic functions or types, choosing constraints, or picking between type aliases and type definitions. Also use when a user is writing a utility function that could work with multiple types, even if they don't mention generics explicitly. Does not cover interface design without generics (see go-interfaces).
-license: Apache-2.0
-compatibility: Requires Go 1.18+ (generics were introduced in Go 1.18)
-metadata:
-  sources: "Google Style Guide"
 ---
 
 # Go Generics and Type Parameters
 
----
+> Compatibility: Generics require Go 1.18+.
+
+## Resource Routing
+
+- `references/CONSTRAINTS.md` - Read when composing constraints, using type sets, or choosing between generics and interfaces.
 
 ## When to Use Generics
 
@@ -111,8 +111,6 @@ func Sum[T Numeric](vals []T) T {
 
 Use the `constraints` package or `cmp` package (Go 1.21+) for standard constraints
 like `cmp.Ordered` instead of writing your own.
-
-> Read [references/CONSTRAINTS.md](references/CONSTRAINTS.md) when writing custom type constraints, composing constraints with ~ and |, or debugging type inference issues.
 
 ---
 

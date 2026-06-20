@@ -64,44 +64,76 @@ while [[ $# -gt 0 ]]; do
         --json)       JSON_OUTPUT=true; shift ;;
         --force)      FORCE=true; shift ;;
         --dry-run)    DRY_RUN=true; shift ;;
-        --limit)      LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
+        --limit)
+            if [[ $# -lt 2 ]]; then
+                echo "error: --limit requires a number" >&2
+                exit 2
+            fi
+            LIMIT="$2"
+            shift 2
+            ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            LOCAL_PREFIX="$1"; shift ;;
     esac
 done
 
+if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
+    echo "error: --limit must be a non-negative integer, got: $LIMIT" >&2
+    exit 2
+fi
+
 generate_config() {
     cat <<'YAML'
+version: "2"
 linters:
   enable:
+    # Minimum recommended
     - errcheck
-    - goimports
-    - revive
     - govet
+    - revive
     - staticcheck
+    # Additional recommended
+    - bodyclose
+    - gocyclo
+    - gosec
+    - ineffassign
+    - misspell
+  settings:
+    revive:
+      rules:
+        - name: exported
+    gocyclo:
+      min-complexity: 15
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
-linters-settings:
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 YAML
 
     if [[ -n "$LOCAL_PREFIX" ]]; then
         cat <<YAML
-  goimports:
-    local-prefixes: ${LOCAL_PREFIX}
+  settings:
+    goimports:
+      local-prefixes:
+        - ${LOCAL_PREFIX}
 YAML
     fi
-
-    cat <<'YAML'
-  revive:
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: error-return
-      - name: error-strings
-      - name: exported
-
-run:
-  timeout: 5m
-YAML
 }
 
 if $DRY_RUN; then

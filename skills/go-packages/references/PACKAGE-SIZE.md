@@ -3,6 +3,13 @@
 Detailed guidance on package splitting, avoiding init(), the run() pattern, and
 CLI structure.
 
+## Contents
+
+- [When to Split a Package](#when-to-split-a-package)
+- [Avoiding init()](#avoiding-init)
+- [Exit in Main](#exit-in-main)
+- [Command-Line Interfaces](#command-line-interfaces)
+
 ## When to Split a Package
 
 ```

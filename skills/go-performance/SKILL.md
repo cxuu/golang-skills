@@ -1,17 +1,16 @@
 ---
 name: go-performance
 description: Use when optimizing Go code, investigating slow performance, or writing performance-critical sections. Also use when a user mentions slow Go code, string concatenation in loops, or asks about benchmarking, even if the user doesn't explicitly mention performance patterns. Does not cover concurrent performance patterns (see go-concurrency).
-license: Apache-2.0
-metadata:
-  sources: "Uber Style Guide, Google Style Guide, Go Wiki CodeReviewComments"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Performance Patterns
 
-## Available Scripts
+## Resource Routing
 
-- **`scripts/bench-compare.sh`** — Runs Go benchmarks N times with optional baseline comparison via benchstat. Supports saving results for future comparison. Run `bash scripts/bench-compare.sh --help` for options.
+- `scripts/bench-compare.sh` - Run when comparing benchmark results, saving baselines, or producing JSON benchmark metadata.
+- `references/BENCHMARKS.md` - Read when writing benchmarks, using benchstat, or profiling with pprof.
+- `references/STRING-OPTIMIZATION.md` - Read when optimizing string conversion, concatenation, or byte/string boundaries.
 
 Performance-specific guidelines apply only to the **hot path**. Don't prematurely optimize—focus these patterns where they matter most.
 
@@ -30,8 +29,6 @@ s := strconv.Itoa(rand.Int()) // ~2x faster than fmt.Sprint()
 | `fmt.Sprint` | 143 ns/op | 2 allocs/op |
 | `strconv.Itoa` | 64.2 ns/op | 1 allocs/op |
 
-> Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when choosing between strconv and fmt for type conversions, or for the full conversion table.
-
 ---
 
 ## Avoid Repeated String-to-Byte Conversions
@@ -40,12 +37,10 @@ Convert a fixed string to `[]byte` once outside the loop:
 
 ```go
 data := []byte("Hello world")
-for i := 0; i < b.N; i++ {
+for b.Loop() { // Go 1.24+; use b.N loops only for older Go
     w.Write(data) // ~7x faster than []byte("...") each iteration
 }
 ```
-
-> Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when optimizing repeated byte conversions in hot loops.
 
 ---
 
@@ -112,8 +107,6 @@ Choose the right strategy based on complexity:
 | `strings.Join` | Joining a slice |
 | Backtick literal | Constant multi-line text |
 
-> Read [references/STRING-OPTIMIZATION.md](references/STRING-OPTIMIZATION.md) when choosing a string concatenation strategy, using strings.Builder in loops, or deciding between fmt.Sprintf and manual concatenation.
-
 ---
 
 ## Benchmarking and Profiling
@@ -123,8 +116,6 @@ Always measure before and after optimizing. Use Go's built-in benchmark framewor
 ```bash
 go test -bench=. -benchmem -count=10 ./...
 ```
-
-> Read [references/BENCHMARKS.md](references/BENCHMARKS.md) when writing benchmarks, comparing results with benchstat, profiling with pprof, or interpreting benchmark output.
 
 > **Validation**: After applying optimizations, run `bash scripts/bench-compare.sh` to measure the actual impact. Only keep optimizations with measurable improvement.
 

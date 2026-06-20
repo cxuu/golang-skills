@@ -77,10 +77,22 @@ fi
 FUNC="${POSITIONAL[0]}"
 PKG="${POSITIONAL[1]}"
 
-if [[ ! "$FUNC" =~ ^[A-Z] ]]; then
-    echo "error: FuncName '$FUNC' must start with an uppercase letter" >&2
+if [[ ! "$FUNC" =~ ^[A-Z][A-Za-z0-9_]*$ ]]; then
+    echo "error: FuncName '$FUNC' must be an exported Go identifier" >&2
     exit 2
 fi
+
+if [[ ! "$PKG" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+    echo "error: package '$PKG' must be a valid Go package identifier" >&2
+    exit 2
+fi
+
+case "$PKG" in
+    _|break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var)
+        echo "error: package '$PKG' must not be a Go keyword or blank identifier" >&2
+        exit 2
+        ;;
+esac
 
 generate_test() {
     local parallel_top="" parallel_sub=""

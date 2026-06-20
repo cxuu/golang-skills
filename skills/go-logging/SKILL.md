@@ -1,13 +1,16 @@
 ---
 name: go-logging
 description: Use when choosing a logging approach, configuring slog, writing structured log statements, or deciding log levels in Go. Also use when setting up production logging, adding request-scoped context to logs, or migrating from log to slog, even if the user doesn't explicitly mention logging. Does not cover error handling strategy (see go-error-handling).
-license: Apache-2.0
-compatibility: slog requires Go 1.21+; slog/slogtest requires Go 1.22+
-metadata:
-  sources: "Google Style Guide, Uber Style Guide"
 ---
 
 # Go Logging
+
+> Compatibility: `log/slog` requires Go 1.21+; `testing/slogtest` requires Go 1.22+.
+
+## Resource Routing
+
+- `references/LEVELS-AND-CONTEXT.md` - Read when choosing log levels, deciding logger-in-context versus explicit parameters, or excluding sensitive fields.
+- `references/LOGGING-PATTERNS.md` - Read when configuring slog handlers, logging HTTP requests, testing handlers, or migrating from `log.Printf`.
 
 ## Core Principle
 
@@ -33,8 +36,6 @@ Which logger?
 Do not introduce a third-party logging library unless profiling shows `slog`
 is a bottleneck in your hot path. When you do, keep the same structured
 key-value style.
-
-> Read [references/LOGGING-PATTERNS.md](references/LOGGING-PATTERNS.md) when setting up slog handlers, configuring JSON/text output, or migrating from log.Printf to slog.
 
 ---
 
@@ -72,8 +73,6 @@ slog.LogAttrs(ctx, slog.LevelInfo, "request handled",
 )
 ```
 
-> Read [references/LEVELS-AND-CONTEXT.md](references/LEVELS-AND-CONTEXT.md) when optimizing log performance or pre-checking with Enabled().
-
 ---
 
 ## Log Levels
@@ -99,8 +98,6 @@ slog.Info("server started", "addr", addr)
 slog.Debug("cache lookup", "key", key, "hit", hit)
 ```
 
-> Read [references/LEVELS-AND-CONTEXT.md](references/LEVELS-AND-CONTEXT.md) when choosing between Warn and Error or defining custom verbosity levels.
-
 ---
 
 ## Request-Scoped Logging
@@ -108,43 +105,17 @@ slog.Debug("cache lookup", "key", key, "hit", hit)
 > **Advisory**: Derive loggers from context to carry request-scoped fields.
 
 Use middleware to enrich a logger with request ID, user ID, or trace ID, then
-pass the enriched logger downstream via context or as an explicit parameter:
-
-```go
-func middleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        logger := slog.With("request_id", requestID(r))
-        ctx := context.WithValue(r.Context(), loggerKey, logger)
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
-```
-
-All subsequent log calls in that request carry `request_id` automatically.
-
-> Read [references/LOGGING-PATTERNS.md](references/LOGGING-PATTERNS.md) when implementing logging middleware or passing loggers through context.
+pass the enriched logger downstream via context or as an explicit parameter.
+Keep the full context-key and middleware implementation in the logging patterns
+reference so request-scoped logging has one owner.
 
 ---
 
 ## Log or Return, Not Both
 
-> **Normative**: Handle each error exactly once — either log it or return it.
-
-Logging an error and then returning it causes duplicate noise as callers up the
-stack also handle the error.
-
-```go
-// Bad: logged here AND by every caller up the stack
-if err != nil {
-    slog.Error("query failed", "err", err)
-    return fmt.Errorf("query: %w", err)
-}
-
-// Good: wrap and return — let the caller decide
-if err != nil {
-    return fmt.Errorf("query: %w", err)
-}
-```
+The handle-once rule belongs to [go-error-handling](../go-error-handling/SKILL.md).
+In logging work, apply it by choosing either a local log-and-recover path or a
+return path with context, not both for the same error.
 
 **Exception**: HTTP handlers and other top-of-stack boundaries may log detailed
 errors server-side while returning a sanitized message to the client:
@@ -171,8 +142,6 @@ handle-once pattern and error wrapping guidance.
 - Request/response bodies that may contain user data
 - Entire slices or maps of unbounded size
 
-> Read [references/LEVELS-AND-CONTEXT.md](references/LEVELS-AND-CONTEXT.md) when deciding what data is safe to include in log attributes.
-
 ---
 
 ## Quick Reference
@@ -195,4 +164,3 @@ handle-once pattern and error wrapping guidance.
 - **Context propagation**: See [go-context](../go-context/SKILL.md) when passing request-scoped values (including loggers) through context
 - **Performance**: See [go-performance](../go-performance/SKILL.md) when optimizing hot-path logging or reducing allocations in log calls
 - **Code review**: See [go-code-review](../go-code-review/SKILL.md) when reviewing logging practices in Go PRs
-

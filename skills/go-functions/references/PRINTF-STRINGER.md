@@ -3,7 +3,17 @@
 Deep reference for Go's `fmt` printing verbs, the `Stringer` and `GoStringer`
 interfaces, custom `Format()` methods, and common pitfalls.
 
----
+## Contents
+
+- [Printf Verbs](#printf-verbs)
+- [Use `%q` for Strings](#use-q-for-strings)
+- [Format Strings Outside Printf](#format-strings-outside-printf)
+- [Naming Printf-style Functions](#naming-printf-style-functions)
+- [The `fmt.Stringer` Interface](#the-fmtstringer-interface)
+- [The `fmt.GoStringer` Interface](#the-fmtgostringer-interface)
+- [Custom Formatting with `fmt.Formatter`](#custom-formatting-with-fmtformatter)
+- [The Infinite Recursion Trap](#the-infinite-recursion-trap)
+- [Quick Reference](#quick-reference)
 
 ## Printf Verbs
 

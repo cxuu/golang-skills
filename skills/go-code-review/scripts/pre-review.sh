@@ -58,13 +58,25 @@ while [[ $# -gt 0 ]]; do
         -v|--version) echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --json)       JSON_OUTPUT=true; shift ;;
         --force)      FORCE=true; shift ;;
-        --limit)      LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
+        --limit)
+            if [[ $# -lt 2 ]]; then
+                echo "error: --limit requires a number" >&2
+                exit 2
+            fi
+            LIMIT="$2"
+            shift 2
+            ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            TARGET="$1"; shift ;;
     esac
 done
 
 TARGET="${TARGET:-./...}"
+
+if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
+    echo "error: --limit must be a non-negative integer, got: $LIMIT" >&2
+    exit 2
+fi
 
 if ! command -v go &>/dev/null; then
     echo "error: go is not installed or not in PATH" >&2

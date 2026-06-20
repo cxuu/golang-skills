@@ -1,19 +1,19 @@
 ---
 name: go-documentation
 description: Use when writing or reviewing documentation for Go packages, types, functions, or methods. Also use proactively when creating new exported types, functions, or packages, even if the user doesn't explicitly ask about documentation. Does not cover code comments for non-exported symbols (see go-style-core).
-license: Apache-2.0
-metadata:
-  sources: "Google Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Documentation
 
-## Available Scripts
+## Resource Routing
 
-- **`scripts/check-docs.sh`** — Reports exported functions, types, methods, constants, and packages missing doc comments. Run `bash scripts/check-docs.sh --help` for options.
-
-> See `assets/doc-template.go` when writing doc comments for a new package or exported type and need a complete reference of all documentation conventions.
+- `scripts/check-docs.sh` - Run when checking exported functions, types, methods, constants, and packages for missing doc comments.
+- `scripts/check-docs-ast.go` - Implementation helper invoked by `check-docs.sh`; patch this when changing documentation analysis behavior.
+- `assets/doc-template.go` - Use when starting a documented package or exported API.
+- `references/CONVENTIONS.md` - Read when documenting parameters, context behavior, concurrency safety, cleanup, errors, or named results.
+- `references/EXAMPLES.md` - Read when adding runnable examples or package examples.
+- `references/FORMATTING.md` - Read when formatting Godoc lists, paragraphs, links, and code blocks.
 
 ---
 
@@ -88,8 +88,6 @@ package math
 - For `main` packages, use the binary name: `// The seed_generator command ...`
 - For long package comments, use a `doc.go` file
 
-> Read [references/EXAMPLES.md](references/EXAMPLES.md) when writing package-level docs, main package comments, doc.go files, or runnable examples.
-
 ---
 
 ## What to Document
@@ -113,8 +111,6 @@ Key principles:
 - Use pointer in error type docs (`*PathError`) for correct `errors.Is`/`errors.As`
 - Don't name results just to enable naked returns — clarity > brevity
 
-> Read [references/CONVENTIONS.md](references/CONVENTIONS.md) when documenting parameter behavior, context cancellation, concurrency safety, cleanup requirements, error returns, or named result parameters in function doc comments.
-
 ---
 
 ## Runnable Examples
@@ -131,14 +127,6 @@ func ExampleConfig_WriteTo() {
 ```
 
 Examples appear in Godoc attached to the documented element.
-
-> Read [references/EXAMPLES.md](references/EXAMPLES.md) when writing runnable Example functions, choosing example naming conventions (Example vs ExampleType_Method), or adding package-level doc.go files.
-
----
-
-## Godoc Formatting
-
-> Read [references/FORMATTING.md](references/FORMATTING.md) when formatting godoc headings, links, lists, or code blocks, using signal boosting for deprecation notices, or previewing doc output locally.
 
 ---
 

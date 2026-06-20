@@ -1,13 +1,18 @@
 ---
 name: go-concurrency
 description: Use when writing concurrent Go code — goroutines, channels, mutexes, or thread-safety guarantees. Also use when parallelizing work, fixing data races, or protecting shared state, even if the user doesn't explicitly mention concurrency primitives. Does not cover context.Context patterns (see go-context).
-license: Apache-2.0
-compatibility: Requires go.uber.org/atomic for atomic operation wrappers
-metadata:
-  sources: "Effective Go, Google Style Guide, Uber Style Guide"
 ---
 
 # Go Concurrency
+
+> Compatibility: Atomic examples may use standard-library typed atomics where available or `go.uber.org/atomic` where a project already depends on it.
+
+## Resource Routing
+
+- `references/GOROUTINE-PATTERNS.md` - Read when starting, stopping, or waiting for goroutines.
+- `references/SYNC-PRIMITIVES.md` - Read when choosing between mutexes, atomics, channels, and once-like primitives.
+- `references/BUFFER-POOLING.md` - Read when considering channel-backed or sync.Pool-style reuse.
+- `references/ADVANCED-PATTERNS.md` - Read for worker pools, pipelines, errgroup, and cancellation-heavy patterns.
 
 ## Goroutine Lifetimes
 
@@ -30,11 +35,11 @@ channel), data races, memory issues, and resource leaks.
    into synchronous functions
 
 ```go
-// Good: Clear lifetime with WaitGroup
+// Good: Clear lifetime with WaitGroup.Go (Go 1.25+)
 var wg sync.WaitGroup
 for item := range queue {
-    wg.Add(1)
-    go func() { defer wg.Done(); process(ctx, item) }()
+    item := item
+    wg.Go(func() { process(ctx, item) })
 }
 wg.Wait()
 ```
@@ -47,10 +52,6 @@ go func() { for { flush(); time.Sleep(delay) } }()
 **Test for leaks** with [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak).
 
 > **Principle**: Never start a goroutine without knowing how it will stop.
-
-> Read [references/GOROUTINE-PATTERNS.md](references/GOROUTINE-PATTERNS.md) when
-> implementing stop/done channel patterns, goroutine waiting strategies, or
-> lifecycle-managed workers.
 
 ---
 
@@ -84,9 +85,6 @@ counter) rather than passing data between goroutines.
 > unnecessary concurrency at the caller side. Let the caller add concurrency
 > when needed.
 
-> Read [references/GOROUTINE-PATTERNS.md](references/GOROUTINE-PATTERNS.md) when
-> writing synchronous-first APIs that callers may wrap in goroutines.
-
 ---
 
 ## Zero-value Mutexes
@@ -101,9 +99,6 @@ var mu sync.Mutex                mu := new(sync.Mutex)
 
 **Don't embed mutexes** — use a named `mu` field to keep `Lock`/`Unlock` as
 implementation details, not exported API.
-
-> Read [references/SYNC-PRIMITIVES.md](references/SYNC-PRIMITIVES.md) when
-> implementing mutex-protected structs or deciding how to structure mutex fields.
 
 ---
 
@@ -135,9 +130,6 @@ c := make(chan int, 1) // size one — Good
 c := make(chan int, 64) // arbitrary — needs justification
 ```
 
-> Read [references/SYNC-PRIMITIVES.md](references/SYNC-PRIMITIVES.md) when
-> reviewing detailed channel direction examples with error-prone patterns.
-
 ---
 
 ## Atomic Operations
@@ -153,10 +145,6 @@ var running atomic.Bool          var running int32 // atomic
 running.Store(true)              atomic.StoreInt32(&running, 1)
 running.Load()                   running == 1 // race!
 ```
-
-> Read [references/SYNC-PRIMITIVES.md](references/SYNC-PRIMITIVES.md) when
-> choosing between sync/atomic and go.uber.org/atomic, or implementing atomic
-> state flags in structs.
 
 ---
 
@@ -186,18 +174,6 @@ operations are not. Document concurrency when:
 
 Use a buffered channel as a free list to reuse allocated buffers. This "leaky
 buffer" pattern uses `select` with `default` for non-blocking operations.
-
-> Read [references/BUFFER-POOLING.md](references/BUFFER-POOLING.md) when
-> implementing a worker pool with reusable buffers or choosing between
-> channel-based pools and `sync.Pool`.
-
----
-
-## Advanced Patterns
-
-> Read [references/ADVANCED-PATTERNS.md](references/ADVANCED-PATTERNS.md) when
-> implementing request-response multiplexing with channels of channels, or
-> CPU-bound parallel computation across cores.
 
 ---
 

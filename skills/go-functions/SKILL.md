@@ -1,12 +1,14 @@
 ---
 name: go-functions
 description: Use when organizing functions within a Go file, formatting function signatures, designing return values, or following Printf-style naming conventions. Also use when a user is adding or refactoring any Go function, even if they don't mention function design or signature formatting. Does not cover functional options constructors (see go-functional-options).
-license: Apache-2.0
-metadata:
-  sources: "Effective Go, Google Style Guide, Uber Style Guide"
 ---
 
 # Go Function Design
+
+## Resource Routing
+
+- `references/SIGNATURES.md` - Read when designing parameters, return values, named results, or signature readability.
+- `references/PRINTF-STRINGER.md` - Read when using fmt verbs, Stringer, GoStringer, Formatter, or Printf-style function naming.
 
 > **When this skill does NOT apply**: For functional options constructors (`WithTimeout`, `WithLogger`), see [go-functional-options](../go-functional-options/SKILL.md). For error return conventions, see [go-error-handling](../go-error-handling/SKILL.md). For naming functions and methods, see [go-naming](../go-naming/SKILL.md).
 
@@ -37,8 +39,6 @@ func calcCost(n []int) int { ... }
 ---
 
 ## Function Signatures
-
-> Read [references/SIGNATURES.md](references/SIGNATURES.md) when formatting multi-line signatures, wrapping return values, shortening call sites, or replacing naked bool parameters with custom types.
 
 Keep the signature on a single line when possible. When it must wrap, put **all
 arguments on their own lines** with a trailing comma:
@@ -73,8 +73,6 @@ func process(r io.Reader) { ... }
 ---
 
 ## Printf and Stringer
-
-> Read [references/PRINTF-STRINGER.md](references/PRINTF-STRINGER.md) when using Printf verbs beyond %v/%s/%d, implementing fmt.Stringer or fmt.GoStringer, writing custom Format() methods, or debugging infinite recursion in String() methods.
 
 ### Printf-style Function Names
 

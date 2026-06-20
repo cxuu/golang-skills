@@ -1,10 +1,29 @@
 # Functional Options vs Config Structs
 
-> **Source**: Google Style Guide, Uber Style Guide
+> Sources: source/google-go-styleguide/best-practices.md; source/uber-go-style/style.md
+> Authority: project policy
+> Minimum Go: any supported Go version
+> Last verified: 2026-06-19
 
 Both functional options and config structs solve the same problem — optional
 configuration for constructors — but they have different trade-offs. Choose
 based on API audience, extensibility needs, and complexity budget.
+
+Project policy: use Google guidance to decide whether optional configuration is
+worth the complexity; when functional options are chosen, prefer Uber's
+interface-with-unexported-method implementation over closure-only options for
+debuggability and testability.
+
+## Contents
+
+- [Decision Framework](#decision-framework)
+- [Config Struct Pattern](#config-struct-pattern)
+- [Comparison](#comparison)
+- [When to Prefer Config Structs](#when-to-prefer-config-structs)
+- [When to Prefer Functional Options](#when-to-prefer-functional-options)
+- [Caller Ergonomics](#caller-ergonomics)
+- [Functional Options Implementation](#functional-options-implementation)
+- [Hybrid Approach](#hybrid-approach)
 
 ## Decision Framework
 
@@ -115,6 +134,93 @@ srv := NewServer(
     WithLogger(logger),
 )
 ```
+
+## Caller Ergonomics
+
+Functional options are most valuable when they keep call sites focused on the
+settings that differ from defaults.
+
+**Before** — positional optional arguments hide meaning and force callers to
+remember default sentinel values:
+
+```go
+conn, err := db.Open(addr, false, zap.NewNop(), 30*time.Second)
+```
+
+**After** — options name each non-default setting and allow the rest to stay
+inside the constructor:
+
+```go
+conn, err := db.Open(
+    addr,
+    db.WithCache(false),
+    db.WithLogger(logger),
+)
+```
+
+## Functional Options Implementation
+
+Use an exported `Option` interface with an unexported `apply` method when
+options should be comparable, mockable, or able to implement extra interfaces:
+
+```go
+package db
+
+import "go.uber.org/zap"
+
+type options struct {
+    cache  bool
+    logger *zap.Logger
+}
+
+type Option interface {
+    apply(*options)
+}
+
+type cacheOption bool
+
+func (c cacheOption) apply(opts *options) {
+    opts.cache = bool(c)
+}
+
+func WithCache(c bool) Option {
+    return cacheOption(c)
+}
+
+type loggerOption struct {
+    Log *zap.Logger
+}
+
+func (l loggerOption) apply(opts *options) {
+    opts.logger = l.Log
+}
+
+func WithLogger(log *zap.Logger) Option {
+    return loggerOption{Log: log}
+}
+
+func Open(addr string, opts ...Option) (*Connection, error) {
+    options := options{
+        cache:  defaultCache,
+        logger: zap.NewNop(),
+    }
+
+    for _, o := range opts {
+        o.apply(&options)
+    }
+
+    return &Connection{}, nil
+}
+```
+
+Avoid closure-only options by default:
+
+```go
+type Option func(*options)
+```
+
+Closure options are concise, but they are harder to compare in tests, harder to
+describe in logs, and cannot implement additional interfaces.
 
 ## Hybrid Approach
 

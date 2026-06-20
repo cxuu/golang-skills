@@ -2,7 +2,15 @@
 
 Common patterns for deriving, checking, and propagating `context.Context`.
 
----
+## Contents
+
+- [Context Immutability](#context-immutability)
+- [When to Use context.Background()](#when-to-use-contextbackground)
+- [Deriving Contexts](#deriving-contexts)
+- [Checking Cancellation](#checking-cancellation)
+- [Respecting Cancellation in HTTP Handlers](#respecting-cancellation-in-http-handlers)
+- [Context Value Best Practices](#context-value-best-practices)
+- [Quick Reference](#quick-reference)
 
 ## Context Immutability
 
@@ -182,7 +190,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 The `r.Context()` is cancelled when:
 - The client closes the connection
-- The `http.Server`'s `ReadTimeout` or `WriteTimeout` fires
+- The request is cancelled by the client or HTTP/2 transport
 - The `ServeHTTP` method returns
 
 ---

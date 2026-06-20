@@ -1,0 +1,3 @@
+package prereview
+
+func Bad( ) {}

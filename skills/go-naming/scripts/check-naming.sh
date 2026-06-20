@@ -46,13 +46,25 @@ while [[ $# -gt 0 ]]; do
         -h|--help)    usage; exit 0 ;;
         -v|--version) echo "$SCRIPT_NAME v$VERSION"; exit 0 ;;
         --json)       JSON_OUTPUT=true; shift ;;
-        --limit)      LIMIT="${2:?error: --limit requires a number}"; shift 2 ;;
+        --limit)
+            if [[ $# -lt 2 ]]; then
+                echo "error: --limit requires a number" >&2
+                exit 2
+            fi
+            LIMIT="$2"
+            shift 2
+            ;;
         -*)           echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
         *)            TARGET="$1"; shift ;;
     esac
 done
 
 TARGET="${TARGET:-.}"
+
+if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
+    echo "error: --limit must be a non-negative integer, got: $LIMIT" >&2
+    exit 2
+fi
 
 json_escape() {
     local s="$1"
@@ -95,13 +107,30 @@ add_violation() {
 check_screaming_constants() {
     local file="$1"
     local line_num=0
+    local in_const_block=false
     while IFS= read -r line; do
         line_num=$((line_num + 1))
+        if [[ "$line" =~ ^[[:space:]]*const[[:space:]]*\([[:space:]]*$ ]]; then
+            in_const_block=true
+            continue
+        fi
+        if $in_const_block && [[ "$line" =~ ^[[:space:]]*\)[[:space:]]*$ ]]; then
+            in_const_block=false
+            continue
+        fi
         # Match const declarations with ALL_CAPS_SNAKE names (2+ uppercase segments with underscore)
-        pat='^[[:space:]]*(const[[:space:]]+)[A-Z][A-Z0-9]*_[A-Z0-9_]+[[:space:]]'
+        if $in_const_block; then
+            pat='^[[:space:]]*[A-Z][A-Z0-9]*_[A-Z0-9_]+[[:space:]]'
+        else
+            pat='^[[:space:]]*(const[[:space:]]+)[A-Z][A-Z0-9]*_[A-Z0-9_]+[[:space:]]'
+        fi
         if [[ "$line" =~ $pat ]]; then
             local name
-            name=$(echo "$line" | sed -E -n 's/^[[:space:]]*const[[:space:]]+([A-Z][A-Z0-9]*_[A-Z0-9_]*).*/\1/p')
+            if $in_const_block; then
+                name=$(echo "$line" | sed -E -n 's/^[[:space:]]*([A-Z][A-Z0-9]*_[A-Z0-9_]*).*/\1/p')
+            else
+                name=$(echo "$line" | sed -E -n 's/^[[:space:]]*const[[:space:]]+([A-Z][A-Z0-9]*_[A-Z0-9_]*).*/\1/p')
+            fi
             if [[ -n "$name" ]]; then
                 add_violation "$file" "$line_num" "screaming-const" "constant '$name' uses SCREAMING_SNAKE_CASE; use MixedCaps instead"
             fi
@@ -169,7 +198,7 @@ done < <(find_go_files "$TARGET")
 
 if [[ ${#FILES[@]} -eq 0 ]]; then
     if $JSON_OUTPUT; then
-        echo '{"violations":[],"count":0,"status":"no_go_files"}'
+        echo '{"violations":[],"total":0,"truncated":false,"status":"no_go_files"}'
     else
         echo "No Go files found in: $TARGET"
     fi

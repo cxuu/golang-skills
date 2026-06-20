@@ -49,24 +49,12 @@ wire themselves into a registry during `init()`.
 
 ---
 
-## Interface Compliance Check
+## Interface Satisfaction Checks
 
-Verify at compile time that a type implements an interface by assigning a
-nil pointer to a blank-identifier variable of the interface type:
-
-```go
-var _ io.Writer = (*MyType)(nil)
-```
-
-This produces a compile error if `*MyType` does not satisfy `io.Writer`,
-catching missing methods before runtime.
-
-**When to use**: Place this check in the same file that defines the type,
-typically right after the type declaration. It is especially useful when a
-type must satisfy an interface defined in another package.
-
-See [go-interfaces](../../go-interfaces/SKILL.md): Interface Satisfaction
-Checks for full guidance on when and where to use this pattern.
+Blank identifiers are also used in compile-time interface assertions, but that
+rule is owned by [go-interfaces](../../go-interfaces/SKILL.md). Use this
+reference for blank-identifier mechanics; route assertion placement, need, and
+validation decisions to the interface skill.
 
 ---
 
@@ -77,4 +65,4 @@ Checks for full guidance on when and where to use this pattern.
 | Discard value | `_, err := f()` |
 | Discard in if-init | `if _, err := f(); err != nil { }` |
 | Side-effect import | `import _ "pkg"` |
-| Interface check | `var _ Interface = (*Type)(nil)` |
+| Interface check | Route to go-interfaces |

@@ -1,13 +1,19 @@
 ---
 name: go-defensive
 description: Use when hardening Go code at API boundaries — copying slices/maps, verifying interface compliance, using defer for cleanup, time.Time/time.Duration, or avoiding mutable globals. Also use when reviewing for robustness concerns like missing cleanup or unsafe crypto usage, even if the user doesn't mention "defensive programming." Does not cover error handling strategy (see go-error-handling).
-license: Apache-2.0
-compatibility: Uses crypto/rand.Text (Go 1.24+) in examples
-metadata:
-  sources: "Effective Go, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Defensive Programming Patterns
+
+> Compatibility: Crypto examples may use `crypto/rand.Text`, which requires Go 1.24+.
+
+## Resource Routing
+
+- `references/BOUNDARY-COPYING.md` - Read when copying slices/maps across API boundaries.
+- `references/GLOBAL-STATE.md` - Read when introducing or removing package globals.
+- `references/MUST-FUNCTIONS.md` - Read when deciding whether a panic-on-error helper is acceptable.
+- `references/PANIC-RECOVER.md` - Read when evaluating panic, recover, or crash containment.
+- `references/TIME-ENUMS-TAGS.md` - Read when handling time types, enum zero values, or struct tags.
 
 ## Defensive Checklist Priority
 
@@ -19,7 +25,7 @@ Reviewing an API boundary?
 ├─ 2. Input validation   → Copy slices/maps received from callers
 ├─ 3. Output safety      → Copy slices/maps before returning to callers
 ├─ 4. Resource cleanup   → Use defer for Close/Unlock/Cancel
-├─ 5. Interface checks   → var _ Interface = (*Type)(nil) for compile-time verification
+├─ 5. Interface checks   → Route compile-time assertions to go-interfaces
 ├─ 6. Time correctness   → Use time.Time and time.Duration, not int/float
 ├─ 7. Enum safety        → Start iota at 1 so zero-value is invalid
 └─ 8. Crypto safety      → crypto/rand for keys, never math/rand
@@ -33,7 +39,7 @@ Reviewing an API boundary?
 |---------|------|---------|
 | Boundary copies | Copy slices/maps on receive and return | [BOUNDARY-COPYING.md](references/BOUNDARY-COPYING.md) |
 | Defer cleanup | `defer f.Close()` right after `os.Open` | Below |
-| Interface check | `var _ I = (*T)(nil)` | See go-interfaces |
+| Interface check | Compile-time satisfaction assertion | See go-interfaces |
 | Time types | `time.Time` / `time.Duration`, never raw int | [TIME-ENUMS-TAGS.md](references/TIME-ENUMS-TAGS.md) |
 | Enum start | `iota + 1` so zero = invalid | Below |
 | Crypto rand | `crypto/rand` for keys, never `math/rand` | Below |
@@ -45,11 +51,9 @@ Reviewing an API boundary?
 
 ## Verify Interface Compliance
 
-Use compile-time checks to verify interface implementation. See **go-interfaces**: Interface Satisfaction Checks for the full pattern.
-
-```go
-var _ http.Handler = (*Handler)(nil)
-```
+Route compile-time interface assertions to [go-interfaces](../go-interfaces/SKILL.md).
+Use this skill only to notice API-boundary robustness risk; the interface skill
+owns when an assertion is appropriate and the exact assertion shape.
 
 ## Copy Slices and Maps at Boundaries
 
@@ -64,8 +68,6 @@ copy(d.trips, trips)
 result := make(map[string]int, len(s.counters))
 for k, v := range s.counters { result[k] = v }
 ```
-
-> Read [references/BOUNDARY-COPYING.md](references/BOUNDARY-COPYING.md) when copying slices or maps at API boundaries, or deciding when defensive copies are necessary vs. when they can be skipped.
 
 ## Defer to Clean Up
 
@@ -118,8 +120,6 @@ const (
 
 ## Time, Struct Tags, and Embedding
 
-> Read [references/TIME-ENUMS-TAGS.md](references/TIME-ENUMS-TAGS.md) when using `time.Time`/`time.Duration` instead of raw ints, adding field tags to marshaled structs, or deciding whether to embed types in public structs.
-
 ## Avoid Mutable Globals
 
 Inject dependencies instead of mutating package-level variables. This makes
@@ -134,8 +134,6 @@ func newSigner() *signer {
   return &signer{now: time.Now}
 }
 ```
-
-> Read [references/GLOBAL-STATE.md](references/GLOBAL-STATE.md) when deciding whether a global variable is appropriate, designing the New() + Default() package state pattern, or replacing mutable globals with dependency injection.
 
 ## Crypto Rand
 
@@ -174,8 +172,6 @@ func safelyDo(work *Work) {
 - Acceptable to panic in `init()` if a library truly cannot set itself up
 - Use recover to isolate panics in server goroutine handlers
 
-> Read [references/PANIC-RECOVER.md](references/PANIC-RECOVER.md) when writing panic recovery in HTTP servers, using panic as an internal control flow mechanism in parsers, or deciding between log.Fatal and panic.
-
 ## Must Functions
 
 `Must` functions panic on error — use them **only** during program
@@ -186,13 +182,11 @@ var validID = regexp.MustCompile(`^[a-z][a-z0-9-]{0,62}$`)
 var tmpl = template.Must(template.ParseFiles("index.html"))
 ```
 
-> Read [references/MUST-FUNCTIONS.md](references/MUST-FUNCTIONS.md) when writing custom Must functions, deciding whether Must is appropriate for a given call site, or wrapping fallible initialization in a panicking helper.
-
 ---
 
 ## Related Skills
 
 - **Error handling**: See [go-error-handling](../go-error-handling/SKILL.md) when choosing between returning errors and panicking, or wrapping errors at boundaries
 - **Concurrency safety**: See [go-concurrency](../go-concurrency/SKILL.md) when protecting shared state with mutexes, atomics, or channels
-- **Interface checks**: See [go-interfaces](../go-interfaces/SKILL.md) when adding compile-time interface satisfaction checks (`var _ I = (*T)(nil)`)
+- **Interface checks**: See [go-interfaces](../go-interfaces/SKILL.md) when adding compile-time interface satisfaction checks
 - **Data structure copying**: See [go-data-structures](../go-data-structures/SKILL.md) when working with slice/map internals or pointer aliasing

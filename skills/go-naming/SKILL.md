@@ -1,17 +1,17 @@
 ---
 name: go-naming
 description: Use when naming any Go identifier — packages, types, functions, methods, variables, constants, or receivers — to ensure idiomatic, clear names. Also use when a user is creating new types, packages, or exported APIs, even if they don't explicitly ask about naming conventions. Does not cover package organization (see go-packages).
-license: Apache-2.0
-metadata:
-  sources: "Google Style Guide, Uber Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Naming Conventions
 
-## Available Scripts
+## Resource Routing
 
-- **`scripts/check-naming.sh`** — Scans Go code for naming anti-patterns: SCREAMING_SNAKE_CASE constants, Get-prefixed getters, bad package names (util/helper/common), and receivers named "this"/"self". Run `bash scripts/check-naming.sh --help` for options.
+- `scripts/check-naming.sh` - Run when checking SCREAMING_SNAKE_CASE constants, Get-prefixed getters, generic package names, or receivers named `this`/`self`.
+- `references/IDENTIFIERS.md` - Read when choosing names for initialisms, exported identifiers, or package-level symbols.
+- `references/REPETITION.md` - Read when names repeat package, receiver, type, or local context.
+- `references/VARIABLES.md` - Read when choosing local variable names, receiver names, or loop identifiers.
 
 ## Core Principle
 
@@ -64,8 +64,6 @@ Short, lowercase, singular nouns. Avoid generic names like `util`, `common`,
 // Bad:  user_service, UserService, count (shadows var)
 ```
 
-> Read [references/IDENTIFIERS.md](references/IDENTIFIERS.md) when naming packages, deciding on import aliases, or choosing between generic and specific package names.
-
 ---
 
 ## Interface Names
@@ -76,8 +74,6 @@ Name one-method interfaces by the method plus `-er`: `Reader`, `Writer`,
 `Formatter`. Honor canonical method names (`Read`, `Write`, `Close`, `String`)
 and their signatures.
 
-> Read [references/IDENTIFIERS.md](references/IDENTIFIERS.md) when defining new interfaces or implementing well-known method signatures.
-
 ---
 
 ## Receiver Names
@@ -87,8 +83,6 @@ and their signatures.
 One or two letters abbreviating the type, consistent across all methods:
 `func (c *Client) Connect()`, `func (c *Client) Send()`.
 Never use `this` or `self`.
-
-> Read [references/IDENTIFIERS.md](references/IDENTIFIERS.md) when choosing receiver names or ensuring consistency across methods.
 
 ---
 
@@ -104,8 +98,6 @@ const MaxPacketSize = 512
 const defaultTimeout = 30 * time.Second
 ```
 
-> Read [references/IDENTIFIERS.md](references/IDENTIFIERS.md) when naming constants or choosing between role-based and value-based names.
-
 ---
 
 ## Initialisms and Acronyms
@@ -114,8 +106,6 @@ const defaultTimeout = 30 * time.Second
 
 Initialisms (URL, ID, HTTP, API) must be all uppercase or all lowercase:
 `HTTPClient`, `userID`, `ParseURL()` — not `HttpClient`, `orderId`, `ParseUrl()`.
-
-> Read [references/IDENTIFIERS.md](references/IDENTIFIERS.md) when using initialisms in compound names or for the full case table.
 
 ---
 
@@ -128,8 +118,6 @@ Getter for field `owner` is `Owner()`, not `GetOwner()`. Setter is
 
 When functions differ only by type, include type at the end:
 `ParseInt()`, `ParseInt64()`.
-
-> Read [references/IDENTIFIERS.md](references/IDENTIFIERS.md) when designing getter/setter APIs or naming function variants.
 
 ---
 
@@ -151,8 +139,6 @@ pendingOrders := filterPending(orders)    // larger scope
 const _defaultPort = 8080                 // unexported global
 ```
 
-> Read [references/VARIABLES.md](references/VARIABLES.md) when naming local variables in functions over 15 lines.
-
 ---
 
 ## Avoiding Repetition
@@ -162,8 +148,6 @@ Go names should not feel repetitive when used. Consider the full context:
 - **Package + symbol**: `widget.New()` not `widget.NewWidget()`
 - **Receiver + method**: `p.Name()` not `p.ProjectName()`
 - **Context + type**: In package `sqldb`, use `Connection` not `DBConnection`
-
-> Read [references/REPETITION.md](references/REPETITION.md) when a package name and its exported symbols feel redundant.
 
 ---
 

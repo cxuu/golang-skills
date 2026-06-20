@@ -12,7 +12,6 @@ import (
     "context"
     "encoding/json"
     "errors"
-    "fmt"
     "log/slog"
     "net/http"
     "os"
@@ -93,7 +92,9 @@ func main() {
 
         ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
         defer cancel()  // go-defensive: defer cleanup
-        httpSrv.Shutdown(ctx)
+        if err := httpSrv.Shutdown(ctx); err != nil {
+            slog.Error("server shutdown failed", "err", err)
+        }
     }()
 
     slog.Info("starting server", "addr", httpSrv.Addr)
@@ -116,4 +117,4 @@ func main() {
 | Concurrency | [go-concurrency](../../go-concurrency/SKILL.md) | Clear goroutine lifetime, channel sizing |
 | Defensive | [go-defensive](../../go-defensive/SKILL.md) | `defer cancel()`, `time.Duration`, graceful shutdown |
 | Packages | [go-packages](../../go-packages/SKILL.md) | Exit only in `main()` |
-| Logging | [go-error-handling](../../go-error-handling/SKILL.md) | Structured slog, handle error once |
+| Logging | [go-logging](../../go-logging/SKILL.md) | Structured slog, handle error once |

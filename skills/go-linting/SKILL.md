@@ -1,9 +1,6 @@
 ---
 name: go-linting
 description: Use when setting up linting for a Go project, configuring golangci-lint, or adding Go checks to a CI/CD pipeline. Also use when starting a new Go project and deciding which linters to enable, even if the user only asks about "code quality" or "static analysis" without mentioning specific linter names. Does not cover code review process (see go-code-review).
-license: Apache-2.0
-metadata:
-  sources: "Uber Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
@@ -15,14 +12,20 @@ More important than any "blessed" set of linters: **lint consistently across a c
 
 Consistent linting helps catch common issues and establishes a high bar for code quality without being unnecessarily prescriptive.
 
----
+## Resource Routing
+
+- `scripts/setup-lint.sh` - Run when generating a `.golangci.yml`, validating the first lint pass, or producing JSON metadata.
+- `assets/golangci.yml` - Use as the v2 golangci-lint baseline for established projects.
 
 ## Setup Procedure
 
-1. Create `.golangci.yml` using the configuration below
+1. Create `.golangci.yml` with `scripts/setup-lint.sh` or copy `assets/golangci.yml`
 2. Run `golangci-lint run ./...`
 3. If errors appear, fix them category by category (formatting first, then vet, then style)
 4. Re-run until clean
+
+After generating `.golangci.yml`, run `golangci-lint config verify --config .golangci.yml`
+to verify the configuration schema before relying on lint results.
 
 ---
 
@@ -50,39 +53,16 @@ Use [golangci-lint](https://github.com/golangci/golangci-lint) as your lint runn
 
 ## Example Configuration
 
-> See `assets/golangci.yml` when creating a new `.golangci.yml` or comparing your existing config against a recommended baseline.
-
-Create `.golangci.yml` in your project root:
-
-```yaml
-linters:
-  enable:
-    - errcheck
-    - goimports
-    - revive
-    - govet
-    - staticcheck
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/your-org/your-repo
-  revive:
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: error-return
-      - name: error-strings
-      - name: exported
-
-run:
-  timeout: 5m
-```
+Use `assets/golangci.yml` as the maintained example. It targets
+golangci-lint v2 (verified with 2.10.1 on 2026-06-19), keeps `goimports`
+under `formatters`, and enables the core linters plus common production
+additions.
 
 ### Running
 
 ```bash
-# Install
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+# Install the version this skill's config is verified against
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
 
 # Run all linters
 golangci-lint run
@@ -126,24 +106,8 @@ Rules:
 
 ## CI/CD Integration
 
-### GitHub Actions
-
-```yaml
-# .github/workflows/lint.yml
-name: Lint
-on: [push, pull_request]
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: stable
-      - uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-```
+Run `golangci-lint run ./...` in CI after tests. Pin the golangci-lint version
+used by CI so local and release behavior do not drift.
 
 ### Pre-commit Hook
 
@@ -157,30 +121,11 @@ Use `--new-from-rev` to lint only changed code, keeping the feedback loop fast.
 
 ---
 
-## Available Scripts
-
-- **`scripts/setup-lint.sh`** — Generates `.golangci.yml` and runs initial lint
-
-```bash
-bash scripts/setup-lint.sh github.com/your-org/your-repo
-bash scripts/setup-lint.sh --force github.com/your-org/your-repo  # overwrite existing
-bash scripts/setup-lint.sh --dry-run                               # preview config
-bash scripts/setup-lint.sh --json                                  # structured output
-```
-
-> **Validation**: After generating `.golangci.yml`, run `golangci-lint run ./...` to verify the configuration is valid and produces expected output. If it fails with a config error, fix and retry.
-
-> `scripts/setup-lint.sh` generates a **minimum** config (5 core linters).
-> For established projects, use `assets/golangci.yml` as a starting point —
-> it adds gosec, ineffassign, misspell, gocyclo, and bodyclose.
-
----
-
 ## Quick Reference
 
 | Task | Command/Action |
 |------|----------------|
-| Install golangci-lint | `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest` |
+| Install golangci-lint | `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1` |
 | Run linters | `golangci-lint run` |
 | Run on path | `golangci-lint run ./pkg/...` |
 | Config file | `.golangci.yml` in project root |

@@ -1,14 +1,22 @@
 ---
 name: go-testing
 description: Use when writing, reviewing, or improving Go test code — including table-driven tests, subtests, parallel tests, test helpers, test doubles, and assertions with cmp.Diff. Also use when a user asks to write a test for a Go function, even if they don't mention specific patterns like table-driven tests or subtests. Does not cover benchmark performance testing (see go-performance).
-license: Apache-2.0
-compatibility: Uses github.com/google/go-cmp for cmp.Diff comparisons
-metadata:
-  sources: "Google Style Guide, Uber Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Testing
+
+> Compatibility: Diff examples may use `github.com/google/go-cmp`.
+
+## Resource Routing
+
+- `scripts/gen-table-test.sh` - Run when generating a table-driven test scaffold.
+- `assets/table-test-template.go` - Use as a copyable table-test starting point.
+- `references/TABLE-DRIVEN-TESTS.md` - Read when choosing table tests, subtests, or parallel test patterns.
+- `references/TEST-HELPERS.md` - Read when writing helpers, fixtures, cleanup, or test doubles.
+- `references/TEST-ORGANIZATION.md` - Read when structuring packages, black-box tests, or larger test suites.
+- `references/VALIDATION-APIS.md` - Read when choosing `t.Error`, `t.Fatal`, `cmp.Diff`, or assertion style.
+- `references/INTEGRATION.md` - Read when testing external services, HTTP handlers, databases, or long-running setup.
 
 ## Quick Reference
 
@@ -59,9 +67,6 @@ For protocol buffers, add `protocmp.Transform()` as a cmp option. Always
 include the direction key `(-want +got)` in diff messages. Avoid comparing
 JSON/serialized output — compare semantically instead.
 
-> Read [references/TEST-HELPERS.md](references/TEST-HELPERS.md) when writing
-> custom comparison helpers or domain-specific test utilities.
-
 ---
 
 ## t.Error vs t.Fatal
@@ -76,10 +81,6 @@ JSON/serialized output — compare semantically instead.
 
 **Never call `t.Fatal`/`t.FailNow` from a goroutine** other than the test
 goroutine — use `t.Error` instead.
-
-> Read [references/TEST-HELPERS.md](references/TEST-HELPERS.md) when writing
-> helpers that need to choose between t.Error and t.Fatal, or for detailed
-> examples of both.
 
 ---
 
@@ -98,9 +99,6 @@ or multiple branches — write separate test functions instead.
 **Key rules:**
 - Use field names when cases span many lines or have same-type adjacent fields
 - Include inputs in failure messages — never identify rows by index
-
-> Read [references/TABLE-DRIVEN-TESTS.md](references/TABLE-DRIVEN-TESTS.md)
-> when writing table-driven tests, subtests, or parallel tests.
 
 > **Validation**: After generating or modifying tests, run `go test -run TestXxx -v` to verify the tests compile and pass. Fix any compilation errors before proceeding.
 
@@ -123,9 +121,6 @@ func setupTestDB(t *testing.T) *sql.DB {
 }
 ```
 
-> Read [references/TEST-HELPERS.md](references/TEST-HELPERS.md) when writing
-> test helpers, cleanup functions, or custom comparison utilities.
-
 ---
 
 ## Test Error Semantics
@@ -146,36 +141,6 @@ For simple presence checks when specific semantics don't matter:
 if gotErr := err != nil; gotErr != tt.wantErr {
     t.Errorf("f(%v) error = %v, want error presence = %t", tt.input, err, tt.wantErr)
 }
-```
-
----
-
-## Test Organization
-
-> Read [references/TEST-ORGANIZATION.md](references/TEST-ORGANIZATION.md) when
-> working with test doubles, choosing test package placement, or scoping test
-> setup.
-
-> Read [references/VALIDATION-APIS.md](references/VALIDATION-APIS.md) when
-> designing reusable test validation functions.
-
----
-
-## Integration Testing
-
-> Read [references/INTEGRATION.md](references/INTEGRATION.md) when writing
-> TestMain, acceptance tests, or tests that need real HTTP/RPC transports.
-
----
-
-## Available Scripts
-
-- **`scripts/gen-table-test.sh`** — Generates a table-driven test scaffold
-
-```bash
-bash scripts/gen-table-test.sh ParseConfig config > config/parse_config_test.go
-bash scripts/gen-table-test.sh --parallel ParseConfig config      # with t.Parallel()
-bash scripts/gen-table-test.sh --output config/parse_config_test.go ParseConfig config
 ```
 
 ---

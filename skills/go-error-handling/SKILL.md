@@ -1,18 +1,20 @@
 ---
 name: go-error-handling
 description: Use when writing Go code that returns, wraps, or handles errors — choosing between sentinel errors, custom types, and fmt.Errorf (%w vs %v), structuring error flow, or deciding whether to log or return. Also use when propagating errors across package boundaries or using errors.Is/As, even if the user doesn't ask about error strategy. Does not cover panic/recover patterns (see go-defensive).
-license: Apache-2.0
-compatibility: Requires Go 1.13+ for errors.Is/errors.As and fmt.Errorf %w wrapping. Structured logging examples use slog (Go 1.21+).
-metadata:
-  sources: "Google Style Guide, Uber Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Error Handling
 
-## Available Scripts
+> Compatibility: `errors.Is`, `errors.As`, and `%w` wrapping require Go 1.13+; structured logging examples may use `log/slog` from Go 1.21+.
 
-- **`scripts/check-errors.sh`** — Detects error handling anti-patterns: string comparison on `err.Error()`, bare `return err` without context, and log-and-return violations. Run `bash scripts/check-errors.sh --help` for options.
+## Resource Routing
+
+- `scripts/check-errors.sh` - Run when checking string-based error matching, bare error propagation, and log-and-return patterns.
+- `scripts/check-errors-ast.go` - Implementation helper invoked by `check-errors.sh`; patch this when changing error-flow analysis behavior.
+- `references/ERROR-FLOW.md` - Read when deciding where to handle, wrap, log, or return errors.
+- `references/ERROR-TYPES.md` - Read when choosing sentinel errors, typed errors, or opaque errors.
+- `references/WRAPPING.md` - Read when choosing `%w` versus `%v` or crossing package boundaries.
 
 In Go, [errors are values](https://go.dev/blog/errors-are-values) — they are
 created by code and consumed by code.
@@ -133,8 +135,6 @@ Error encountered?
 └─ Neither? → Log at appropriate level, continue
 ```
 
-> Read [references/ERROR-FLOW.md](references/ERROR-FLOW.md) when structuring complex error flows, deciding between logging vs returning, implementing the handle-once pattern, or choosing structured logging levels.
-
 ---
 
 ## Error Types
@@ -151,8 +151,6 @@ Error encountered?
 **Default**: Wrap with `fmt.Errorf("...: %w", err)`. Escalate to sentinels for
 `errors.Is()`, to custom types for `errors.As()`.
 
-> Read [references/ERROR-TYPES.md](references/ERROR-TYPES.md) when defining sentinel errors, creating custom error types, or choosing error strategies for a package API.
-
 ---
 
 ## Error Wrapping
@@ -165,8 +163,6 @@ Error encountered?
 **Key rules**: Place `%w` at the end. Add context callers don't have. If
 annotation adds nothing, return `err` directly.
 
-> Read [references/WRAPPING.md](references/WRAPPING.md) when deciding between %v and %w, wrapping errors across package boundaries, or adding contextual information.
-
 > **Validation**: After implementing error handling, run `bash scripts/check-errors.sh` to detect common anti-patterns. Then run `go vet ./...` to catch additional issues.
 
 ---
@@ -178,4 +174,3 @@ annotation adds nothing, return `err` directly.
 - **Panic handling**: See [go-defensive](../go-defensive/SKILL.md) when deciding between panic and error returns, or writing recover guards
 - **Guard clauses**: See [go-control-flow](../go-control-flow/SKILL.md) when structuring early-return error flow or reducing nesting
 - **Logging decisions**: See [go-logging](../go-logging/SKILL.md) when choosing log levels, configuring structured logging, or deciding what context to include in log messages
-

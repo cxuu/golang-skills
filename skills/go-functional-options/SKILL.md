@@ -1,14 +1,15 @@
 ---
 name: go-functional-options
 description: Use when designing a Go constructor or factory function with optional configuration — especially with 3+ optional parameters or extensible APIs. Also use when building a New* function that takes many settings, even if they don't mention "functional options" by name. Does not cover general function design (see go-functions).
-license: Apache-2.0
-metadata:
-  sources: "Uber Style Guide"
 ---
 
 # Functional Options Pattern
 
 Functional options is a pattern where you declare an opaque `Option` type that records information in an internal struct. The constructor accepts a variadic number of these options and applies them to configure the result.
+
+## Resource Routing
+
+- `references/OPTIONS-VS-STRUCTS.md` - Read when choosing between config structs and functional options, implementing the full interface-based option pattern, or evaluating hybrid constructor APIs.
 
 ## When to Use
 
@@ -37,94 +38,6 @@ type Option interface {
 
 The unexported `apply` method ensures only options from this package can be used.
 
-## Complete Implementation
-
-```go
-package db
-
-import "go.uber.org/zap"
-
-// options holds all configuration for opening a connection.
-type options struct {
-    cache  bool
-    logger *zap.Logger
-}
-
-// Option configures how we open the connection.
-type Option interface {
-    apply(*options)
-}
-
-// cacheOption implements Option for cache setting (simple type alias).
-type cacheOption bool
-
-func (c cacheOption) apply(opts *options) {
-    opts.cache = bool(c)
-}
-
-// WithCache enables or disables caching.
-func WithCache(c bool) Option {
-    return cacheOption(c)
-}
-
-// loggerOption implements Option for logger setting (struct for pointers).
-type loggerOption struct {
-    Log *zap.Logger
-}
-
-func (l loggerOption) apply(opts *options) {
-    opts.logger = l.Log
-}
-
-// WithLogger sets the logger for the connection.
-func WithLogger(log *zap.Logger) Option {
-    return loggerOption{Log: log}
-}
-
-// Open creates a connection.
-func Open(addr string, opts ...Option) (*Connection, error) {
-    // Start with defaults
-    options := options{
-        cache:  defaultCache,
-        logger: zap.NewNop(),
-    }
-
-    // Apply all provided options
-    for _, o := range opts {
-        o.apply(&options)
-    }
-
-    // Use options.cache and options.logger...
-    return &Connection{}, nil
-}
-```
-
-## Usage Examples
-
-### Without Functional Options (Bad)
-
-```go
-// Caller must always provide all parameters, even defaults
-db.Open(addr, db.DefaultCache, zap.NewNop())
-db.Open(addr, db.DefaultCache, log)
-db.Open(addr, false /* cache */, zap.NewNop())
-db.Open(addr, false /* cache */, log)
-```
-
-### With Functional Options (Good)
-
-```go
-// Only provide options when needed
-db.Open(addr)
-db.Open(addr, db.WithLogger(log))
-db.Open(addr, db.WithCache(false))
-db.Open(
-    addr,
-    db.WithCache(false),
-    db.WithLogger(log),
-)
-```
-
 ## Comparison: Functional Options vs Config Struct
 
 | Aspect | Functional Options | Config Struct |
@@ -137,22 +50,9 @@ db.Open(
 
 **Prefer Config Struct when**: Fewer than 3 options, options rarely change, all options usually specified together, or internal APIs only.
 
-> Read [references/OPTIONS-VS-STRUCTS.md](references/OPTIONS-VS-STRUCTS.md) when deciding between functional options and config structs, designing a config struct API with proper defaults, or evaluating the hybrid approach for complex constructors.
-
 ## Why Not Closures?
 
-An alternative implementation uses closures:
-
-```go
-// Closure approach (not recommended)
-type Option func(*options)
-
-func WithCache(c bool) Option {
-    return func(o *options) { o.cache = c }
-}
-```
-
-The interface approach is preferred because:
+The interface approach is preferred over closure-only options because:
 
 1. **Testability** - Options can be compared in tests and mocks
 2. **Debuggability** - Options can implement `fmt.Stringer`

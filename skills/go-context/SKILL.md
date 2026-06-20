@@ -1,13 +1,15 @@
 ---
 name: go-context
 description: Use when working with context.Context in Go — placement in signatures, propagating cancellation and deadlines, and storing values in context vs parameters. Also use when cancelling long-running operations, setting timeouts, or passing request-scoped data, even if they don't mention context.Context directly. Does not cover goroutine lifecycle or sync primitives (see go-concurrency).
-license: Apache-2.0
-compatibility: Requires Go 1.7+ (context moved to standard library in Go 1.7)
-metadata:
-  sources: "Go Wiki CodeReviewComments"
 ---
 
 # Go Context Usage
+
+> Compatibility: `context` has been in the standard library since Go 1.7.
+
+## Resource Routing
+
+- `references/PATTERNS.md` - Read when deriving contexts, checking cancellation, handling HTTP request contexts, or using typed context-value keys.
 
 ## Context as First Parameter
 
@@ -89,8 +91,6 @@ Context values are **not** appropriate for:
 ---
 
 ## Common Patterns
-
-> Read [references/PATTERNS.md](references/PATTERNS.md) when deriving contexts (WithTimeout, WithCancel, WithDeadline), checking cancellation in loops or HTTP handlers, using context values with typed keys, or needing the quick reference table.
 
 ### Deriving Contexts
 

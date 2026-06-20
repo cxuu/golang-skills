@@ -3,6 +3,14 @@
 Detailed patterns for slog setup, handler configuration, testing, HTTP
 middleware, and migration from the legacy `log` package.
 
+## Contents
+
+- [Setting Up slog](#setting-up-slog)
+- [Custom Handler Patterns](#custom-handler-patterns)
+- [Testing with slogtest](#testing-with-slogtest)
+- [HTTP Request Logging Middleware](#http-request-logging-middleware)
+- [Migration from log.Printf to slog](#migration-from-logprintf-to-slog)
+
 ## Setting Up slog
 
 ### Basic Configuration
@@ -103,50 +111,10 @@ func (h *contextHandler) WithGroup(name string) slog.Handler {
 
 ### Multi-Handler (Fan-Out)
 
-Write to multiple destinations (e.g., stdout + file):
-
-```go
-type multiHandler struct {
-    handlers []slog.Handler
-}
-
-func (m *multiHandler) Enabled(ctx context.Context, level slog.Level) bool {
-    for _, h := range m.handlers {
-        if h.Enabled(ctx, level) {
-            return true
-        }
-    }
-    return false
-}
-
-func (m *multiHandler) Handle(ctx context.Context, r slog.Record) error {
-    var errs []error
-    for _, h := range m.handlers {
-        if h.Enabled(ctx, r.Level) {
-            if err := h.Handle(ctx, r); err != nil {
-                errs = append(errs, err)
-            }
-        }
-    }
-    return errors.Join(errs...)
-}
-
-func (m *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-    handlers := make([]slog.Handler, len(m.handlers))
-    for i, h := range m.handlers {
-        handlers[i] = h.WithAttrs(attrs)
-    }
-    return &multiHandler{handlers: handlers}
-}
-
-func (m *multiHandler) WithGroup(name string) slog.Handler {
-    handlers := make([]slog.Handler, len(m.handlers))
-    for i, h := range m.handlers {
-        handlers[i] = h.WithGroup(name)
-    }
-    return &multiHandler{handlers: handlers}
-}
-```
+Write to multiple destinations (for example stdout plus a file) by composing
+handlers behind a small `slog.Handler` wrapper. Forward `Enabled`, `Handle`,
+`WithAttrs`, and `WithGroup` to each destination, and test the wrapper with
+`slogtest`.
 
 ---
 

@@ -1,17 +1,17 @@
 ---
 name: go-interfaces
 description: Use when defining or implementing Go interfaces, designing abstractions, creating mockable boundaries for testing, or composing types through embedding. Also use when deciding whether to accept an interface or return a concrete type, or using type assertions or type switches, even if the user doesn't explicitly mention interfaces. Does not cover generics-based polymorphism (see go-generics).
-license: Apache-2.0
-metadata:
-  sources: "Effective Go, Google Style Guide, Uber Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Interfaces and Composition
 
-## Available Scripts
+## Resource Routing
 
-- **`scripts/check-interface-compliance.sh`** — Finds exported interfaces missing compile-time compliance checks (`var _ I = (*T)(nil)`). Run `bash scripts/check-interface-compliance.sh --help` for options.
+- `scripts/check-interface-compliance.sh` - Run as a heuristic to find exported interfaces that may need compile-time assertions.
+- `scripts/check-interface-compliance.go` - Implementation helper invoked by `check-interface-compliance.sh`; patch this when changing method-set analysis.
+- `references/EMBEDDING.md` - Read when embedding interfaces or structs in public APIs.
+- `references/RECEIVER-TYPE.md` - Read when pointer/value receivers affect interface satisfaction.
 
 ---
 
@@ -104,8 +104,6 @@ the correct type in each case branch. When a case lists multiple types
 Avoid embedding types in public structs — the inner type's full method set
 becomes part of your public API. Use unexported fields instead.
 
-> Read [references/EMBEDDING.md](references/EMBEDDING.md) when using struct embedding for composition, overriding embedded methods, resolving name conflicts, applying the HandlerFunc adapter pattern, or deciding whether to embed in public API types.
-
 ---
 
 ## Interface Satisfaction Checks
@@ -138,8 +136,6 @@ If in doubt, use a pointer receiver. Don't mix receiver types on a single
 type — if any method needs a pointer, use pointers for all methods. Use value
 receivers only for small, immutable types (`Point`, `time.Time`) or basic types.
 
-> Read [references/RECEIVER-TYPE.md](references/RECEIVER-TYPE.md) when deciding between pointer and value receivers for a new type, especially for types with sync primitives or large structs.
-
 ---
 
 ## Quick Reference
@@ -162,4 +158,4 @@ receivers only for small, immutable types (`Point`, `time.Time`) or basic types.
 - **Error types**: See [go-error-handling](../go-error-handling/SKILL.md) when implementing the `error` interface, custom error types, or `errors.As` matching
 - **Generics vs interfaces**: See [go-generics](../go-generics/SKILL.md) when deciding whether generics are needed or an interface already suffices
 - **Functional options**: See [go-functional-options](../go-functional-options/SKILL.md) when using an interface-based Option pattern for flexible constructors
-- **Compile-time checks**: See [go-defensive](../go-defensive/SKILL.md) when adding `var _ I = (*T)(nil)` satisfaction checks at API boundaries
+- **Defensive boundaries**: See [go-defensive](../go-defensive/SKILL.md) when interface assertions are one part of a broader API-boundary hardening pass

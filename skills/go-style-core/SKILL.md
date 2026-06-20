@@ -1,12 +1,14 @@
 ---
 name: go-style-core
 description: Use when working with Go formatting, line length, nesting, naked returns, semicolons, or core style principles. Also use when a style question isn't covered by a more specific skill, even if the user doesn't reference a specific style rule. Does not cover domain-specific patterns like error handling, naming, or testing (see specialized skills). Acts as fallback when no more specific style skill applies.
-license: Apache-2.0
-metadata:
-  sources: "Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Style Core Principles
+
+## Resource Routing
+
+- `references/PRINCIPLES.md` - Read when resolving conflicts between clarity, simplicity, concision, maintainability, and consistency.
+- `references/FORMATTING.md` - Read when handling gofmt, line breaks, whitespace, comments, or semicolons.
 
 ## Style Principles (Priority Order)
 
@@ -20,15 +22,11 @@ When writing readable Go code, apply these principles in order of importance:
 4. **Maintainability** — Will this be easy to modify later?
 5. **Consistency** — Does it match surrounding code and project conventions?
 
-> Read [references/PRINCIPLES.md](references/PRINCIPLES.md) when resolving conflicts between clarity, simplicity, and concision, or when you need concrete examples of how each principle applies in real Go code.
-
 ---
 
 ## Formatting
 
 Run `gofmt` — no exceptions. There is **no rigid line length limit**, but Uber suggests a soft limit of 99 characters. Break by semantics, not length — refactor rather than just wrap.
-
-> Read [references/FORMATTING.md](references/FORMATTING.md) when configuring gofmt, deciding on line breaks, applying MixedCaps rules, or resolving local consistency questions.
 
 ---
 

@@ -5,10 +5,13 @@
 When converting primitives to/from strings, `strconv` is faster than `fmt`
 because `fmt` uses reflection and handles arbitrary types.
 
+Benchmark snippets use `b.Loop()`, available in Go 1.24 and newer. For older
+Go versions, use `for i := 0; i < b.N; i++`.
+
 **Bad:**
 
 ```go
-for i := 0; i < b.N; i++ {
+for b.Loop() {
     s := fmt.Sprint(rand.Int())
 }
 ```
@@ -16,7 +19,7 @@ for i := 0; i < b.N; i++ {
 **Good:**
 
 ```go
-for i := 0; i < b.N; i++ {
+for b.Loop() {
     s := strconv.Itoa(rand.Int())
 }
 ```
@@ -48,7 +51,7 @@ conversion once and capture the result.
 **Bad:**
 
 ```go
-for i := 0; i < b.N; i++ {
+for b.Loop() {
     w.Write([]byte("Hello world"))
 }
 ```
@@ -57,7 +60,7 @@ for i := 0; i < b.N; i++ {
 
 ```go
 data := []byte("Hello world")
-for i := 0; i < b.N; i++ {
+for b.Loop() {
     w.Write(data)
 }
 ```

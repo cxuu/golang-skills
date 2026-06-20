@@ -1,12 +1,14 @@
 ---
 name: go-packages
 description: Use when creating Go packages, organizing imports, managing dependencies, or deciding how to structure Go code into packages. Also use when starting a new Go project or splitting a growing codebase into packages, even if the user doesn't explicitly ask about package organization. Does not cover naming individual identifiers (see go-naming).
-license: Apache-2.0
-metadata:
-  sources: "Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Packages and Imports
+
+## Resource Routing
+
+- `references/IMPORTS.md` - Read when grouping imports, using blank imports, dot imports, or import aliases.
+- `references/PACKAGE-SIZE.md` - Read when splitting packages, avoiding `init`, structuring `main`, or designing CLI flags/subcommands.
 
 > **When this skill does NOT apply**: For naming individual identifiers within a package, see [go-naming](../go-naming/SKILL.md). For organizing functions within a single file, see [go-functions](../go-functions/SKILL.md). For configuring linters that enforce import rules, see [go-linting](../go-linting/SKILL.md).
 
@@ -43,8 +45,6 @@ not be the entire package name.
 **Do NOT split** just because a file is long, to create single-type packages, or
 if it would create circular dependencies.
 
-> Read [references/PACKAGE-SIZE.md](references/PACKAGE-SIZE.md) when deciding whether to split or combine packages, organizing files within a package, or structuring CLI programs.
-
 ---
 
 ## Imports
@@ -73,8 +73,6 @@ import (
 | Blank imports (`import _`) | Only in `main` packages or tests |
 | Dot imports (`import .`) | Never use, except for circular-dependency test files |
 
-> Read [references/IMPORTS.md](references/IMPORTS.md) when organizing imports with extended grouping, renaming proto packages, or deciding on blank/dot imports.
-
 ---
 
 ## Avoid init()
@@ -88,8 +86,6 @@ Avoid `init()` where possible. When unavoidable, it must be:
 
 **Acceptable uses**: complex expressions that can't be single assignments,
 pluggable hooks (e.g., `database/sql` dialects), deterministic precomputation.
-
-> Read [references/PACKAGE-SIZE.md](references/PACKAGE-SIZE.md) when you need to refactor init() into explicit functions or understand acceptable init() uses.
 
 ---
 
@@ -110,8 +106,6 @@ func main() {
     }
 }
 ```
-
-> Read [references/PACKAGE-SIZE.md](references/PACKAGE-SIZE.md) when implementing the run() pattern, structuring CLI subcommands, or choosing flag naming conventions.
 
 ---
 
@@ -144,4 +138,3 @@ func main() {
 - **Error handling across packages**: See [go-error-handling](../go-error-handling/SKILL.md) when wrapping errors at package boundaries with `%w` vs `%v`
 - **Import linting**: See [go-linting](../go-linting/SKILL.md) when configuring goimports local-prefixes or enforcing import grouping
 - **Global state**: See [go-defensive](../go-defensive/SKILL.md) when replacing `init()` with explicit initialization or avoiding mutable globals
-

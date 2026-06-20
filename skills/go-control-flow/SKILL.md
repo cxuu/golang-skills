@@ -1,16 +1,14 @@
 ---
 name: go-control-flow
 description: Use when writing conditionals, loops, or switch statements in Go — including if with initialization, early returns, for loop forms, range, switch, type switches, and blank identifier patterns. Also use when writing a simple if/else or for loop, even if the user doesn't mention guard clauses or variable scoping. Does not cover error flow patterns (see go-error-handling).
-license: Apache-2.0
-metadata:
-  sources: "Effective Go, Google Style Guide"
 ---
 
 # Go Control Flow
 
-> Read [references/SWITCH-PATTERNS.md](references/SWITCH-PATTERNS.md) when using switch statements, type switches, or break with labels
+## Resource Routing
 
-> Read [references/BLANK-IDENTIFIER.md](references/BLANK-IDENTIFIER.md) when using `_`, blank identifier imports, or compile-time interface checks
+- `references/SWITCH-PATTERNS.md` - Read when using switch statements, type switches, fallthrough, or labeled breaks.
+- `references/BLANK-IDENTIFIER.md` - Read when using `_`, blank imports, unused compile-time assertions, or intentional discards.
 
 ---
 
@@ -169,8 +167,7 @@ For type switches, see **go-interfaces**: Type Switch.
 
 **Never discard errors carelessly** — a nil dereference panic may follow.
 
-Verify interface compliance at compile time: `var _ io.Writer = (*MyType)(nil)`.
-See **go-interfaces** for the interface satisfaction check pattern.
+Route compile-time interface assertions to [go-interfaces](../go-interfaces/SKILL.md).
 
 ---
 
@@ -189,7 +186,7 @@ See **go-interfaces** for the interface satisfaction check pattern.
 | Break from loop in switch | `break Label` |
 | Discard value | `_, err := f()` |
 | Side-effect import | `import _ "pkg"` |
-| Interface check | `var _ Interface = (*Type)(nil)` |
+| Interface check | Route to go-interfaces |
 
 ---
 

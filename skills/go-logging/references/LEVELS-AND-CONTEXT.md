@@ -3,6 +3,14 @@
 Detailed guidance on log level semantics, context-based logging patterns,
 performance considerations, and what to keep out of logs.
 
+## Contents
+
+- [Level Semantics](#level-semantics)
+- [Custom Verbosity Levels](#custom-verbosity-levels)
+- [Context-Based Logging](#context-based-logging)
+- [Performance Considerations](#performance-considerations)
+- [What NOT to Log](#what-not-to-log)
+
 ## Level Semantics
 
 ### Debug
@@ -102,22 +110,9 @@ level at runtime.
 
 ### Pattern 1: Logger in Context
 
-Store an enriched `*slog.Logger` in the context. Each middleware layer adds
-its own fields:
-
-```go
-func authMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        userID := authenticate(r)
-        logger := loggerFromCtx(r.Context()).With("user_id", userID)
-        ctx := context.WithValue(r.Context(), loggerKey, logger)
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
-```
-
-**Pros**: Simple, works with any handler chain.
-**Cons**: Requires discipline to always use `loggerFromCtx`.
+Use this when HTTP middleware needs to add request-scoped fields as the request
+moves through a handler chain. The canonical context-key and middleware
+implementation lives in `LOGGING-PATTERNS.md`.
 
 ### Pattern 2: Explicit Logger Parameter
 

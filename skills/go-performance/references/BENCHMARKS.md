@@ -1,20 +1,30 @@
 # Benchmark Methodology
 
+## Contents
+
+- [Writing Benchmarks](#writing-benchmarks)
+- [Running Benchmarks](#running-benchmarks)
+- [Interpreting Results](#interpreting-results)
+- [Using benchstat for Comparison](#using-benchstat-for-comparison)
+- [Benchmark Examples from Performance Patterns](#benchmark-examples-from-performance-patterns)
+- [Profiling with pprof](#profiling-with-pprof)
+- [Common Mistakes](#common-mistakes)
+
 ## Writing Benchmarks
 
-Go benchmarks use the `testing.B` type and live in `_test.go` files. The
-benchmark function name must start with `Benchmark`.
+Go benchmarks use the `testing.B` type and live in `_test.go` files. Function
+names must start with `Benchmark`. On Go 1.24+, prefer `b.Loop()`.
 
 ```go
 func BenchmarkStrconv(b *testing.B) {
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         s := strconv.Itoa(rand.Int())
         _ = s
     }
 }
 
 func BenchmarkFmtSprint(b *testing.B) {
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         s := fmt.Sprint(rand.Int())
         _ = s
     }
@@ -22,7 +32,8 @@ func BenchmarkFmtSprint(b *testing.B) {
 ```
 
 Key rules:
-- Use `b.N` as the loop bound — the framework adjusts it for stable timing
+- Use `b.Loop()` on Go 1.24+; use `for i := 0; i < b.N; i++` only when
+  maintaining older Go versions
 - Assign results to a variable (or `_`) to prevent the compiler from
   optimizing away the call
 - Use `b.ResetTimer()` after expensive setup that shouldn't be measured
@@ -36,7 +47,7 @@ func BenchmarkConvert(b *testing.B) {
         b.Run(fmt.Sprintf("size=%d", size), func(b *testing.B) {
             data := make([]byte, size)
             b.ResetTimer()
-            for i := 0; i < b.N; i++ {
+            for b.Loop() {
                 _ = string(data)
             }
         })
@@ -133,7 +144,7 @@ Tips:
 ```go
 func BenchmarkRepeatedConversion(b *testing.B) {
     var buf bytes.Buffer
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         buf.Write([]byte("Hello world"))
     }
 }
@@ -141,7 +152,7 @@ func BenchmarkRepeatedConversion(b *testing.B) {
 func BenchmarkSingleConversion(b *testing.B) {
     var buf bytes.Buffer
     data := []byte("Hello world")
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         buf.Write(data)
     }
 }
@@ -156,7 +167,7 @@ func BenchmarkSingleConversion(b *testing.B) {
 
 ```go
 func BenchmarkNoCapacity(b *testing.B) {
-    for n := 0; n < b.N; n++ {
+    for b.Loop() {
         data := make([]int, 0)
         for k := 0; k < 1000; k++ {
             data = append(data, k)
@@ -165,7 +176,7 @@ func BenchmarkNoCapacity(b *testing.B) {
 }
 
 func BenchmarkWithCapacity(b *testing.B) {
-    for n := 0; n < b.N; n++ {
+    for b.Loop() {
         data := make([]int, 0, 1000)
         for k := 0; k < 1000; k++ {
             data = append(data, k)
@@ -241,22 +252,22 @@ Access profiles at `http://localhost:6060/debug/pprof/`.
 
 ## Common Mistakes
 
-### Ignoring b.N
+### Ignoring the benchmark loop
 
-The testing framework adjusts `b.N` to get stable timing. Using a fixed
-iteration count produces meaningless results:
+The testing framework adjusts iteration counts to get stable timing. Using a
+fixed iteration count produces meaningless results:
 
 ```go
-// Bad: Ignores b.N — benchmark framework can't calibrate
+// Bad: Ignores the benchmark loop, so the framework can't calibrate
 func BenchmarkFixed(b *testing.B) {
     for i := 0; i < 1000; i++ {
         doWork()
     }
 }
 
-// Good: Use b.N as the loop bound
+// Good: Use b.Loop on Go 1.24+
 func BenchmarkCorrect(b *testing.B) {
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         doWork()
     }
 }
@@ -270,7 +281,7 @@ away entirely. Assign results to a package-level variable:
 ```go
 // Bad: Compiler may optimize away the call
 func BenchmarkElided(b *testing.B) {
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         expensiveFunc()
     }
 }
@@ -280,7 +291,7 @@ var benchResult int
 
 func BenchmarkKept(b *testing.B) {
     var r int
-    for i := 0; i < b.N; i++ {
+    for b.Loop() {
         r = expensiveFunc()
     }
     benchResult = r

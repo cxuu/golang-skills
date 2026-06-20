@@ -1,5 +1,21 @@
 # Documentation Conventions Reference
 
+> Sources: source/google-go-styleguide/decisions.md; source/google-go-styleguide/best-practices.md; source/golang-wiki/CodeReviewComments.md
+> Authority: normative
+> Minimum Go: any supported Go version
+> Last verified: 2026-06-19
+
+## Contents
+
+- [Parameters and Configuration](#parameters-and-configuration)
+- [Contexts](#contexts)
+- [Concurrency](#concurrency)
+- [Cleanup](#cleanup)
+- [Errors](#errors)
+- [Named Result Parameters](#named-result-parameters)
+- [Deprecation Notices](#deprecation-notices)
+- [Comment Sentences - Detailed](#comment-sentences--detailed)
+
 ## Parameters and Configuration
 
 > **Advisory**: Document error-prone or non-obvious parameters, not everything.
@@ -242,4 +258,3 @@ type Server struct {
     PageLength      int    // lines per page (optional; default: 20)
 }
 ```
-

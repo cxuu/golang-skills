@@ -52,7 +52,9 @@ system without a mutex in sight.
 > **Source**: Effective Go (modernized)
 
 When a computation can be broken into independent pieces, parallelize it across
-CPU cores using a `sync.WaitGroup` to wait for completion:
+CPU cores using a `sync.WaitGroup` to wait for completion. On Go 1.25 and
+newer, use `WaitGroup.Go` so the add/done bookkeeping stays coupled to the
+goroutine:
 
 ```go
 type Vector []float64
@@ -66,19 +68,19 @@ func (v Vector) DoSome(i, n int, u Vector) {
 func (v Vector) DoAll(u Vector) {
     numCPU := runtime.NumCPU()
     var wg sync.WaitGroup
-    wg.Add(numCPU)
     for i := 0; i < numCPU; i++ {
-        go func(i int) {
-            defer wg.Done()
+        i := i
+        wg.Go(func() {
             v.DoSome(i*len(v)/numCPU, (i+1)*len(v)/numCPU, u)
-        }(i)
+        })
     }
     wg.Wait()
 }
 ```
 
 Use `runtime.NumCPU()` for hardware cores or `runtime.GOMAXPROCS(0)` to honor
-the user's resource configuration.
+the user's resource configuration. For Go versions before 1.25, use
+`wg.Add(1)`, `go func`, and `defer wg.Done()` around each launched goroutine.
 
 > **Important**: Don't confuse concurrency (structuring a program as
 > independently executing components) with parallelism (executing calculations

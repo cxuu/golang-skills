@@ -102,23 +102,43 @@ which works across multiple AI coding tools. When you're writing Go code:
    focuses on higher-level guidance
 5. **Conditional cross-references**: Skills link to each other with "when"
    conditions to avoid unnecessary context loading
+6. **Rule ownership**: `docs/RULE_OWNERSHIP.md` keeps duplicated guidance out
+   of non-owner skills
 
 ## Project Structure
 
 ```
-skills/
-├── go-*/
-│   ├── SKILL.md          # Core rules (< 225 lines each)
-│   ├── references/       # Detailed guidance, loaded on demand
-│   ├── scripts/          # Automation scripts (8 skills)
-│   └── assets/           # Output templates (4 skills)
+.
+├── skills/
+│   └── go-*/
+│       ├── SKILL.md      # Core rules (< 225 lines each)
+│       ├── references/   # Detailed guidance, loaded on demand
+│       ├── scripts/      # Automation scripts and helpers
+│       └── assets/       # Output templates (4 skills)
 ├── evals/
-│   ├── evals.json        # 51 trigger evals + 15 quality evals
-│   └── files/            # Sample Go files for quality evals
+│   ├── evals.json        # Trigger and quality eval definitions
+│   ├── files/            # Sample Go files for quality evals
+│   └── fixtures/         # Test fixtures for script/eval coverage
+├── docs/                 # Repository maintenance notes
+├── .github/workflows/    # CI validation
 └── source/               # Original style guide sources
 ```
 
+## Provenance and Compatibility
+
+Bundled upstream source snapshots live under `source/`. Each source file keeps
+its own inline provenance header, and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+summarizes the source path, upstream project, URL, license, and copyright at the
+repository level.
+
+Go-version-sensitive guidance is tracked in [COMPATIBILITY.md](COMPATIBILITY.md).
+When a skill recommends a standard-library API that depends on a specific Go
+release, the guidance should name the minimum Go version and include an older
+fallback where that helps users on maintained but older toolchains.
+
 ## License
 
-This project is licensed under the Apache License, Version 2.0. See the
-[LICENSE](LICENSE) file for details.
+Project-authored skill files, scripts, assets, docs, and evals are licensed
+under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+Bundled upstream snapshots under `source/` retain their upstream licenses; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

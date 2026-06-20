@@ -1,14 +1,13 @@
 ---
 name: go-data-structures
 description: Use when working with Go slices, maps, or arrays — choosing between new and make, using append, declaring empty slices (nil vs literal for JSON), implementing sets with maps, and copying data at boundaries. Also use when building or manipulating collections, even if the user doesn't ask about allocation idioms. Does not cover concurrent data structure safety (see go-concurrency).
-license: Apache-2.0
-metadata:
-  sources: "Effective Go, Google Style Guide, Uber Style Guide, Go Wiki CodeReviewComments"
 ---
 
 # Go Data Structures
 
----
+## Resource Routing
+
+- `references/SLICES.md` - Read when deciding nil versus empty slices, copying slices, or managing slice capacity and aliasing.
 
 ## Choosing a Data Structure
 
@@ -66,8 +65,6 @@ for i := range picture {
 }
 ```
 
-> Read [references/SLICES.md](references/SLICES.md) when debugging unexpected slice behavior, sharing slices across goroutines, or working with slice headers.
-
 ### Declaring Empty Slices
 
 Prefer nil slices over empty literals:
@@ -94,14 +91,18 @@ zero-length slices.
 
 ### Implementing a Set
 
-Use `map[T]bool` — idiomatic and reads naturally:
+Use `map[T]struct{}` when the map is only a set. The empty struct takes no
+storage and makes membership intent explicit:
 
 ```go
-attended := map[string]bool{"Ann": true, "Joe": true}
-if attended[person] {  // false if not in map
+attended := map[string]struct{}{"Ann": {}, "Joe": {}}
+if _, ok := attended[person]; ok {
     fmt.Println(person, "was at the meeting")
 }
 ```
+
+Use boolean map values only when the value carries a separate meaning beyond
+presence.
 
 ---
 
@@ -134,7 +135,7 @@ func increment(sc *SafeCounter) {
 | Topic | Key Point |
 |-------|-----------|
 | Slices | Always assign `append` result; `nil` slice preferred over `[]T{}` |
-| Sets | `map[T]bool` is idiomatic |
+| Sets | `map[T]struct{}` for membership-only sets |
 | Copying | Don't copy `T` if methods are on `*T`; beware aliasing |
 
 ## Related Skills

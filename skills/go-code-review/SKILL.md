@@ -1,14 +1,18 @@
 ---
 name: go-code-review
 description: Use when reviewing Go code or checking code against community style standards. Also use proactively before submitting a Go PR or when reviewing any Go code changes, even if the user doesn't explicitly request a style review. Does not cover language-specific syntax — delegates to specialized skills.
-license: Apache-2.0
-compatibility: Web server example in references uses slog (Go 1.21+)
-metadata:
-  sources: "Go Wiki CodeReviewComments, Uber Style Guide"
 allowed-tools: Bash(bash:*)
 ---
 
 # Go Code Review Checklist
+
+> Compatibility: `references/WEB-SERVER.md` uses `log/slog` examples that require Go 1.21+.
+
+## Resource Routing
+
+- `assets/review-template.md` - Use when formatting review output with Must Fix, Should Fix, and Nits sections.
+- `scripts/pre-review.sh` - Run before manual review to collect gofmt, go vet, and golangci-lint results.
+- `references/WEB-SERVER.md` - Read when reviewing an HTTP server that combines concurrency, context, logging, error handling, and shutdown behavior.
 
 ## Review Procedure
 
@@ -163,12 +167,6 @@ bash scripts/pre-review.sh --json ./...  # structured JSON output
 Or manually: `gofmt -l <path> && go vet ./... && golangci-lint run ./...`
 
 Fix any issues before proceeding to the checklist above. For linter setup and configuration, see [go-linting](../go-linting/SKILL.md).
-
----
-
-## Integrative Example
-
-> Read [references/WEB-SERVER.md](references/WEB-SERVER.md) when building a production HTTP server and want to verify your code applies concurrency, error handling, context, documentation, and naming conventions together.
 
 ---
 

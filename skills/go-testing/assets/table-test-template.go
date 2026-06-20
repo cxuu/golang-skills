@@ -5,26 +5,27 @@ import "testing"
 func TestExample(t *testing.T) {
 	tests := []struct {
 		name string
-		// TODO: add input fields
-		// TODO: add expected output fields
+		give string // TODO: replace with actual input type
+		want string // TODO: replace with actual output type
 	}{
 		{
 			name: "basic case",
-			// TODO: fill in
+			give: "",
+			want: "",
 		},
-		{
-			name: "edge case",
-			// TODO: fill in
-		},
+		// TODO: add more test cases
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// TODO: call function under test
-			// TODO: compare got vs want
-			// if diff := cmp.Diff(want, got); diff != "" {
-			// 	t.Errorf("Example() mismatch (-want +got):\n%s", diff)
-			// }
+			got := Example(tt.give)
+			if got != tt.want {
+				t.Errorf("Example(%q) = %q, want %q", tt.give, got, tt.want)
+			}
+			// For richer diffs, consider:
+			//   if diff := cmp.Diff(tt.want, got); diff != "" {
+			//       t.Errorf("Example() mismatch (-want +got):\n%s", diff)
+			//   }
 		})
 	}
 }

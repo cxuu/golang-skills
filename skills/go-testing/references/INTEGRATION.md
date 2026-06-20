@@ -84,7 +84,7 @@ func ExercisePlayer(b *chess.Board, p chess.Player) error {
 ```go
 func TestAcceptance(t *testing.T) {
     player := deepblue.New()
-    if err := chesstest.ExerciseGame(t, chesstest.SimpleGame, player); err != nil {
+    if err := chesstest.ExercisePlayer(chesstest.StartingBoard(), player); err != nil {
         t.Errorf("Deep Blue player failed acceptance test: %v", err)
     }
 }
@@ -110,7 +110,7 @@ func TestAPIIntegration(t *testing.T) {
 
     // Use a real HTTP client against the test server
     client := api.NewClient(srv.URL)
-    result, err := client.GetUser(context.Background(), "user-123")
+    result, err := client.GetUser(t.Context(), "user-123")
     if err != nil {
         t.Fatalf("GetUser() error: %v", err)
     }
@@ -121,7 +121,9 @@ func TestAPIIntegration(t *testing.T) {
 ```
 
 Using the production client with a test server ensures your test exercises as
-much real code as possible, avoiding the complexity of imitating client behavior.
+much real code as possible, avoiding the complexity of imitating client
+behavior. `t.Context()` requires Go 1.24 or newer; use an explicit context with
+cleanup-managed cancellation when maintaining older Go versions.
 
 ---
 
